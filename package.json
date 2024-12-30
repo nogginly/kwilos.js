@@ -1,0 +1,29 @@
+{
+  "name": "kwilos.js",
+  "version": "0.5.0",
+  "description": "kwilos.js is an easy-to-use entity-based Javascript graphics toolkit for use with HTML5 Canvas",
+  "keywords": [
+    "Javascript",
+    "Graphics",
+    "ECS"
+  ],
+  "homepage": "https://github.com/nogginly/kwilos.js",
+  "bugs": {
+    "url": "https://github.com/nogginly/kwilos.js/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nogginly/kwilos.js.git"
+  },
+  "license": "MPL-2.0",
+  "author": "nogginly",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-esm": "esbuild --format=esm --bundle src/kwilos.js  --outfile=_dist/kwilos.mjs",
+    "build-esm-min": "esbuild --format=esm --bundle --minify --sourcemap src/kwilos.js --outfile=_dist/kwilos.min.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.24.2"
+  }
+}
