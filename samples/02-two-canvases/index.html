@@ -1,0 +1,41 @@
+<html>
+
+<head>
+  <title>
+    Kwilos.js - Two layered canvases
+  </title>
+
+  <!-- Load the app as a module -->
+  <script src="app.js" type="module"></script>
+
+  <style>
+    /* Nest absolutely position CANVAS'es under a relatively positioned
+       parent DIV to place them where we want. */
+    .layered {
+      position: relative;
+      /* size of biggest canvas */
+      height: 400;
+    }
+
+    .layered canvas {
+      position: absolute;
+    }
+
+    .layered #over-canvas-02 {
+      left: 200;
+      top: 100;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Kwilos.js Samples </h1>
+  <h2>Two layered canvases</h2>
+  <div class="layered">
+    <canvas id="under-canvas-02" width="400" height="400"></canvas>
+    <canvas id="over-canvas-02" width="300" height="200"></canvas>
+  </div>
+  <p>Move the mouse around in the canvas above.</p>
+</body>
+
+</html>
