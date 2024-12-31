@@ -23,6 +23,74 @@ Clone the repo and then ...
 > TODO
 > - figure out how to publish with versioning for people to import via CDN
 
+## API
+
+### Attaching to a Canvas
+
+Kwilos can be attached to one or more canvases, allowing control of graphics in each independently.
+
+`Kwilos.attach(canvas, tick [, config])`
+
+* Provide a `canvas` after locating it using `document.getElementById` or other DOM API.
+* Define a function that is your `tick` handler, which will be called with one parameter (we call it `env`) that provides runtime state information and functionality.
+* No `config` is needed to get started.
+
+### Configuring Kwilos
+
+When attaching a canvas, you can configure Kwilos with the following properties that you can provide in an object. 
+
+Property | Default value | Description
+----|-----|----
+`background_clear` | `false` | If `true` then the background is cleared, allowing layered canvases to be transparent
+`background_color` | `black` | Set the background colour between ticks. If `background_clear` is set then use `null` or a colour with alpha to see through the canvas.
+`font` | `undefined` | When `undefined` the default font of the browser is used. Otherwise specify a font as you would for the CSS `font-family` property.
+`preload_images` | `[]` | Provide one or more paths to images to preload to ensure the images are ready when `tick` handler is called.
+
+## The `tick` Function
+
+The `tick` function is called repeatedly, with the frame rate as defined by the browser's `requestAnimationFrame` function. This is typically 60 times a second.
+
+It is called with an `env` parameter that contains runtime state properties and utility functions for use by the application. 
+
+### The `env` Parameter
+
+The runtime environment object contains properties that are grouped as follows:
+- `env.inputs` contains the properties to access input event information
+- `env.outputs` is an array into which graphical entities are pushed to be rendered to the canvas
+- `env.state` is an object into which the app can store data that it can expect to be available across repeated calls to the `tick` handler.
+
+#### Inputs
+
+> Details TODO
+
+`env.inputs` | Description
+----|----
+`.mouse` | TODO
+&emsp;`.x` | 
+&emsp;`.y` | 
+&emsp;`.button_left` | `true` if left mouse button is pressed
+&emsp;`.button_middle` | `true` if middle mouse button (or device equivalent) is pressed
+&emsp;`.button_right` | `true` if left right button (or device equivalent) is pressed
+&emsp;`.moved` | `true` if mouse has moved since last frame; if a mouse button is also pressed, this indicates _dragging_.
+`.key` | TODO
+&emsp;`.alt` | 
+&emsp;`.shift` | 
+&emsp;`.ctrl` | 
+&emsp;`.meta` | 
+&emsp;`.pressed[C]` | Contains an object wit `code` and `key` properties when [key code](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_code_values) `C` is pressed.
+&emsp;`.typed` | 
+&emsp;&emsp;`.code` | 
+&emsp;&emsp;`.key` | 
+
+#### Outputs
+
+> TODO
+
+#### State
+
+> TODO
+
+
 ## Contributing
 
 Bug reports and sugestions are welcome. For now I am not yet ready for code changes and pull requests. I appreciate your understanding.
