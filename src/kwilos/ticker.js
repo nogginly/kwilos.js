@@ -8,15 +8,21 @@ export function ticker(_ts, sys) {
 
     // If the ticker returns false, skip rendering outputs
     if (sys.app.tick(sys.args) == undefined) {
-      // clear background
-      draw.fillStyle = sys.canvas.background_color
-      draw.fillRect(0, 0, sys.canvas.width, sys.canvas.height)
-
-      // render (and reset) the output primitives
-      var prims = sys.args.outputs
-      sys.args.outputs = []
-      render(sys, prims)
+      // clear background if either of the background properties is specified
+      let bgcolor = sys.canvas.background_color
+      if (sys.canvas.background_clear) {
+        draw.clearRect(0, 0, sys.canvas.width, sys.canvas.height)
+      }
+      if (bgcolor) {
+        draw.fillStyle = bgcolor
+        draw.fillRect(0, 0, sys.canvas.width, sys.canvas.height)
+      }
+      // if neither specified, canvas will not be cleared, it's gonna be a mess. :-)
     }
+    // render (and reset) the output primitives
+    var prims = sys.args.outputs
+    sys.args.outputs = []
+    render(sys, prims)
   }
   finally {
     // reset of end of frame state

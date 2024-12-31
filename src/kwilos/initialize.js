@@ -15,19 +15,27 @@ export async function initialize_with_canvas(system, canvas, tick, config) {
   app.config = config
   app.tick = tick
 
-  system.canvas.background_color = config.background_color || 'black'
+  // Obtain dimensions from the canvas
   system.canvas.width = canvas.width
   system.canvas.height = canvas.height
+  // If set, call `clearRect` on the canvas
+  system.canvas.background_clear = config.background_clear || false
+  // If set, call `fillRect` on the canvas
+  system.canvas.background_color = config.background_color
 
+  // Set a default font for labels, if specified,
   if (typeof config.font == 'string')
     system.fonts.default = config.font
 
+  // Load and store the drawing context
   app.draw_context = canvas.getContext('2d')
   app.draw_context.font = system.fonts.default
 
+  // Pre-load any images specified
   await _preload_images(system, config.preload_images)
   setup_event_handlers(system, canvas)
 
+  // Schedule the ticker
   BAL.schedule_ticker(ticker, system)
 }
 
@@ -43,6 +51,7 @@ async function _preload_images(system, paths) {
     }
   }
 }
+
 // 
 // Separate async preloader
 async function _preload_image(sys, path) {
