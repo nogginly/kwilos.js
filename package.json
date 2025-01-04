@@ -1,6 +1,6 @@
 {
   "name": "kwilos.js",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "kwilos.js is an easy-to-use entity-based Javascript graphics toolkit for use with HTML5 Canvas",
   "keywords": [
     "Javascript",

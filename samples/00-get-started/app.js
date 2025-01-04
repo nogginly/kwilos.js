@@ -1,7 +1,7 @@
 /* Don't use sloppy JS. */ "use strict";
 
 // 1. Import and then attach an instance of Kwilos to your Canvas, 
-// supplying a `tick` handler
+// by providing element ID, and supplying a `tick` handler
 // 
 // 2. The `tick` handler will be repeatedly called 
 // based on the HTML5 `requestAnimationFrame` schedule;
@@ -18,7 +18,7 @@
 
 import { Kwilos } from "../../_dist/kwilos.mjs";
 
-await Kwilos.attach(document.getElementById("00-canvas"), tick)
+await Kwilos.attach("00-canvas", tick)
 
 function tick(env) {
   env.outputs.push(

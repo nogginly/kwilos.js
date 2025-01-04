@@ -3,7 +3,7 @@
 // 1. Import Kwilos
 // 
 // 2. Use a `config` object to set defaults and pre-load images when
-//    attaching `Kwilos` to your canvas
+//    attaching `Kwilos` to your canvas using selector
 // 
 // 3. Push a different types of renderables to be drawn at the end of 
 //    each tick:
@@ -30,7 +30,7 @@ let app = {
   }
 }
 
-await Kwilos.attach(document.getElementById("01-canvas"), tick, app.config)
+await Kwilos.attach("#canvas-01", tick, app.config)
 
 // The engine calls `tick` every frame at some frame-rate
 function tick(env) {

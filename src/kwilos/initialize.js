@@ -11,6 +11,10 @@ import { ticker } from './ticker';
 export async function initialize_with_canvas(system, canvas, tick, config) {
   let app = system.app
 
+  // lookit up as ID or selector if called with string
+  if (typeof canvas == 'string')
+    canvas = document.getElementById(canvas) || document.querySelector(canvas)
+
   app.canvas = canvas
   app.config = config
   app.tick = tick
@@ -21,7 +25,8 @@ export async function initialize_with_canvas(system, canvas, tick, config) {
   // If set, call `clearRect` on the canvas
   system.canvas.background_clear = config.background_clear || false
   // If set, call `fillRect` on the canvas
-  system.canvas.background_color = config.background_color
+  system.canvas.background_color = config.background_color ||
+    (config.background_clear ? null : 'black')
 
   // Set a default font for labels, if specified,
   if (typeof config.font == 'string')
