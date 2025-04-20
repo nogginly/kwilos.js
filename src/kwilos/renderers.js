@@ -20,8 +20,25 @@ export function render(sys, primitives) {
       render(sys, p);
     }
     else if (p.constructor === Object) {
-      // Lookup by type and call matching render, if any
-      RENDERABLES[p.type.toLowerCase()]?.call(this, sys, p)
+      if (p.type) {
+        // Lookup by type and call matching render, if any
+        RENDERABLES[p.type.toLowerCase()]?.call(this, sys, p)
+      }
+      else {
+        // Use a heuristic to determine renderer
+        if (p.text !== undefined)
+          _render_label(sys, p)
+        else if (p.radius !== undefined)
+          _render_circle(sys, p)
+        else if (p.tile_index !== undefined)
+          _render_tile(sys, p)
+        else if (p.path !== undefined)
+          _render_image(sys, p)
+        else if (p.outputs !== undefined)
+          _render_container(sys, p)
+        else
+          _render_rectangle(sys, p)
+      }
     }
   }
 }
@@ -118,7 +135,7 @@ function _render_circle(sys, { x, y, radius, fill_color, stroke_color } = {}) {
 }
 
 // Render an image as a tile from a tileset image (tile_index), specified using
-// - either tile size (tile_w, tile_h), 
+// - either tile size (tile_w, tile_h),
 // - or tileset dimensions (tile_rows, tile_cols)
 function _render_tile(sys,
   { x, y, w, h, path, tile_w, tile_h, tile_rows, tile_cols, tile_index } = {}) {
