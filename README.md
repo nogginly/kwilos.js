@@ -15,9 +15,21 @@ _Kwilos_ uses a "game loop" metaphor while providing a way to use it efficiently
 Clone the repo and then ...
 
 - Run `npm install` to pull the dev dependencies
-- Run `npm run build-esm-min` which will make a minified bundled release: `_dist/kwilos.min.mjs`
-- Run `npm run build-esm` if you want a non-minified build: `_dist/kwilos.mjs`
-- Run `npm test` to run the tests
+- Run `npm run build` to make the bundled releases in `_dist/`: `kwilos.mjs`, minified `kwilos.min.mjs`, and TypeScript declarations in `types/`
+- Run `npm test` to run the tests, and `npm run typecheck` to check the types
+
+The source in `src/` runs in the browser as is, without a build. To try the samples, serve the repository root with any static web server, for example `python3 -m http.server`, and open `samples/`.
+
+### Types
+
+Kwilos is written in JavaScript with types in JSDoc comments, checked by TypeScript. Editors use them for completion and to flag mistakes, such as a misspelt property. Types such as `Env`, `Tick`, `Config` and `Scene` are exported for use in your own JSDoc or TypeScript:
+
+```js
+/** @import { Env } from "kwilos.js" */
+
+/** @param {Env} env */
+function tick(env) { ... }
+```
 
 ### Via CDN
 

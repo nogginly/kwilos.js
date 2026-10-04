@@ -17,7 +17,9 @@
 //    since nothing in this scene changes
 //
 
-import { Kwilos, circle, rect, image, tile, label } from "../../_dist/kwilos.mjs";
+import { Kwilos, circle, rect, image, tile, label } from "../../src/kwilos.js";
+
+/** @import { Env } from "../../src/kwilos.js" */
 
 const BG_DESERT = 'assets/backgroundColorDesert.png'
 const FEM_TILESHEET = 'assets/female_tilesheet.png'
@@ -36,6 +38,7 @@ let app = {
 await Kwilos.attach("#canvas-01", tick, app.config)
 
 // The engine calls `tick` every frame at some frame-rate
+/** @param {Env} env */
 function tick(env) {
   if (env.state.drawn)
     return null

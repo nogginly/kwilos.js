@@ -1,7 +1,15 @@
 /* Don't use sloppy JS. */ "use strict";
 
-import { load_image } from "./initialize";
+import { load_image } from "./initialize.js";
 
+/**
+ * @import { System } from './types.js'
+ * @import { Scene, Circle, Rect, Label, Image, Tile, Container } from './shapes.js'
+ */
+
+/** @typedef {(sys: System, entity: any) => void} Renderer */
+
+/** @type {Record<string, Renderer>} */
 const RENDERABLES = {
   container: _render_container,
   circle: _render_circle,
@@ -14,6 +22,10 @@ const RENDERABLES = {
 // Renders a scene in order, descending into nested arrays and skipping
 // null, undefined and false entries. Throws a TypeError for an entity
 // whose `type` is not one of the shapes.
+/**
+ * @param {System} sys
+ * @param {Scene} scene
+ */
 export function render(sys, scene) {
   for (const entity of scene) {
     if (entity == null || entity === false)
@@ -25,20 +37,31 @@ export function render(sys, scene) {
   }
 }
 
+/**
+ * @param {any} entity
+ * @returns {Renderer}
+ */
 function _renderer_for(entity) {
-  const renderer = Object.hasOwn(RENDERABLES, entity.type) && RENDERABLES[entity.type]
+  const renderer = Object.hasOwn(RENDERABLES, entity?.type) && RENDERABLES[entity.type]
   if (!renderer)
     throw new TypeError(`Kwilos: cannot draw an entity of type ${JSON.stringify(entity.type)}`)
   return renderer
 }
 
-function _render_container(sys, { x = 0, y = 0, w, h, clip, scene } = {}) {
+/**
+ * @param {System} sys
+ * @param {Container} entity
+ */
+function _render_container(sys, { x = 0, y = 0, w, h, clip, scene }) {
   if (!Array.isArray(scene))
     throw new TypeError(`Kwilos: a container's scene must be an array, got ${typeof scene}`)
 
   let draw = sys.app.draw_context
 
   if (clip == true) {
+    if (w == null || h == null)
+      throw new TypeError('Kwilos: a clipped container needs w and h')
+
     // save/restoring draw state is expensive, so only use it
     // if clipping is required
     draw.save()
@@ -65,7 +88,11 @@ function _render_container(sys, { x = 0, y = 0, w, h, clip, scene } = {}) {
   }
 }
 
-function _render_label(sys, { x, y, text, font_name, font_size, fill_color, stroke_color, text_align, text_baseline } = {}) {
+/**
+ * @param {System} sys
+ * @param {Label} entity
+ */
+function _render_label(sys, { x, y, text, font_name, font_size, fill_color, stroke_color, text_align, text_baseline }) {
   let restore_default_font = false  // assume we don't need to
   let draw = sys.app.draw_context
 
@@ -95,7 +122,11 @@ function _render_label(sys, { x, y, text, font_name, font_size, fill_color, stro
   }
 }
 
-function _render_rectangle(sys, { x, y, w, h, fill_color, stroke_color } = {}) {
+/**
+ * @param {System} sys
+ * @param {Rect} entity
+ */
+function _render_rectangle(sys, { x, y, w, h, fill_color, stroke_color }) {
   let draw = sys.app.draw_context
 
   draw.beginPath()
@@ -110,7 +141,11 @@ function _render_rectangle(sys, { x, y, w, h, fill_color, stroke_color } = {}) {
   }
 }
 
-function _render_circle(sys, { x, y, radius, fill_color, stroke_color } = {}) {
+/**
+ * @param {System} sys
+ * @param {Circle} entity
+ */
+function _render_circle(sys, { x, y, radius, fill_color, stroke_color }) {
   let draw = sys.app.draw_context
 
   draw.beginPath()
@@ -128,8 +163,12 @@ function _render_circle(sys, { x, y, radius, fill_color, stroke_color } = {}) {
 // Render an image as a tile from a tileset image (tile_index), specified using
 // - either tile size (tile_w, tile_h),
 // - or tileset dimensions (tile_rows, tile_cols)
+/**
+ * @param {System} sys
+ * @param {Tile} entity
+ */
 function _render_tile(sys,
-  { x, y, w, h, path, tile_w, tile_h, tile_rows, tile_cols, tile_index } = {}) {
+  { x, y, w, h, path, tile_w, tile_h, tile_rows, tile_cols, tile_index }) {
 
   let draw = sys.app.draw_context
   let img = load_image(sys, path)
@@ -145,9 +184,7 @@ function _render_tile(sys,
       tile_h = Math.trunc(img.height / tile_rows)
     }
     else {
-      // TODO - not sure what this does
-      tile_w = w
-      tile_h = h
+      throw new TypeError('Kwilos: a tile needs either tile_w and tile_h, or tile_rows and tile_cols')
     }
     let source_x = tile_index % tile_cols * tile_w
     let source_y = Math.trunc(tile_index / tile_cols) * tile_h
@@ -161,8 +198,12 @@ function _render_tile(sys,
 // Render a single image, rendered
 // - either as a whole sprite,
 // - or as a portion of the image (via source_* parameters)
+/**
+ * @param {System} sys
+ * @param {Image} entity
+ */
 function _render_image(sys,
-  { x, y, w, h, path, source_x, source_y, source_w, source_h } = {}) {
+  { x, y, w, h, path, source_x, source_y, source_w, source_h }) {
 
   let draw = sys.app.draw_context
   let img = load_image(sys, path)
