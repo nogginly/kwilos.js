@@ -53,18 +53,18 @@ describe('render', () => {
   })
 
   describe('container', () => {
-    it('moves the origin for its outputs, then restores the transform', () => {
-      const calls = render_calls([container({ x: 10, y: 20, outputs: [circle({ x: 0, y: 0, radius: 1 })] })])
+    it('moves the origin for its scene, then restores the transform', () => {
+      const calls = render_calls([container({ x: 10, y: 20, scene: [circle({ x: 0, y: 0, radius: 1 })] })])
       expect(names(calls)).toEqual(['getTransform', 'translate', 'beginPath', 'arc', 'setTransform'])
       expect(calls[1]).toEqual(['translate', 10, 20])
     })
 
     it('defaults its origin to 0, 0', () => {
-      expect(render_calls([container({ outputs: [] })])).toContainEqual(['translate', 0, 0])
+      expect(render_calls([container({ scene: [] })])).toContainEqual(['translate', 0, 0])
     })
 
-    it('clips its outputs to its size when asked', () => {
-      const calls = render_calls([container({ x: 10, y: 20, w: 30, h: 40, clip: true, outputs: [] })])
+    it('clips its scene to its size when asked', () => {
+      const calls = render_calls([container({ x: 10, y: 20, w: 30, h: 40, clip: true, scene: [] })])
       expect(calls).toEqual([
         ['save'], ['translate', 10, 20], ['beginPath'], ['rect', 0, 0, 30, 40], ['clip'], ['restore'],
       ])
@@ -72,7 +72,7 @@ describe('render', () => {
 
     it('restores the transform when an output fails to draw', () => {
       const sys = attached_system()
-      expect(() => render(sys, [container({ outputs: [{ type: 'star' }] })])).toThrow(TypeError)
+      expect(() => render(sys, [container({ scene: [{ type: 'star' }] })])).toThrow(TypeError)
       expect(names(sys.app.draw_context.calls)).toEqual(['getTransform', 'translate', 'setTransform'])
     })
   })

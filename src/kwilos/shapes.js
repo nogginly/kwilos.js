@@ -80,10 +80,10 @@
  */
 
 /**
- * A layer: draws its `outputs` with the origin moved to (`x`, `y`).
+ * A layer: draws its `scene` with the origin moved to (`x`, `y`).
  * @typedef {object} Container
  * @property {'container'} type
- * @property {Scene} outputs
+ * @property {Scene} scene
  * @property {number} [x] Defaults to 0
  * @property {number} [y] Defaults to 0
  * @property {boolean} [clip] Hides drawing outside `w` by `h`

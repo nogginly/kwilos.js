@@ -32,7 +32,7 @@ function _renderer_for(entity) {
   return renderer
 }
 
-function _render_container(sys, { x = 0, y = 0, w, h, clip, outputs } = {}) {
+function _render_container(sys, { x = 0, y = 0, w, h, clip, scene } = {}) {
   let draw = sys.app.draw_context
 
   if (clip == true) {
@@ -44,7 +44,7 @@ function _render_container(sys, { x = 0, y = 0, w, h, clip, outputs } = {}) {
       draw.beginPath()
       draw.rect(0, 0, w, h)
       draw.clip()
-      render(sys, outputs)
+      render(sys, scene)
     }
     finally {
       draw.restore()
@@ -54,7 +54,7 @@ function _render_container(sys, { x = 0, y = 0, w, h, clip, outputs } = {}) {
     const save = draw.getTransform()
     try {
       draw.translate(x, y)
-      render(sys, outputs)
+      render(sys, scene)
     }
     finally {
       draw.setTransform(save)

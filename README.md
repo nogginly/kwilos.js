@@ -86,9 +86,9 @@ Factory | Required | Optional
 `label` | `x`, `y`, `text` | `font_name`, `font_size` (points), `fill_color`, `stroke_color`, `text_align` (default `center`), `text_baseline` (default `alphabetic`)
 `image` | `path`, `x`, `y` | `w`, `h`, and `source_x`, `source_y`, `source_w`, `source_h` to draw part of the image
 `tile` | `path`, `x`, `y`, `tile_index`, and either `tile_w` + `tile_h` or `tile_rows` + `tile_cols` | `w`, `h`
-`container` | `outputs` (a scene) | `x`, `y` (default `0`), and `clip` with `w`, `h` to hide drawing outside that area
+`container` | `scene` | `x`, `y` (default `0`), and `clip` with `w`, `h` to hide drawing outside that area
 
-A `circle`, `rect` or `label` with neither `fill_color` nor `stroke_color` draws nothing. A `container` draws its `outputs` with the origin moved to its `x` and `y`, which makes containers useful as layers: the containers in a scene are drawn in order, each one over the last.
+A `circle`, `rect` or `label` with neither `fill_color` nor `stroke_color` draws nothing. A `container` draws its `scene` with the origin moved to its `x` and `y`, which makes containers useful as layers: the containers in a scene are drawn in order, each one over the last.
 
 ### The `env` Parameter
 
