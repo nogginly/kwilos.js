@@ -16,7 +16,8 @@ Clone the repo and then ...
 
 - Run `npm install` to pull the dev dependencies
 - Run `npm run build-esm-min` which will make a minified bundled release: `_dist/kwilos.min.mjs`
-- Run `npm run build-esm` if you want a non-minified build: `_dist/kwilos.min.mjs`
+- Run `npm run build-esm` if you want a non-minified build: `_dist/kwilos.mjs`
+- Run `npm test` to run the tests
 
 ### Via CDN
 
@@ -50,13 +51,32 @@ Property | Default value | Description
 
 The `tick` function is called repeatedly, with the frame rate as defined by the browser's `requestAnimationFrame` function. This is typically 60 times a second.
 
-It is called with an `env` parameter that contains runtime state properties and utility functions for use by the application. 
+It is called with an `env` parameter that contains runtime state properties and utility functions for use by the application, and returns the scene to draw.
+
+### The Return Value
+
+`tick` returns | Effect
+----|----
+An array of entities | The background is cleared, then the entities are drawn in array order. An empty array draws only the background.
+`null` | The canvas is left as it is. If the canvas was resized since the last frame, the last scene is drawn again.
+Anything else | Throws a `TypeError`, which stops the frame loop.
+
+Within the array, nested arrays are drawn in place, and `null`, `undefined` and `false` entries are skipped, so conditional entities can be written inline:
+
+```js
+function tick(env) {
+  const { mouse } = env.inputs
+  return [
+    { type: 'circle', x: mouse.x, y: mouse.y, radius: 10, fill_color: 'red' },
+    mouse.button_left && { type: 'label', x: 10, y: 20, text: 'Dragging', fill_color: 'white' },
+  ]
+}
+```
 
 ### The `env` Parameter
 
 The runtime environment object contains properties that are grouped as follows:
 - `env.inputs` contains the properties to access input event information
-- `env.outputs` is an array into which graphical entities are pushed to be rendered to the canvas
 - `env.state` is an object into which the app can store data that it can expect to be available across repeated calls to the `tick` handler.
 
 #### Inputs
@@ -81,10 +101,6 @@ The runtime environment object contains properties that are grouped as follows:
 &emsp;`.typed` | 
 &emsp;&emsp;`.code` | 
 &emsp;&emsp;`.key` | 
-
-#### Outputs
-
-> TODO
 
 #### State
 

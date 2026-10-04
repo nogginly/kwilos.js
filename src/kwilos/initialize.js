@@ -4,6 +4,36 @@ import { BAL } from './bal'
 import { setup_event_handlers } from './event_handlers';
 import { ticker } from './ticker';
 
+// Returns the per-canvas system state, before a canvas is attached
+export function create_system() {
+  return {
+    canvas: {
+      width: 400,
+      height: 400,
+    },
+    atlas: {},
+    fonts: {
+      default: "14pt serif"
+    },
+    args: {
+      grid: {},
+      state: {},
+      inputs: {
+        mouse: {
+          x: 0,
+          y: 0
+        },
+        key: {
+          pressed: {},
+        }
+      }
+    },
+    app: {
+      last_scene: null
+    }
+  }
+}
+
 // 
 // Intentionally keeping this procedural, using OOP with WGTK class to
 // encapsulate the system information / state per canvas

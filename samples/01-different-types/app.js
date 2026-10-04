@@ -5,13 +5,16 @@
 // 2. Use a `config` object to set defaults and pre-load images when
 //    attaching `Kwilos` to your canvas using selector
 //
-// 3. Push a different types of renderables to be drawn at the end of
-//    each tick:
+// 3. Return the different types of renderables to be drawn at the
+//    end of each tick:
 //      - 'circle`
 //      - 'rect`
 //      - 'image`
 //      - 'tile`
 //      - 'label`
+//
+// 4. Return `null` once the scene is drawn to leave the canvas as it is,
+//    since nothing in this scene changes
 //
 
 import { Kwilos } from "../../_dist/kwilos.mjs";
@@ -34,7 +37,11 @@ await Kwilos.attach("#canvas-01", tick, app.config)
 
 // The engine calls `tick` every frame at some frame-rate
 function tick(env) {
-  env.outputs.push(
+  if (env.state.drawn)
+    return null
+  env.state.drawn = true
+
+  return [
     // whole image
     { x: 10, y: 10, path: BG_DESERT },
     { // extract portion of image
@@ -53,14 +60,11 @@ function tick(env) {
     { x: 50, y: 560, radius: 25, fill_color: 'red' },
     { x: 150, y: 560, radius: 25, stroke_color: 'red' },
     { x: 250, y: 560 - 25, w: 100, h: 50, fill_color: 'red' },
-  )
-  // render some tiles from a tilesheet defined using rows and cols
-  for (let i = 3; i < 8; i++) {
-    env.outputs.push({
+    // render some tiles from a tilesheet defined using rows and cols;
+    // nested arrays are drawn in place
+    [3, 4, 5, 6, 7].map(i => ({
       x: ((i - 2) * 70), y: 370, path: FEM_TILESHEET,
       tile_cols: 9, tile_rows: 3, tile_index: i * 2,
-    },
-    )
-  }
+    })),
+  ]
 }
-

@@ -1,34 +1,9 @@
 /* Don't use sloppy JS. */ "use strict";
 
-import { initialize_with_canvas } from "./kwilos/initialize";
+import { create_system, initialize_with_canvas } from "./kwilos/initialize";
 
 export class Kwilos {
-  // Private system information / state
-  #system = {
-    canvas: {
-      width: 400,
-      height: 400,
-    },
-    atlas: {},
-    fonts: {
-      default: "14pt serif"
-    },
-    args: {
-      grid: {},
-      state: {},
-      outputs: [],
-      inputs: {
-        mouse: {
-          x: 0,
-          y: 0
-        },
-        key: {
-          pressed: {},
-        }
-      }
-    },
-    app: {}
-  }
+  #system = create_system()
 
   static async attach(canvas, tick, config = {}) {
     let kwilos = new Kwilos()

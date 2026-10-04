@@ -15,8 +15,12 @@ const RENDERABLES = {
 // entries are nested arrays of primitives
 export function render(sys, primitives) {
   for (const p of primitives) {
+    // Skip placeholders left by conditionals, e.g. `cond && circle(...)`
+    if (p == null || p === false) {
+      continue
+    }
     // Support nested arrays of primitives
-    if (p.constructor === Array) {
+    else if (p.constructor === Array) {
       render(sys, p);
     }
     else if (p.constructor === Object) {
