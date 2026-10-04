@@ -64,14 +64,31 @@ Anything else | Throws a `TypeError`, which stops the frame loop.
 Within the array, nested arrays are drawn in place, and `null`, `undefined` and `false` entries are skipped, so conditional entities can be written inline:
 
 ```js
+import { Kwilos, circle, label } from "kwilos.mjs"
+
 function tick(env) {
   const { mouse } = env.inputs
   return [
-    { type: 'circle', x: mouse.x, y: mouse.y, radius: 10, fill_color: 'red' },
-    mouse.button_left && { type: 'label', x: 10, y: 20, text: 'Dragging', fill_color: 'white' },
+    circle({ x: mouse.x, y: mouse.y, radius: 10, fill_color: 'red' }),
+    mouse.button_left && label({ x: 10, y: 20, text: 'Dragging', fill_color: 'white' }),
   ]
 }
 ```
+
+### Shapes
+
+Each shape has a factory, exported alongside `Kwilos`, that takes the shape's properties and returns a plain object tagged with its `type`. A hand-written object with the same `type` is drawn the same way. An entity without a recognised `type` throws a `TypeError`.
+
+Factory | Required | Optional
+----|----|----
+`circle` | `x`, `y` (centre), `radius` | `fill_color`, `stroke_color`
+`rect` | `x`, `y` (top-left), `w`, `h` | `fill_color`, `stroke_color`
+`label` | `x`, `y`, `text` | `font_name`, `font_size` (points), `fill_color`, `stroke_color`, `text_align` (default `center`), `text_baseline` (default `alphabetic`)
+`image` | `path`, `x`, `y` | `w`, `h`, and `source_x`, `source_y`, `source_w`, `source_h` to draw part of the image
+`tile` | `path`, `x`, `y`, `tile_index`, and either `tile_w` + `tile_h` or `tile_rows` + `tile_cols` | `w`, `h`
+`container` | `scene` | `x`, `y` (default `0`), and `clip` with `w`, `h` to hide drawing outside that area
+
+A `circle`, `rect` or `label` with neither `fill_color` nor `stroke_color` draws nothing. A `container` draws its `scene` with the origin moved to its `x` and `y`, which makes containers useful as layers: the containers in a scene are drawn in order, each one over the last.
 
 ### The `env` Parameter
 

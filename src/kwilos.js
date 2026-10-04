@@ -2,6 +2,8 @@
 
 import { create_system, initialize_with_canvas } from "./kwilos/initialize";
 
+export { circle, rect, label, image, tile, container } from "./kwilos/shapes";
+
 export class Kwilos {
   #system = create_system()
 

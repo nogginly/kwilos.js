@@ -13,20 +13,20 @@
 // 4. Return an array of entities from `tick` and they will be drawn
 // after it returns
 //
-// 5. Use the `label` type to specify a text entity.
+// 5. Use the `label` factory to create a text entity.
 // 
 
-import { Kwilos } from "../../_dist/kwilos.mjs";
+import { Kwilos, label } from "../../_dist/kwilos.mjs";
 
 await Kwilos.attach("00-canvas", tick)
 
 function tick(env) {
   return [
-    {
-      type: 'label', text: 'Hello, world!',
+    label({
+      text: 'Hello, world!',
       x: env.inputs.mouse.x, y: env.inputs.mouse.y,
       font_size: 32, fill_color: 'lightblue', stroke_color: 'white'
-    }
+    })
   ]
 }
 

@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { ticker } from '../src/kwilos/ticker.js'
+import { circle } from '../src/kwilos.js'
 import { attached_system } from './support/system.js'
 
-const dot = { type: 'circle', x: 5, y: 6, radius: 3, fill_color: 'red' }
+const dot = circle({ x: 5, y: 6, radius: 3, fill_color: 'red' })
 const arc_of_dot = ['arc', 5, 6, 3, 0, 2 * Math.PI]
 
 describe('ticker', () => {
