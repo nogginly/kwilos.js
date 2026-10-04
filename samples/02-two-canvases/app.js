@@ -31,13 +31,13 @@ await Kwilos.attach(
   tick_under, app.config_under)
 
 function tick_under(env) {
-  env.outputs.push(
+  return [
     {
       type: 'label', text: 'Hello, Underworld!',
       x: env.inputs.mouse.x, y: env.inputs.mouse.y,
       font_size: 32, fill_color: 'purple', stroke_color: 'white'
     }
-  )
+  ]
 }
 
 await Kwilos.attach(
@@ -45,12 +45,12 @@ await Kwilos.attach(
   tick_over, app.config_over)
 
 function tick_over(env) {
-  env.outputs.push(
+  return [
     {
       type: 'label', text: 'Hello, Overworld!',
       x: env.inputs.mouse.x, y: env.inputs.mouse.y,
       font_size: 32, fill_color: 'blue', stroke_color: 'white'
     }
-  )
+  ]
 }
 
