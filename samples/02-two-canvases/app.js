@@ -12,7 +12,7 @@
 // to the canvas underneath where they overlap
 //
 
-import { Kwilos } from "../../_dist/kwilos.mjs";
+import { Kwilos, label } from "../../_dist/kwilos.mjs";
 
 let app = {
   config_under: {
@@ -32,11 +32,11 @@ await Kwilos.attach(
 
 function tick_under(env) {
   return [
-    {
-      type: 'label', text: 'Hello, Underworld!',
+    label({
+      text: 'Hello, Underworld!',
       x: env.inputs.mouse.x, y: env.inputs.mouse.y,
       font_size: 32, fill_color: 'purple', stroke_color: 'white'
-    }
+    })
   ]
 }
 
@@ -46,11 +46,11 @@ await Kwilos.attach(
 
 function tick_over(env) {
   return [
-    {
-      type: 'label', text: 'Hello, Overworld!',
+    label({
+      text: 'Hello, Overworld!',
       x: env.inputs.mouse.x, y: env.inputs.mouse.y,
       font_size: 32, fill_color: 'blue', stroke_color: 'white'
-    }
+    })
   ]
 }
 

@@ -11,47 +11,31 @@ const RENDERABLES = {
   tile: _render_tile
 }
 
-// Iterate through primitives and render them, digging deeper if
-// entries are nested arrays of primitives
-export function render(sys, primitives) {
-  for (const p of primitives) {
-    // Skip placeholders left by conditionals, e.g. `cond && circle(...)`
-    if (p == null || p === false) {
+// Renders a scene in order, descending into nested arrays and skipping
+// null, undefined and false entries. Throws a TypeError for an entity
+// whose `type` is not one of the shapes.
+export function render(sys, scene) {
+  for (const entity of scene) {
+    if (entity == null || entity === false)
       continue
-    }
-    // Support nested arrays of primitives
-    else if (p.constructor === Array) {
-      render(sys, p);
-    }
-    else if (p.constructor === Object) {
-      if (p.type) {
-        // Lookup by type and call matching render, if any
-        RENDERABLES[p.type.toLowerCase()]?.call(this, sys, p)
-      }
-      else {
-        // Use a heuristic to determine renderer
-        if (p.text !== undefined)
-          _render_label(sys, p)
-        else if (p.radius !== undefined)
-          _render_circle(sys, p)
-        else if (p.tile_index !== undefined)
-          _render_tile(sys, p)
-        else if (p.path !== undefined)
-          _render_image(sys, p)
-        else if (p.outputs !== undefined)
-          _render_container(sys, p)
-        else
-          _render_rectangle(sys, p)
-      }
-    }
+    else if (Array.isArray(entity))
+      render(sys, entity)
+    else
+      _renderer_for(entity)(sys, entity)
   }
 }
 
-function _render_container(sys, { x, y, w, h, clip, outputs } = {}) {
-  // TODO what if coordinates are not specified?
-  //      ideally, pick the "previous" container (or canvas) bounds
+function _renderer_for(entity) {
+  const renderer = Object.hasOwn(RENDERABLES, entity.type) && RENDERABLES[entity.type]
+  if (!renderer)
+    throw new TypeError(`Kwilos: cannot draw an entity of type ${JSON.stringify(entity.type)}`)
+  return renderer
+}
+
+function _render_container(sys, { x = 0, y = 0, w, h, clip, outputs } = {}) {
+  let draw = sys.app.draw_context
+
   if (clip == true) {
-    let draw = sys.app.draw_context
     // save/restoring draw state is expensive, so only use it
     // if clipping is required
     draw.save()
