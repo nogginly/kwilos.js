@@ -2,6 +2,3 @@
 /_dist
 
 .DS_Store
-
-# This is a lib, and deps are for building only
-package-lock.json
