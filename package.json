@@ -18,13 +18,23 @@
   "license": "MPL-2.0",
   "author": "nogginly",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./_dist/types/kwilos.d.ts",
+      "default": "./_dist/kwilos.min.mjs"
+    }
+  },
   "scripts": {
     "test": "vitest run",
+    "typecheck": "tsc",
     "build-esm": "esbuild --format=esm --bundle src/kwilos.js  --outfile=_dist/kwilos.mjs",
-    "build-esm-min": "esbuild --format=esm --bundle --minify --sourcemap src/kwilos.js --outfile=_dist/kwilos.min.mjs"
+    "build-esm-min": "esbuild --format=esm --bundle --minify --sourcemap src/kwilos.js --outfile=_dist/kwilos.min.mjs",
+    "build-types": "tsc -p tsconfig.build.json",
+    "build": "npm run build-esm && npm run build-esm-min && npm run build-types"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
     "vitest": "^5.0.3"
   }
 }

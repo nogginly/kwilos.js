@@ -12,7 +12,9 @@
 // to the canvas underneath where they overlap
 //
 
-import { Kwilos, label } from "../../_dist/kwilos.mjs";
+import { Kwilos, label } from "../../src/kwilos.js";
+
+/** @import { Env } from "../../src/kwilos.js" */
 
 let app = {
   config_under: {
@@ -30,6 +32,7 @@ await Kwilos.attach(
   document.getElementById("under-canvas-02"),
   tick_under, app.config_under)
 
+/** @param {Env} env */
 function tick_under(env) {
   return [
     label({
@@ -44,6 +47,7 @@ await Kwilos.attach(
   document.getElementById("over-canvas-02"),
   tick_over, app.config_over)
 
+/** @param {Env} env */
 function tick_over(env) {
   return [
     label({

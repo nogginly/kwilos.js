@@ -1,10 +1,15 @@
 /* Don't use sloppy JS. */ "use strict";
 
-import { BAL } from './bal'
-import { setup_event_handlers } from './event_handlers';
-import { ticker } from './ticker';
+import { BAL } from './bal.js'
+import { setup_event_handlers } from './event_handlers.js';
+import { ticker } from './ticker.js';
+
+/**
+ * @import { System, App, Config, Tick } from './types.js'
+ */
 
 // Returns the per-canvas system state, before a canvas is attached
+/** @returns {System} */
 export function create_system() {
   return {
     canvas: {
@@ -16,7 +21,6 @@ export function create_system() {
       default: "14pt serif"
     },
     args: {
-      grid: {},
       state: {},
       inputs: {
         mouse: {
@@ -28,9 +32,10 @@ export function create_system() {
         }
       }
     },
-    app: {
+    // the remaining fields are set by `initialize_with_canvas`
+    app: /** @type {App} */ ({
       last_scene: null
-    }
+    })
   }
 }
 
@@ -38,12 +43,21 @@ export function create_system() {
 // Intentionally keeping this procedural, using OOP with WGTK class to
 // encapsulate the system information / state per canvas
 // 
-export async function initialize_with_canvas(system, canvas, tick, config) {
+/**
+ * @param {System} system
+ * @param {HTMLElement | string | null} canvas_or_id The canvas, or its element ID or a CSS selector
+ * @param {Tick} tick
+ * @param {Config} config
+ */
+export async function initialize_with_canvas(system, canvas_or_id, tick, config) {
   let app = system.app
 
   // lookit up as ID or selector if called with string
-  if (typeof canvas == 'string')
-    canvas = document.getElementById(canvas) || document.querySelector(canvas)
+  const canvas = typeof canvas_or_id == 'string'
+    ? document.getElementById(canvas_or_id) || document.querySelector(canvas_or_id)
+    : canvas_or_id
+  if (!(canvas instanceof HTMLCanvasElement))
+    throw new TypeError(`Kwilos: no canvas found for ${typeof canvas_or_id == "string" ? JSON.stringify(canvas_or_id) : String(canvas_or_id)}`)
 
   app.canvas = canvas
   app.config = config
@@ -63,7 +77,10 @@ export async function initialize_with_canvas(system, canvas, tick, config) {
     system.fonts.default = config.font
 
   // Load and store the drawing context
-  app.draw_context = canvas.getContext('2d')
+  const draw_context = canvas.getContext('2d')
+  if (draw_context == null)
+    throw new Error('Kwilos: the canvas has no 2D drawing context')
+  app.draw_context = draw_context
   app.draw_context.font = system.fonts.default
 
   // Pre-load any images specified
@@ -79,6 +96,10 @@ export async function initialize_with_canvas(system, canvas, tick, config) {
 // renderers have to be async which causes image drawing to 
 // occur out of order with the output list
 // 
+/**
+ * @param {System} system
+ * @param {string[] | undefined} paths
+ */
 async function _preload_images(system, paths) {
   if (paths != null) {
     for (const p of paths) {
@@ -87,18 +108,35 @@ async function _preload_images(system, paths) {
   }
 }
 
-// 
-// Separate async preloader
-async function _preload_image(sys, path) {
-  return (sys.atlas[path] ||= await BAL.create_image(path))
+// Loads an image once, caching the pending load in the atlas so that
+// later requests share it, then replacing it with the loaded image
+/**
+ * @param {System} sys
+ * @param {string} path
+ * @returns {Promise<HTMLImageElement>}
+ */
+function _preload_image(sys, path) {
+  const cached = sys.atlas[path]
+  if (cached)
+    return Promise.resolve(cached)
+
+  const loading = BAL.create_image(path).then(img => (sys.atlas[path] = img))
+  sys.atlas[path] = loading
+  return loading
 }
 
-// 
-// Immediate (non async) load image from a path, caching images in an atlas to avoid reloading them
+// Returns the image at `path` if it has loaded; otherwise starts loading
+// it, if not already started, and returns undefined
+/**
+ * @param {System} sys
+ * @param {string} path
+ * @returns {HTMLImageElement | undefined}
+ */
 export function load_image(sys, path) {
-  let image = sys.atlas[path]
-  if (image == null) {
-    _preload_image(sys, path)  // this will run async
-  }
-  return image
+  const cached = sys.atlas[path]
+  if (cached == null)
+    _preload_image(sys, path).catch(error => console.error(error))
+  else if (!(cached instanceof Promise))
+    return cached
+  return undefined
 }

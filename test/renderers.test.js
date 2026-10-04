@@ -52,6 +52,11 @@ describe('render', () => {
     expect(calls).toEqual([['drawImage', sheet, 100, 110, 100, 110, 1, 2, 100, 110]])
   })
 
+  it('throws a TypeError for a tile without tile size or sheet dimensions', () => {
+    expect(() => render_calls([tile({ path: 'sheet.png', x: 0, y: 0, tile_index: 0 })],
+      sys => { sys.atlas['sheet.png'] = { width: 300, height: 220 } })).toThrow(/tile needs/)
+  })
+
   describe('container', () => {
     it('moves the origin for its scene, then restores the transform', () => {
       const calls = render_calls([container({ x: 10, y: 20, scene: [circle({ x: 0, y: 0, radius: 1 })] })])
@@ -68,6 +73,10 @@ describe('render', () => {
       expect(calls).toEqual([
         ['save'], ['translate', 10, 20], ['beginPath'], ['rect', 0, 0, 30, 40], ['clip'], ['restore'],
       ])
+    })
+
+    it('throws a TypeError when clipped without a size', () => {
+      expect(() => render_calls([container({ clip: true, w: 10, scene: [] })])).toThrow(/clipped container needs w and h/)
     })
 
     it.each([undefined, null, {}])('throws a TypeError when its scene is %o', (scene) => {

@@ -16,10 +16,13 @@
 // 5. Use the `label` factory to create a text entity.
 // 
 
-import { Kwilos, label } from "../../_dist/kwilos.mjs";
+import { Kwilos, label } from "../../src/kwilos.js";
+
+/** @import { Env } from "../../src/kwilos.js" */
 
 await Kwilos.attach("00-canvas", tick)
 
+/** @param {Env} env */
 function tick(env) {
   return [
     label({

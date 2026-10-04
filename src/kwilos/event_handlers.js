@@ -1,7 +1,15 @@
 /* Don't use sloppy JS. */ "use strict";
 
-import { BAL } from './bal'
+import { BAL } from './bal.js'
 
+/**
+ * @import { System, Keyboard, Mouse } from './types.js'
+ */
+
+/**
+ * @param {System} system
+ * @param {HTMLCanvasElement} canvas
+ */
 export function setup_event_handlers(system, canvas) {
   let sys_key = system.args.inputs.key
   let sys_mouse = system.args.inputs.mouse
@@ -18,6 +26,10 @@ export function setup_event_handlers(system, canvas) {
   ])
 }
 
+/**
+ * @param {Keyboard} sys_key
+ * @param {KeyboardEvent} event
+ */
 function _document_key_down(sys_key, event) {
   sys_key.alt = event.altKey
   sys_key.shift = event.shiftKey
@@ -35,6 +47,10 @@ function _document_key_down(sys_key, event) {
   }
 }
 
+/**
+ * @param {Keyboard} sys_key
+ * @param {KeyboardEvent} event
+ */
 function _document_key_up(sys_key, event) {
   sys_key.alt = event.altKey
   sys_key.shift = event.shiftKey
@@ -43,12 +59,20 @@ function _document_key_up(sys_key, event) {
   delete sys_key.pressed[event.code]
 }
 
+/**
+ * @param {Mouse} sys_mouse
+ * @param {MouseEvent} event
+ */
 function _canvas_mouse_moved(sys_mouse, event) {
   sys_mouse.x = event.offsetX
   sys_mouse.y = event.offsetY
   sys_mouse.moved = true
 }
 
+/**
+ * @param {Mouse} sys_mouse
+ * @param {MouseEvent} event
+ */
 function _canvas_mouse_pressed(sys_mouse, event) {
   switch (event.button) {
     case 0:
@@ -63,6 +87,10 @@ function _canvas_mouse_pressed(sys_mouse, event) {
   }
 }
 
+/**
+ * @param {Mouse} sys_mouse
+ * @param {MouseEvent} event
+ */
 function _canvas_mouse_released(sys_mouse, event) {
   switch (event.button) {
     case 0:

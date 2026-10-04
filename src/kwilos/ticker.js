@@ -1,12 +1,21 @@
 /* Don't use sloppy JS. */ "use strict";
 
-import { render } from './renderers'
+import { render } from './renderers.js'
+
+/**
+ * @import { System } from './types.js'
+ * @import { Scene } from './shapes.js'
+ */
 
 // Runs one frame: calls the app's `tick` and draws the scene it returns.
 // - An array clears the background and renders its entities in order.
 // - `null` leaves the canvas untouched, unless the canvas was resized,
 //   in which case the last scene is drawn again.
 // - Anything else throws a TypeError.
+/**
+ * @param {number} _ts
+ * @param {System} sys
+ */
 export function ticker(_ts, sys) {
   try {
     const resized = _sync_canvas_size(sys)
@@ -36,6 +45,10 @@ export function ticker(_ts, sys) {
   }
 }
 
+/**
+ * @param {System} sys
+ * @param {Scene} scene
+ */
 function _draw_scene(sys, scene) {
   let draw = sys.app.draw_context
   let bgcolor = sys.canvas.background_color
@@ -52,6 +65,10 @@ function _draw_scene(sys, scene) {
 
 // Resizing a canvas wipes its pixels and resets the drawing context,
 // so record the new size, restore the default font, and report the change
+/**
+ * @param {System} sys
+ * @returns {boolean}
+ */
 function _sync_canvas_size(sys) {
   let canvas = sys.app.canvas
   let size = sys.canvas
