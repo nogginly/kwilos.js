@@ -33,6 +33,9 @@ function _renderer_for(entity) {
 }
 
 function _render_container(sys, { x = 0, y = 0, w, h, clip, scene } = {}) {
+  if (!Array.isArray(scene))
+    throw new TypeError(`Kwilos: a container's scene must be an array, got ${typeof scene}`)
+
   let draw = sys.app.draw_context
 
   if (clip == true) {

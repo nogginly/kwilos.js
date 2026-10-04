@@ -70,6 +70,12 @@ describe('render', () => {
       ])
     })
 
+    it.each([undefined, null, {}])('throws a TypeError when its scene is %o', (scene) => {
+      const sys = attached_system()
+      expect(() => render(sys, [container({ scene })])).toThrow(/container's scene must be an array/)
+      expect(sys.app.draw_context.calls).toEqual([])
+    })
+
     it('restores the transform when an output fails to draw', () => {
       const sys = attached_system()
       expect(() => render(sys, [container({ scene: [{ type: 'star' }] })])).toThrow(TypeError)
