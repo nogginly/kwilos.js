@@ -110,31 +110,48 @@ The runtime environment object contains properties that are grouped as follows:
 
 #### Inputs
 
-> Details TODO
+`env.inputs` holds the input state as of the current frame. Mouse positions are in canvas coordinates, and only movement over the canvas is tracked. Keys are heard across the whole page, so every attached canvas sees the same keyboard state. When the window loses focus, every button and key is released.
 
 `env.inputs` | Description
 ----|----
-`.mouse` | TODO
-&emsp;`.x` | 
-&emsp;`.y` | 
-&emsp;`.button_left` | `true` if left mouse button is pressed
-&emsp;`.button_middle` | `true` if middle mouse button (or device equivalent) is pressed
-&emsp;`.button_right` | `true` if left right button (or device equivalent) is pressed
-&emsp;`.moved` | `true` if mouse has moved since last frame; if a mouse button is also pressed, this indicates _dragging_.
-`.key` | TODO
-&emsp;`.alt` | 
-&emsp;`.shift` | 
-&emsp;`.ctrl` | 
-&emsp;`.meta` | 
-&emsp;`.pressed[C]` | Contains an object wit `code` and `key` properties when [key code](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_code_values) `C` is pressed.
-&emsp;`.typed` | 
-&emsp;&emsp;`.code` | 
-&emsp;&emsp;`.key` | 
+`.mouse` | Pointer state
+&emsp;`.x`, `.y` | Position of the pointer when it was last over the canvas
+&emsp;`.previous_x`, `.previous_y` | `.x` and `.y` as of the previous frame
+&emsp;`.moved` | `true` if the pointer moved since the previous frame; with a button pressed, this is a _drag_
+&emsp;`.button_left` | `true` while the left button is pressed; pressed on the canvas, released anywhere
+&emsp;`.button_middle` | `true` while the middle button (or device equivalent) is pressed
+&emsp;`.button_right` | `true` while the right button (or device equivalent) is pressed
+`.key` | Keyboard state
+&emsp;`.alt`, `.shift`, `.ctrl`, `.meta` | `true` while the modifier key is held
+&emsp;`.pressed[C]` | Present while the key with [key code](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_code_values) `C` is held, e.g. `.pressed.KeyA` or `.pressed.ArrowUp`
+&emsp;&emsp;`.code` | The key code, `C`
+&emsp;&emsp;`.text` | The character or key name produced, e.g. `"a"`, `"A"` or `"ArrowUp"`
+&emsp;`.typed` | Present only in the frame in which a printable key was pressed, with the same `.code` and `.text` properties
+
+For example, to move a circle with the arrow keys, and turn it red while the left button is held:
+
+```js
+function tick(env) {
+  const { mouse, key } = env.inputs
+  env.state.x ??= 100
+  if (key.pressed.ArrowLeft) env.state.x -= 2
+  if (key.pressed.ArrowRight) env.state.x += 2
+  return [
+    circle({ x: env.state.x, y: 100, radius: 10, fill_color: mouse.button_left ? 'red' : 'white' }),
+  ]
+}
+```
 
 #### State
 
-> TODO
+`env.state` starts as an empty object and is kept between frames, so the app can store whatever it needs there:
 
+```js
+function tick(env) {
+  env.state.frames = (env.state.frames ?? 0) + 1
+  return [label({ x: 100, y: 50, text: `Frame ${env.state.frames}`, fill_color: 'white' })]
+}
+```
 
 ## Contributing
 

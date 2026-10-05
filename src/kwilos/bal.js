@@ -27,6 +27,12 @@ export const BAL = {
       document.addEventListener(ev.name, ev.handler)
     }
   },
+  /** @param {EventMapping[]} event_mappings */
+  add_window_event_listeners: function (event_mappings) {
+    for (const ev of event_mappings) {
+      window.addEventListener(ev.name, ev.handler)
+    }
+  },
   /**
    * @param {HTMLElement} element
    * @param {EventMapping[]} event_mappings
