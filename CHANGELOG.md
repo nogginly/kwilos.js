@@ -1,0 +1,33 @@
+# Changelog
+
+Notable changes to Kwilos JS. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/); before 1.0, a minor version may break the API.
+
+## [0.6.0] - 2026-10-05
+
+### Changed (breaking)
+
+- `tick` returns the scene to draw, replacing `env.outputs`. An array clears the background and draws its entities in order; `null` leaves the canvas as it is; any other value throws a `TypeError`.
+- Entities are drawn by their `type` only. An entity without a recognised `type` throws a `TypeError`, where it was previously guessed from its fields.
+- A container's entities move from `outputs` to `scene`.
+- Invalid entities throw a `TypeError` where they previously drew nothing: a container without a `scene`, a clipped container without `w` and `h`, and a tile without `tile_w` and `tile_h` or `tile_rows` and `tile_cols`.
+- `Kwilos.attach` throws a `TypeError` when no canvas is found, and rejects when a preloaded image fails to load.
+
+### Added
+
+- Shape factories, exported alongside `Kwilos`: `circle`, `rect`, `label`, `image`, `tile` and `container`.
+- `null`, `undefined` and `false` entries in a scene are skipped, so conditional entities can be written inline.
+- After the canvas is resized, the last scene is drawn again.
+- JSDoc types, checked with TypeScript, and declarations in `_dist/types` for editors and TypeScript projects.
+- `src/` runs in the browser without a build.
+
+### Fixed
+
+- A container without `clip` threw a `ReferenceError`.
+- A mouse button released outside the canvas stayed pressed.
+- Buttons and keys stayed pressed after the window lost focus.
+- An image that was not preloaded was fetched again on every frame until it loaded.
+
+### Removed
+
+- `env.outputs`, replaced by the return value of `tick`.
+- `env.grid`, which was unused.
