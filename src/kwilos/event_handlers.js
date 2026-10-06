@@ -16,14 +16,38 @@ export function setup_event_handlers(system, canvas) {
 
   BAL.add_event_listeners(canvas, [
     { name: 'mousemove', handler: (ev) => _canvas_mouse_moved(sys_mouse, ev) },
-    { name: 'mouseup', handler: (ev) => _canvas_mouse_released(sys_mouse, ev) },
     { name: 'mousedown', handler: (ev) => _canvas_mouse_pressed(sys_mouse, ev) },
   ])
 
+  // Releases are heard on the whole document, so a button released
+  // outside the canvas does not stay pressed
   BAL.add_document_event_listeners([
+    { name: 'mouseup', handler: (ev) => _canvas_mouse_released(sys_mouse, ev) },
     { name: 'keydown', handler: (ev) => _document_key_down(sys_key, ev) },
     { name: 'keyup', handler: (ev) => _document_key_up(sys_key, ev) },
   ])
+
+  // A window that loses focus misses the releases that follow
+  BAL.add_window_event_listeners([
+    { name: 'blur', handler: () => _window_blurred(sys_mouse, sys_key) },
+  ])
+}
+
+/**
+ * Releases every button and key.
+ * @param {Mouse} sys_mouse
+ * @param {Keyboard} sys_key
+ */
+function _window_blurred(sys_mouse, sys_key) {
+  sys_mouse.button_left = false
+  sys_mouse.button_middle = false
+  sys_mouse.button_right = false
+  sys_key.alt = false
+  sys_key.shift = false
+  sys_key.ctrl = false
+  sys_key.meta = false
+  for (const code in sys_key.pressed)
+    delete sys_key.pressed[code]
 }
 
 /**
