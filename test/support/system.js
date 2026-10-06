@@ -11,11 +11,13 @@ export function recording_context() {
 }
 
 // Returns a system attached to a fake canvas, ready to pass to `ticker`
-export function attached_system({ tick, width = 100, height = 80, background_color = 'black', background_clear = false } = {}) {
+export function attached_system({ tick, config = {}, width = 100, height = 80, background_color = 'black', background_clear = false } = {}) {
   const sys = create_system()
   sys.canvas = { width, height, background_color, background_clear }
   sys.app.canvas = { width, height }
   sys.app.draw_context = recording_context()
   sys.app.tick = tick
+  sys.app.config = config
+  sys.app.detach = () => {}
   return sys
 }

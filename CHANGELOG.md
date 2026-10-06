@@ -2,6 +2,18 @@
 
 Notable changes to Kwilos JS. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/); before 1.0, a minor version may break the API.
 
+## [Unreleased]
+
+### Added
+
+- `kwilos.detach()` stops the frames and removes the input listeners.
+- The `on_error` config option receives errors thrown during a frame, so frames continue.
+- The `context_menu` config option, which when `false` suppresses the browser's context menu over the canvas.
+
+### Changed
+
+- An error thrown during a frame without `on_error` detaches Kwilos, removing its input listeners as well as stopping the frames.
+
 ## [0.6.0] - 2026-10-05
 
 ### Changed (breaking)

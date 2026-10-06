@@ -7,6 +7,41 @@ import { render } from './renderers.js'
  * @import { Scene } from './shapes.js'
  */
 
+// Runs one frame, passing any error to the app's `on_error`. Without
+// `on_error`, or when it throws, detaches and rethrows.
+/**
+ * @param {number} ts
+ * @param {System} sys
+ */
+export function frame(ts, sys) {
+  try {
+    ticker(ts, sys)
+  }
+  catch (error) {
+    const on_error = sys.app.config.on_error
+    if (!on_error)
+      _detach_and_throw(sys, error)
+    else {
+      try {
+        on_error(error, sys.args)
+      }
+      catch (rethrown) {
+        _detach_and_throw(sys, rethrown)
+      }
+    }
+  }
+}
+
+/**
+ * @param {System} sys
+ * @param {unknown} error
+ * @returns {never}
+ */
+function _detach_and_throw(sys, error) {
+  sys.app.detach()
+  throw error
+}
+
 // Runs one frame: calls the app's `tick` and draws the scene it returns.
 // - An array clears the background and renders its entities in order.
 // - `null` leaves the canvas untouched, unless the canvas was resized,

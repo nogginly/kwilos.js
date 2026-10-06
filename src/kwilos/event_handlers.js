@@ -7,30 +7,40 @@ import { BAL } from './bal.js'
  */
 
 /**
+ * Listens for input on the canvas, document and window, and for the
+ * context menu when `context_menu` is false in the config.
  * @param {System} system
  * @param {HTMLCanvasElement} canvas
+ * @returns {Array<() => void>} Functions that remove the listeners
  */
 export function setup_event_handlers(system, canvas) {
   let sys_key = system.args.inputs.key
   let sys_mouse = system.args.inputs.mouse
 
-  BAL.add_event_listeners(canvas, [
+  /** @type {import('./bal.js').EventMapping[]} */
+  const canvas_events = [
     { name: 'mousemove', handler: (ev) => _canvas_mouse_moved(sys_mouse, ev) },
     { name: 'mousedown', handler: (ev) => _canvas_mouse_pressed(sys_mouse, ev) },
-  ])
+  ]
+  if (system.app.config.context_menu === false)
+    canvas_events.push({ name: 'contextmenu', handler: (ev) => ev.preventDefault() })
 
-  // Releases are heard on the whole document, so a button released
-  // outside the canvas does not stay pressed
-  BAL.add_document_event_listeners([
-    { name: 'mouseup', handler: (ev) => _canvas_mouse_released(sys_mouse, ev) },
-    { name: 'keydown', handler: (ev) => _document_key_down(sys_key, ev) },
-    { name: 'keyup', handler: (ev) => _document_key_up(sys_key, ev) },
-  ])
+  return [
+    BAL.add_event_listeners(canvas, canvas_events),
 
-  // A window that loses focus misses the releases that follow
-  BAL.add_window_event_listeners([
-    { name: 'blur', handler: () => _window_blurred(sys_mouse, sys_key) },
-  ])
+    // Releases are heard on the whole document, so a button released
+    // outside the canvas does not stay pressed
+    BAL.add_document_event_listeners([
+      { name: 'mouseup', handler: (ev) => _canvas_mouse_released(sys_mouse, ev) },
+      { name: 'keydown', handler: (ev) => _document_key_down(sys_key, ev) },
+      { name: 'keyup', handler: (ev) => _document_key_up(sys_key, ev) },
+    ]),
+
+    // A window that loses focus misses the releases that follow
+    BAL.add_window_event_listeners([
+      { name: 'blur', handler: () => _window_blurred(sys_mouse, sys_key) },
+    ]),
+  ]
 }
 
 /**
