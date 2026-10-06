@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Kwilos browser test harness</title>
+  <style>
+    body { margin: 0; height: 600px; }
+    canvas { position: absolute; left: 0; top: 0; }
+  </style>
+  <script type="module">
+    import * as kwilos from "../../../src/kwilos.js"
+    window.kwilos = kwilos
+    window.dispatchEvent(new Event('kwilos-ready'))
+  </script>
+</head>
+<body>
+  <canvas id="c" width="200" height="200"></canvas>
+</body>
+</html>
