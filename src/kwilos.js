@@ -7,6 +7,7 @@ export { circle, rect, label, image, tile, container } from "./kwilos/shapes.js"
 /**
  * @typedef {import("./kwilos/types.js").Tick} Tick
  * @typedef {import("./kwilos/types.js").Config} Config
+ * @typedef {import("./kwilos/types.js").ErrorHandler} ErrorHandler
  * @typedef {import("./kwilos/types.js").Env} Env
  * @typedef {import("./kwilos/types.js").Inputs} Inputs
  * @typedef {import("./kwilos/types.js").Mouse} Mouse
@@ -38,5 +39,13 @@ export class Kwilos {
     await initialize_with_canvas(kwilos.#system, canvas, tick, config)
 
     return kwilos
+  }
+
+  /**
+   * Stops calling `tick` and stops listening for input. The canvas keeps
+   * its last frame. Does nothing once detached.
+   */
+  detach() {
+    this.#system.app.detach()
   }
 }

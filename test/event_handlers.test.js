@@ -77,6 +77,25 @@ describe('keyboard input', () => {
   })
 })
 
+describe('context menu', () => {
+  it('is left alone by default', () => {
+    expect(on_canvas.contextmenu).toBeUndefined()
+  })
+
+  it('is suppressed when context_menu is false', () => {
+    on_canvas = {}
+    vi.mocked(BAL.add_event_listeners).mockImplementation((_canvas, mappings) => {
+      for (const { name, handler } of mappings) on_canvas[name] = handler
+    })
+    sys = attached_system({ config: { context_menu: false } })
+    setup_event_handlers(sys, sys.app.canvas)
+
+    const event = { preventDefault: vi.fn() }
+    on_canvas.contextmenu(event)
+    expect(event.preventDefault).toHaveBeenCalled()
+  })
+})
+
 describe('when the window loses focus', () => {
   it('releases every button and key', () => {
     on_canvas.mousedown({ button: LEFT })

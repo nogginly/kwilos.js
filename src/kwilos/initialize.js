@@ -2,7 +2,7 @@
 
 import { BAL } from './bal.js'
 import { setup_event_handlers } from './event_handlers.js';
-import { ticker } from './ticker.js';
+import { frame } from './ticker.js';
 
 /**
  * @import { System, App, Config, Tick } from './types.js'
@@ -34,7 +34,8 @@ export function create_system() {
     },
     // the remaining fields are set by `initialize_with_canvas`
     app: /** @type {App} */ ({
-      last_scene: null
+      last_scene: null,
+      detach: () => {}
     })
   }
 }
@@ -85,10 +86,16 @@ export async function initialize_with_canvas(system, canvas_or_id, tick, config)
 
   // Pre-load any images specified
   await _preload_images(system, config.preload_images)
-  setup_event_handlers(system, canvas)
 
-  // Schedule the ticker
-  BAL.schedule_ticker(ticker, system)
+  // Listen for input and schedule the frames, keeping the means to undo both
+  const undo = [
+    ...setup_event_handlers(system, canvas),
+    BAL.schedule_ticker(frame, system),
+  ]
+  app.detach = () => {
+    for (const undo_one of undo.splice(0))
+      undo_one()
+  }
 }
 
 // Intentionally separating async and immediate image loading 

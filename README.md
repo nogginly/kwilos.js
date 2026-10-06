@@ -44,9 +44,30 @@ Kwilos can be attached to one or more canvases, allowing control of graphics in 
 
 `Kwilos.attach(canvas, tick [, config])`
 
-* Provide a `canvas` after locating it using `document.getElementById` or other DOM API.
+* Provide a `canvas` element, or its element ID or a CSS selector. If no canvas is found, `attach` throws a `TypeError`.
 * Define a function that is your `tick` handler, which will be called with one parameter (we call it `env`) that provides runtime state information and functionality.
 * No `config` is needed to get started.
+
+`attach` returns a promise of the attached `Kwilos`, resolved once any preloaded images have loaded.
+
+### Detaching
+
+`kwilos.detach()` stops calling `tick` and stops listening for input. The canvas keeps its last frame. Calling it again does nothing.
+
+### Handling Errors
+
+By default, an error thrown during a frame, whether by `tick` or while drawing its scene, detaches Kwilos and is rethrown, so it appears in the browser console.
+
+To keep going instead, provide `on_error` in the config. It receives the error and `env`, and the frames continue. To stop after all, rethrow the error, and Kwilos detaches as above:
+
+```js
+const kwilos = await Kwilos.attach("canvas", tick, {
+  on_error: (error, env) => {
+    console.warn("Frame failed, starting over", error)
+    env.state = {}
+  }
+})
+```
 
 ### Configuring Kwilos
 
@@ -58,6 +79,8 @@ Property | Default value | Description
 `background_color` | `black` | Set the background colour between ticks. If `background_clear` is set then use `null` or a colour with alpha to see through the canvas.
 `font` | `undefined` | When `undefined` the default font of the browser is used. Otherwise specify a font as you would for the CSS `font-family` property.
 `preload_images` | `[]` | Provide one or more paths to images to preload to ensure the images are ready when `tick` handler is called.
+`context_menu` | `true` | If `false` then the browser's context menu is suppressed over the canvas, so the right mouse button can be used
+`on_error` | `undefined` | A function that receives errors thrown during a frame, so that frames continue; see [Handling Errors](#handling-errors)
 
 ## The `tick` Function
 

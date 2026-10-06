@@ -21,6 +21,17 @@
  * @property {string | null} [background_color] Fills the canvas before each scene; defaults to "black" unless `background_clear` is set
  * @property {string} [font] Default label font, as for the CSS `font` property
  * @property {string[]} [preload_images] Image paths to load before the first frame
+ * @property {boolean} [context_menu] Set to false to suppress the browser's context menu over the canvas, so the right button can be used
+ * @property {ErrorHandler} [on_error] Receives errors thrown during a frame, and frames continue; without it, an error detaches Kwilos and is rethrown
+ */
+
+/**
+ * Handles an error thrown during a frame; frames continue unless it throws,
+ * in which case Kwilos detaches and the error propagates.
+ * @callback ErrorHandler
+ * @param {unknown} error
+ * @param {Env} env
+ * @returns {void}
  */
 
 /**
@@ -84,6 +95,7 @@
  * @property {Tick} tick
  * @property {Config} config
  * @property {Scene | null} last_scene
+ * @property {() => void} detach Stops the frames and removes the listeners; does nothing once detached
  */
 
 export {}
