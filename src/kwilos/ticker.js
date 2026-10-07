@@ -75,8 +75,10 @@ export function ticker(_ts, sys) {
     mouse.moved = false
     mouse.previous_x = mouse.x
     mouse.previous_y = mouse.y
+    // a new list, so one the app kept from this frame stays as it was
     let key = sys.args.inputs.key
-    delete key.typed
+    if (key.typed.length > 0)
+      key.typed = []
   }
 }
 

@@ -12,6 +12,7 @@ Notable changes to Kwilos JS. The format follows [Keep a Changelog](https://keep
 
 ### Changed
 
+- **Breaking:** `env.inputs.key.typed` is a list of every printable key pressed since the previous frame, in order, and empty when there are none. It was a single key, so a key typed in the same frame as another was lost.
 - An error thrown during a frame without `on_error` detaches Kwilos, removing its input listeners as well as stopping the frames.
 
 ## [0.6.0] - 2026-10-05

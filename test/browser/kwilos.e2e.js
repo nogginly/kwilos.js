@@ -56,7 +56,7 @@ test.describe('input', () => {
       window.typed = []
       window.kw = await window.kwilos.Kwilos.attach('#c', (env) => {
         window.env = env
-        if (env.inputs.key.typed) window.typed.push(env.inputs.key.typed.text)
+        window.typed.push(...env.inputs.key.typed.map(k => k.text))
         return null
       }, { context_menu: false })
     })
@@ -93,14 +93,20 @@ test.describe('input', () => {
       pressed: { KeyA: { code: 'KeyA', text: 'A' } },
     })
 
-    // `typed` holds one key per frame, so wait for each to be seen
+    // keys typed faster than the frames are all kept, in order
     await page.keyboard.up('KeyA')
     await page.keyboard.up('Shift')
-    await page.keyboard.press('KeyH')
-    await expect.poll(typed).toEqual(['A', 'h'])
-    await page.keyboard.press('ArrowLeft')
-    await page.keyboard.press('KeyI')
+    await page.keyboard.type('hi')
     await expect.poll(typed).toEqual(['A', 'h', 'i'])
+  })
+
+  test('keeps every key typed within a single frame', async ({ page }) => {
+    // Both key presses run in one task, so no frame can come between them
+    await page.evaluate(() => {
+      for (const [code, key] of [['KeyH', 'h'], ['KeyI', 'i']])
+        document.dispatchEvent(new KeyboardEvent('keydown', { code, key }))
+    })
+    await expect.poll(() => page.evaluate(() => window.typed)).toEqual(['h', 'i'])
   })
 
   test('releases buttons and keys when the window loses focus', async ({ page }) => {

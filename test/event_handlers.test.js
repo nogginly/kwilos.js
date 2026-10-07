@@ -60,14 +60,24 @@ describe('keyboard input', () => {
     expect(sys.args.inputs.key).toMatchObject({
       shift: true,
       pressed: { KeyA: { code: 'KeyA', text: 'A' } },
-      typed: { code: 'KeyA', text: 'A' },
+      typed: [{ code: 'KeyA', text: 'A' }],
     })
   })
 
   it('records only printable keys as typed', () => {
     on_document.keydown(key('ArrowUp', 'ArrowUp'))
     expect(sys.args.inputs.key.pressed).toHaveProperty('ArrowUp')
-    expect(sys.args.inputs.key.typed).toBeUndefined()
+    expect(sys.args.inputs.key.typed).toEqual([])
+  })
+
+  it('records every key typed between frames, in order', () => {
+    on_document.keydown(key('KeyH', 'h'))
+    on_document.keydown(key('ArrowLeft', 'ArrowLeft'))
+    on_document.keydown(key('KeyI', 'i'))
+    expect(sys.args.inputs.key.typed).toEqual([
+      { code: 'KeyH', text: 'h' },
+      { code: 'KeyI', text: 'i' },
+    ])
   })
 
   it('forgets a key once released', () => {
