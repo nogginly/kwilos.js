@@ -74,10 +74,10 @@ function _document_key_down(sys_key, event) {
     text: event.key
   }
   if (event.key.length == 1) {
-    sys_key.typed = {
+    sys_key.typed.push({
       code: event.code,
       text: event.key
-    }
+    })
   }
 }
 

@@ -68,6 +68,17 @@ describe('ticker', () => {
     })
   })
 
+  it('starts a new typed list each frame, leaving one the app kept intact', () => {
+    let kept
+    const sys = attached_system({ tick: (env) => { kept = env.inputs.key.typed; return null } })
+    sys.args.inputs.key.typed.push({ code: 'KeyA', text: 'a' })
+
+    ticker(0, sys)
+    expect(kept).toEqual([{ code: 'KeyA', text: 'a' }])
+    expect(sys.args.inputs.key.typed).toEqual([])
+    expect(sys.args.inputs.key.typed).not.toBe(kept)
+  })
+
   describe('when tick returns anything else', () => {
     it.each([undefined, false, 0, {}])('throws a TypeError for %o', (value) => {
       const sys = attached_system({ tick: () => value })
@@ -78,11 +89,11 @@ describe('ticker', () => {
     it('still resets per-frame input', () => {
       const sys = attached_system({ tick: () => undefined })
       Object.assign(sys.args.inputs.mouse, { x: 7, y: 9, moved: true })
-      sys.args.inputs.key.typed = { code: 'KeyA', text: 'a' }
+      sys.args.inputs.key.typed.push({ code: 'KeyA', text: 'a' })
 
       expect(() => ticker(0, sys)).toThrow()
       expect(sys.args.inputs.mouse).toMatchObject({ moved: false, previous_x: 7, previous_y: 9 })
-      expect(sys.args.inputs.key.typed).toBeUndefined()
+      expect(sys.args.inputs.key.typed).toEqual([])
     })
   })
 })

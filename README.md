@@ -150,7 +150,7 @@ The runtime environment object contains properties that are grouped as follows:
 &emsp;`.pressed[C]` | Present while the key with [key code](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_code_values) `C` is held, e.g. `.pressed.KeyA` or `.pressed.ArrowUp`
 &emsp;&emsp;`.code` | The key code, `C`
 &emsp;&emsp;`.text` | The character or key name produced, e.g. `"a"`, `"A"` or `"ArrowUp"`
-&emsp;`.typed` | Present only in the frame in which a printable key was pressed, with the same `.code` and `.text` properties
+&emsp;`.typed` | The printable keys pressed since the previous frame, in order, each with the same `.code` and `.text` properties; empty when there are none
 
 For example, to move a circle with the arrow keys, and turn it red while the left button is held:
 

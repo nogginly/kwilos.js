@@ -29,6 +29,7 @@ export function create_system() {
         },
         key: {
           pressed: {},
+          typed: [],
         }
       }
     },

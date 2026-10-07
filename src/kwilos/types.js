@@ -64,7 +64,7 @@
  * Keyboard state.
  * @typedef {object} Keyboard
  * @property {Record<string, KeyPress>} pressed Keys held down, by key code, e.g. `pressed.KeyA`
- * @property {KeyPress} [typed] A printable key pressed during this frame only
+ * @property {KeyPress[]} typed Printable keys pressed since the previous frame, in order; empty when there are none
  * @property {boolean} [alt]
  * @property {boolean} [shift]
  * @property {boolean} [ctrl]
