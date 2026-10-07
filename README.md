@@ -16,7 +16,8 @@ Clone the repo and then ...
 
 - Run `npm install` to pull the dev dependencies
 - Run `npm run build` to make the bundled releases in `_dist/`: `kwilos.mjs`, minified `kwilos.min.mjs`, and TypeScript declarations in `types/`
-- Run `npm test` to run the tests, and `npm run typecheck` to check the types
+- Run `npm test` to run the unit tests, and `npm run typecheck` to check the types
+- Run `npm run test-browser` to run the browser tests, which draw the samples and drive Kwilos in Chromium with [Playwright](https://playwright.dev). The first time, run `npx playwright install --only-shell chromium` to download the headless browser, or set `CHROMIUM_PATH` to use a Chromium you already have
 
 The source in `src/` runs in the browser as is, without a build. To try the samples, serve the repository root with any static web server, for example `python3 -m http.server`, and open `samples/`.
 

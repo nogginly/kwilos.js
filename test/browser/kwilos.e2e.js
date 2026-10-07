@@ -1,0 +1,180 @@
+import { test, expect } from '@playwright/test'
+import { open_harness, expect_pixel, pixel, frames, page_errors } from './helpers.js'
+
+const RED = [255, 0, 0, 255]
+
+test.beforeEach(async ({ page }) => open_harness(page))
+
+test.describe('attaching', () => {
+  test('throws a TypeError when no canvas matches', async ({ page }) => {
+    const message = await page.evaluate(() =>
+      window.kwilos.Kwilos.attach('#missing', () => []).catch(error => `${error.name}: ${error.message}`))
+    expect(message).toBe('TypeError: Kwilos: no canvas found for "#missing"')
+  })
+
+  test('rejects when a preloaded image fails to load', async ({ page }) => {
+    const message = await page.evaluate(() =>
+      window.kwilos.Kwilos.attach('#c', () => [], { preload_images: ['missing.png'] }).catch(error => error.message))
+    expect(message).toBe('Kwilos: could not load image missing.png')
+  })
+})
+
+test.describe('drawing', () => {
+  test('redraws the last scene after the canvas is resized', async ({ page }) => {
+    await page.evaluate(async () => {
+      const { Kwilos, rect } = window.kwilos
+      let drawn = false
+      await Kwilos.attach('#c', () => {
+        if (drawn) return null
+        drawn = true
+        return [rect({ x: 0, y: 0, w: 1000, h: 1000, fill_color: 'red' })]
+      })
+    })
+    await expect_pixel(page, '#c', 5, 5, RED)
+
+    await page.evaluate(() => { document.querySelector('#c').width = 300 })
+    await expect_pixel(page, '#c', 250, 5, RED)
+  })
+
+  test('draws a container clipped to its size', async ({ page }) => {
+    await page.evaluate(async () => {
+      const { Kwilos, container, rect } = window.kwilos
+      await Kwilos.attach('#c', () => [
+        container({ x: 50, y: 50, w: 20, h: 20, clip: true, scene: [
+          rect({ x: 0, y: 0, w: 100, h: 100, fill_color: 'red' }),
+        ]}),
+      ])
+    })
+    await expect_pixel(page, '#c', 60, 60, RED)
+    expect(await pixel(page, '#c', 80, 80)).toEqual([0, 0, 0, 255])
+  })
+})
+
+test.describe('input', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(async () => {
+      window.typed = []
+      window.kw = await window.kwilos.Kwilos.attach('#c', (env) => {
+        window.env = env
+        if (env.inputs.key.typed) window.typed.push(env.inputs.key.typed.text)
+        return null
+      }, { context_menu: false })
+    })
+  })
+
+  const mouse = (page) => page.evaluate(() => ({ ...window.env.inputs.mouse }))
+
+  test('tracks the pointer over the canvas', async ({ page }) => {
+    await page.mouse.move(30, 40)
+    await expect.poll(() => mouse(page)).toMatchObject({ x: 30, y: 40 })
+  })
+
+  test('keeps a button pressed until released, even outside the canvas', async ({ page }) => {
+    await page.mouse.move(100, 100)
+    await page.mouse.down()
+    await expect.poll(() => mouse(page)).toMatchObject({ button_left: true })
+
+    await page.mouse.move(400, 400)
+    await frames(page)
+    expect(await mouse(page)).toMatchObject({ button_left: true })
+
+    await page.mouse.up()
+    await expect.poll(() => mouse(page)).toMatchObject({ button_left: false })
+  })
+
+  test('records held keys and typed characters', async ({ page }) => {
+    const typed = () => page.evaluate(() => window.typed)
+
+    await page.keyboard.down('Shift')
+    await page.keyboard.down('KeyA')
+    await expect.poll(typed).toEqual(['A'])
+    expect(await page.evaluate(() => window.env.inputs.key)).toMatchObject({
+      shift: true,
+      pressed: { KeyA: { code: 'KeyA', text: 'A' } },
+    })
+
+    // `typed` holds one key per frame, so wait for each to be seen
+    await page.keyboard.up('KeyA')
+    await page.keyboard.up('Shift')
+    await page.keyboard.press('KeyH')
+    await expect.poll(typed).toEqual(['A', 'h'])
+    await page.keyboard.press('ArrowLeft')
+    await page.keyboard.press('KeyI')
+    await expect.poll(typed).toEqual(['A', 'h', 'i'])
+  })
+
+  test('releases buttons and keys when the window loses focus', async ({ page }) => {
+    await page.mouse.move(100, 100)
+    await page.mouse.down()
+    await page.keyboard.down('KeyA')
+    await expect.poll(() => mouse(page)).toMatchObject({ button_left: true })
+
+    await page.evaluate(() => window.dispatchEvent(new Event('blur')))
+    await expect.poll(() => page.evaluate(() => window.env.inputs)).toMatchObject({
+      mouse: { button_left: false },
+      key: { pressed: {} },
+    })
+  })
+
+  test('suppresses the context menu when asked', async ({ page }) => {
+    const prevented = await page.evaluate(() => {
+      const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true })
+      document.querySelector('#c').dispatchEvent(event)
+      return event.defaultPrevented
+    })
+    expect(prevented).toBe(true)
+  })
+})
+
+test.describe('lifecycle', () => {
+  const count_frames = (config) => async ({ page }) => page.evaluate(async (config) => {
+    window.frames_run = 0
+    window.handled = []
+    if (config.on_error) config.on_error = (error) => window.handled.push(error.message)
+    window.kw = await window.kwilos.Kwilos.attach('#c', () => {
+      window.frames_run++
+      if (config.fail) throw new Error('tick failed')
+      return []
+    }, config)
+  }, config)
+
+  const frames_run = (page) => page.evaluate(() => window.frames_run)
+
+  test('detach stops the frames and the input', async ({ page }) => {
+    await page.evaluate(async () => {
+      window.frames_run = 0
+      window.kw = await window.kwilos.Kwilos.attach('#c', (env) => {
+        window.frames_run++
+        window.env = env
+        return []
+      })
+    })
+    await page.mouse.move(10, 10)
+    await expect.poll(() => page.evaluate(() => window.env.inputs.mouse.x)).toBe(10)
+
+    await page.evaluate(() => window.kw.detach())
+    const at_detach = await frames_run(page)
+    await page.mouse.move(50, 50)
+    await frames(page, 5)
+
+    expect(await frames_run(page)).toBe(at_detach)
+    expect(await page.evaluate(() => window.env.inputs.mouse.x)).toBe(10)
+    await page.evaluate(() => window.kw.detach())   // a second detach does nothing
+  })
+
+  test('an error without on_error stops the frames and reaches the console', async ({ page }) => {
+    const errors = page_errors(page)
+    await count_frames({ fail: true })({ page })
+    await expect.poll(() => errors).toEqual(['tick failed'])
+    await frames(page, 5)
+    expect(await frames_run(page)).toBe(1)
+  })
+
+  test('on_error receives errors and the frames continue', async ({ page }) => {
+    const errors = page_errors(page)
+    await count_frames({ fail: true, on_error: true })({ page })
+    await expect.poll(() => frames_run(page)).toBeGreaterThan(3)
+    expect((await page.evaluate(() => window.handled)).length).toBeGreaterThan(3)
+    expect(errors).toEqual([])
+  })
+})
