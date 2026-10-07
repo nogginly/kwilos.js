@@ -3,7 +3,7 @@
 // Types shared across modules; this module has no runtime content.
 
 /**
- * @import { Scene } from './shapes.js'
+ * @import { Scene, Entity } from './shapes.js'
  */
 
 /**
@@ -39,6 +39,14 @@
  * @typedef {object} Env
  * @property {Inputs} inputs Input state as of this frame
  * @property {Record<string, any>} state Data the app keeps between frames
+ * @property {(point?: Point) => Entity | null} hit Returns the shape drawn topmost at the point, by default the mouse position, in the scene last drawn; null if there is none
+ */
+
+/**
+ * A position in canvas coordinates.
+ * @typedef {object} Point
+ * @property {number} x
+ * @property {number} y
  */
 
 /**
@@ -48,7 +56,8 @@
  */
 
 /**
- * Pointer state, in canvas coordinates.
+ * Pointer state, in canvas pixels, even when the canvas is displayed at
+ * another size.
  * @typedef {object} Mouse
  * @property {number} x
  * @property {number} y

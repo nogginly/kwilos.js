@@ -126,15 +126,36 @@ Factory | Required | Optional
 
 A `circle`, `rect` or `label` with neither `fill_color` nor `stroke_color` draws nothing. A `container` draws its `scene` with the origin moved to its `x` and `y`, which makes containers useful as layers: the containers in a scene are drawn in order, each one over the last.
 
+### Hit-Testing
+
+Two functions tell which shapes lie under a point, such as the mouse. Both count a shape's whole area, whether or not it is filled, so a shape with neither `fill_color` nor `stroke_color` makes an invisible hit area.
+
+`env.hit(point)` returns the shape drawn topmost at the point in the scene last drawn, which is what the user sees, or `null`. Without a point, it tests the mouse position. It allows for containers' origins and clips, measures labels by their text, and sizes images from their loaded files. It returns the shape object from the scene. Every shape accepts an `id`, which Kwilos ignores, so the simplest test is by `id`. Comparing with `===` works only with the very object that was drawn, not a copy such as `{ ...shape }`:
+
+```js
+import { Kwilos, circle, rect } from "kwilos.js"
+
+function tick(env) {
+  const pressed = env.inputs.mouse.button_left && env.hit()?.id === 'button'
+  return [
+    rect({ x: 0, y: 0, w: 200, h: 200, fill_color: 'navy' }),
+    circle({ id: 'button', x: 100, y: 100, radius: 30, fill_color: pressed ? 'orange' : 'red' }),
+  ]
+}
+```
+
+`contains(shape, point)` tells whether one shape contains the point, and works anywhere, without Kwilos running. It measures shapes from their own properties only: circles, rects, and images and tiles with `w` and `h`. For a label, or an image or tile sized by its file, it throws a `TypeError`; use `env.hit` for those.
+
 ### The `env` Parameter
 
 The runtime environment object contains properties that are grouped as follows:
 - `env.inputs` contains the properties to access input event information
 - `env.state` is an object into which the app can store data that it can expect to be available across repeated calls to the `tick` handler.
+- `env.hit(point)` returns the shape under a point, by default the mouse position; see [Hit-Testing](#hit-testing).
 
 #### Inputs
 
-`env.inputs` holds the input state as of the current frame. Mouse positions are in canvas coordinates, and only movement over the canvas is tracked. Keys are heard across the whole page, so every attached canvas sees the same keyboard state. When the window loses focus, every button and key is released.
+`env.inputs` holds the input state as of the current frame. Mouse positions are in canvas pixels, even when the canvas is displayed at another size with CSS, and only movement over the canvas is tracked. Keys are heard across the whole page, so every attached canvas sees the same keyboard state. When the window loses focus, every button and key is released.
 
 `env.inputs` | Description
 ----|----

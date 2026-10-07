@@ -3,6 +3,7 @@
 import { BAL } from './bal.js'
 import { setup_event_handlers } from './event_handlers.js';
 import { frame } from './ticker.js';
+import { hit } from './hits.js';
 
 /**
  * @import { System, App, Config, Tick } from './types.js'
@@ -11,7 +12,8 @@ import { frame } from './ticker.js';
 // Returns the per-canvas system state, before a canvas is attached
 /** @returns {System} */
 export function create_system() {
-  return {
+  /** @type {System} */
+  const system = {
     canvas: {
       width: 400,
       height: 400,
@@ -22,6 +24,7 @@ export function create_system() {
     },
     args: {
       state: {},
+      hit: (point) => hit(system, point ?? system.args.inputs.mouse),
       inputs: {
         mouse: {
           x: 0,
@@ -39,6 +42,7 @@ export function create_system() {
       detach: () => {}
     })
   }
+  return system
 }
 
 // 

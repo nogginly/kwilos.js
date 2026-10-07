@@ -3,6 +3,7 @@
 import { create_system, initialize_with_canvas } from "./kwilos/initialize.js";
 
 export { circle, rect, label, image, tile, container } from "./kwilos/shapes.js";
+export { contains } from "./kwilos/hits.js";
 
 /**
  * @typedef {import("./kwilos/types.js").Tick} Tick
@@ -13,6 +14,7 @@ export { circle, rect, label, image, tile, container } from "./kwilos/shapes.js"
  * @typedef {import("./kwilos/types.js").Mouse} Mouse
  * @typedef {import("./kwilos/types.js").Keyboard} Keyboard
  * @typedef {import("./kwilos/types.js").KeyPress} KeyPress
+ * @typedef {import("./kwilos/types.js").Point} Point
  * @typedef {import("./kwilos/shapes.js").Scene} Scene
  * @typedef {import("./kwilos/shapes.js").Entity} Entity
  * @typedef {import("./kwilos/shapes.js").Circle} Circle
