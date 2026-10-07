@@ -19,7 +19,7 @@ export function setup_event_handlers(system, canvas) {
 
   /** @type {import('./bal.js').EventMapping[]} */
   const canvas_events = [
-    { name: 'mousemove', handler: (ev) => _canvas_mouse_moved(sys_mouse, ev) },
+    { name: 'mousemove', handler: (ev) => _canvas_mouse_moved(sys_mouse, canvas, ev) },
     { name: 'mousedown', handler: (ev) => _canvas_mouse_pressed(sys_mouse, ev) },
   ]
   if (system.app.config.context_menu === false)
@@ -94,12 +94,15 @@ function _document_key_up(sys_key, event) {
 }
 
 /**
+ * Records the pointer position in canvas pixels, scaling from the size the
+ * canvas is displayed at.
  * @param {Mouse} sys_mouse
+ * @param {HTMLCanvasElement} canvas
  * @param {MouseEvent} event
  */
-function _canvas_mouse_moved(sys_mouse, event) {
-  sys_mouse.x = event.offsetX
-  sys_mouse.y = event.offsetY
+function _canvas_mouse_moved(sys_mouse, canvas, event) {
+  sys_mouse.x = event.offsetX * (canvas.clientWidth ? canvas.width / canvas.clientWidth : 1)
+  sys_mouse.y = event.offsetY * (canvas.clientHeight ? canvas.height / canvas.clientHeight : 1)
   sys_mouse.moved = true
 }
 

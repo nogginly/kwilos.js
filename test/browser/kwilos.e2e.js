@@ -132,6 +132,55 @@ test.describe('input', () => {
   })
 })
 
+test.describe('hit-testing', () => {
+  const SHEET = '../../../samples/01-different-types/assets/female_tilesheet.png'
+
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(async (SHEET) => {
+      const { Kwilos, rect, circle, label, image, container } = window.kwilos
+      window.kw = await Kwilos.attach('#c', (env) => {
+        window.env = env
+        return [
+          rect({ id: 'background', x: 0, y: 0, w: 200, h: 200, fill_color: 'navy' }),
+          image({ id: 'sheet', path: SHEET, x: 0, y: 150, w: 40, h: 40 }),
+          label({ id: 'title', x: 100, y: 40, text: 'Kwilos', font_size: 20, fill_color: 'white' }),
+          container({ x: 100, y: 100, w: 40, h: 40, clip: true, scene: [
+            circle({ id: 'button', x: 20, y: 20, radius: 30, fill_color: 'red' }),
+          ]}),
+        ]
+      }, { preload_images: [SHEET] })
+    }, SHEET)
+    await frames(page)
+  })
+
+  const hit_at = (page, x, y) => page.evaluate(([x, y]) => window.env.hit({ x, y })?.id ?? null, [x, y])
+
+  test('finds the shape on top, through containers and their clips', async ({ page }) => {
+    expect(await hit_at(page, 120, 120)).toBe('button')
+    expect(await hit_at(page, 95, 120)).toBe('background')   // in the circle, outside the clip
+    expect(await hit_at(page, 20, 170)).toBe('sheet')
+    expect(await hit_at(page, 300, 300)).toBeNull()
+  })
+
+  test('measures a label by the ink of its text', async ({ page }) => {
+    expect(await hit_at(page, 100, 32)).toBe('title')
+    expect(await hit_at(page, 100, 5)).toBe('background')
+    expect(await hit_at(page, 10, 32)).toBe('background')
+  })
+
+  test('tests the mouse position by default', async ({ page }) => {
+    await page.mouse.move(120, 120)
+    await expect.poll(() => page.evaluate(() => window.env.hit()?.id)).toBe('button')
+  })
+
+  test('works on a canvas displayed at another size', async ({ page }) => {
+    await page.evaluate(() => { document.querySelector('#c').style.width = '400px'; document.querySelector('#c').style.height = '400px' })
+    await page.mouse.move(240, 240)   // canvas pixel (120, 120)
+    await expect.poll(() => page.evaluate(() => [window.env.inputs.mouse.x, window.env.inputs.mouse.y])).toEqual([120, 120])
+    expect(await page.evaluate(() => window.env.hit()?.id)).toBe('button')
+  })
+})
+
 test.describe('lifecycle', () => {
   const count_frames = (config) => async ({ page }) => page.evaluate(async (config) => {
     window.frames_run = 0

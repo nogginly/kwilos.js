@@ -16,6 +16,7 @@
 /**
  * @typedef {object} Circle
  * @property {'circle'} type
+ * @property {string | number} [id] Identifies the shape, e.g. to compare with what `env.hit` returns; Kwilos does not use it
  * @property {number} x Centre
  * @property {number} y Centre
  * @property {number} radius
@@ -26,6 +27,7 @@
 /**
  * @typedef {object} Rect
  * @property {'rect'} type
+ * @property {string | number} [id] Identifies the shape, e.g. to compare with what `env.hit` returns; Kwilos does not use it
  * @property {number} x Top-left corner
  * @property {number} y Top-left corner
  * @property {number} w
@@ -37,6 +39,7 @@
 /**
  * @typedef {object} Label
  * @property {'label'} type
+ * @property {string | number} [id] Identifies the shape, e.g. to compare with what `env.hit` returns; Kwilos does not use it
  * @property {number} x Anchor point, see `text_align`
  * @property {number} y Anchor point, see `text_baseline`
  * @property {string} text
@@ -51,6 +54,7 @@
 /**
  * @typedef {object} Image
  * @property {'image'} type
+ * @property {string | number} [id] Identifies the shape, e.g. to compare with what `env.hit` returns; Kwilos does not use it
  * @property {string} path Image URL; preload it via the `preload_images` config to draw it on the first frame
  * @property {number} x Top-left corner
  * @property {number} y Top-left corner
@@ -67,6 +71,7 @@
  * `tile_rows` and `tile_cols`.
  * @typedef {object} Tile
  * @property {'tile'} type
+ * @property {string | number} [id] Identifies the shape, e.g. to compare with what `env.hit` returns; Kwilos does not use it
  * @property {string} path Tile sheet URL
  * @property {number} tile_index Counting left to right, then top to bottom, from 0
  * @property {number} x Top-left corner
@@ -83,6 +88,7 @@
  * A layer: draws its `scene` with the origin moved to (`x`, `y`).
  * @typedef {object} Container
  * @property {'container'} type
+ * @property {string | number} [id] Identifies the shape, e.g. to compare with what `env.hit` returns; Kwilos does not use it
  * @property {Scene} scene
  * @property {number} [x] Defaults to 0
  * @property {number} [y] Defaults to 0

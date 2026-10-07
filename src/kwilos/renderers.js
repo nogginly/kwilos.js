@@ -89,24 +89,30 @@ function _render_container(sys, { x = 0, y = 0, w, h, clip, scene }) {
 }
 
 /**
+ * Returns the font a label is drawn in: its own `font_size` and
+ * `font_name`, if either is given, otherwise the default font.
+ * @param {System} sys
+ * @param {Label} label
+ * @returns {string}
+ */
+export function label_font(sys, { font_name, font_size }) {
+  if (font_size == null && font_name == null)
+    return sys.fonts.default
+  return `${font_size || 14}pt ${font_name || "serif"}`
+}
+
+/**
  * @param {System} sys
  * @param {Label} entity
  */
-function _render_label(sys, { x, y, text, font_name, font_size, fill_color, stroke_color, text_align, text_baseline }) {
-  let restore_default_font = false  // assume we don't need to
+function _render_label(sys, entity) {
+  const { x, y, text, fill_color, stroke_color, text_align, text_baseline } = entity
   let draw = sys.app.draw_context
 
   draw.beginPath()
   draw.textAlign = text_align || 'center'
   draw.textBaseline = text_baseline || 'alphabetic'
-
-  // don't change font if we don't need to
-  if (font_size != null || font_name != null) {
-    font_size ||= 14
-    font_name ||= "serif"
-    draw.font = `${font_size}pt ${font_name}`
-    restore_default_font = true
-  }
+  draw.font = label_font(sys, entity)
 
   if (fill_color != null) {
     draw.fillStyle = fill_color
@@ -117,9 +123,7 @@ function _render_label(sys, { x, y, text, font_name, font_size, fill_color, stro
     draw.strokeText(text, x, y)
   }
 
-  if (restore_default_font) {
-    draw.font = sys.fonts.default
-  }
+  draw.font = sys.fonts.default
 }
 
 /**

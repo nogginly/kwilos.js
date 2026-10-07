@@ -40,6 +40,12 @@ describe('mouse input', () => {
     expect(sys.args.inputs.mouse).toMatchObject({ x: 12, y: 34, moved: true })
   })
 
+  it('scales the position to canvas pixels when the canvas is displayed at another size', () => {
+    Object.assign(sys.app.canvas, { width: 400, height: 200, clientWidth: 800, clientHeight: 400 })
+    on_canvas.mousemove({ offsetX: 300, offsetY: 100 })
+    expect(sys.args.inputs.mouse).toMatchObject({ x: 150, y: 50 })
+  })
+
   it('presses buttons on the canvas', () => {
     on_canvas.mousedown({ button: LEFT })
     on_canvas.mousedown({ button: RIGHT })
