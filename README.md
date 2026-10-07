@@ -166,12 +166,29 @@ The runtime environment object contains properties that are grouped as follows:
 &emsp;`.button_left` | `true` while the left button is pressed; pressed on the canvas, released anywhere
 &emsp;`.button_middle` | `true` while the middle button (or device equivalent) is pressed
 &emsp;`.button_right` | `true` while the right button (or device equivalent) is pressed
+&emsp;`.clicks` | The clicks on the canvas since the previous frame, in order; empty when there are none. A click is a button pressed and released over the canvas.
+&emsp;&emsp;`.button` | `"left"`, `"middle"` or `"right"`
+&emsp;&emsp;`.x`, `.y` | Where the button was released, in canvas pixels
 `.key` | Keyboard state
 &emsp;`.alt`, `.shift`, `.ctrl`, `.meta` | `true` while the modifier key is held
 &emsp;`.pressed[C]` | Present while the key with [key code](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_code_values) `C` is held, e.g. `.pressed.KeyA` or `.pressed.ArrowUp`
 &emsp;&emsp;`.code` | The key code, `C`
 &emsp;&emsp;`.text` | The character or key name produced, e.g. `"a"`, `"A"` or `"ArrowUp"`
 &emsp;`.typed` | The printable keys pressed since the previous frame, in order, each with the same `.code` and `.text` properties; empty when there are none
+
+The `button_` properties are sampled once per frame, so a click quicker than a frame may never show in them; it always appears in `clicks`. Use `button_left` for something held, such as a drag, and `clicks` for something done once, such as pressing a button:
+
+```js
+function tick(env) {
+  const { clicks } = env.inputs.mouse
+  env.state.count ??= 0
+  env.state.count += clicks.filter(click => env.hit(click)?.id === 'add').length
+  return [
+    rect({ id: 'add', x: 10, y: 10, w: 80, h: 30, fill_color: 'green' }),
+    label({ x: 50, y: 70, text: `Clicked ${env.state.count} times`, fill_color: 'white' }),
+  ]
+}
+```
 
 For example, to move a circle with the arrow keys, and turn it red while the left button is held:
 

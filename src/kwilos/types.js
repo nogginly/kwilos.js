@@ -64,9 +64,18 @@
  * @property {number} [previous_x] `x` as of the previous frame
  * @property {number} [previous_y] `y` as of the previous frame
  * @property {boolean} [moved] The pointer moved since the previous frame; with a button pressed, this is a drag
- * @property {boolean} [button_left]
+ * @property {boolean} [button_left] Held down, as of this frame; a click shorter than a frame shows only in `clicks`
  * @property {boolean} [button_middle]
  * @property {boolean} [button_right]
+ * @property {Click[]} clicks Clicks on the canvas since the previous frame, in order; empty when there are none
+ */
+
+/**
+ * A button pressed and released over the canvas.
+ * @typedef {object} Click
+ * @property {'left' | 'middle' | 'right'} button
+ * @property {number} x Where the button was released, in canvas pixels
+ * @property {number} y Where the button was released, in canvas pixels
  */
 
 /**

@@ -46,6 +46,28 @@ describe('mouse input', () => {
     expect(sys.args.inputs.mouse).toMatchObject({ x: 150, y: 50 })
   })
 
+  it('records each click with its button and position, in order', () => {
+    on_canvas.click({ button: 0, offsetX: 10, offsetY: 20 })
+    on_canvas.auxclick({ button: 2, offsetX: 30, offsetY: 40 })
+    on_canvas.auxclick({ button: 1, offsetX: 50, offsetY: 60 })
+    expect(sys.args.inputs.mouse.clicks).toEqual([
+      { button: 'left', x: 10, y: 20 },
+      { button: 'right', x: 30, y: 40 },
+      { button: 'middle', x: 50, y: 60 },
+    ])
+  })
+
+  it('ignores clicks of other buttons, such as Back', () => {
+    on_canvas.auxclick({ button: 3, offsetX: 10, offsetY: 20 })
+    expect(sys.args.inputs.mouse.clicks).toEqual([])
+  })
+
+  it('scales a click to canvas pixels', () => {
+    Object.assign(sys.app.canvas, { width: 400, height: 200, clientWidth: 800, clientHeight: 400 })
+    on_canvas.click({ button: 0, offsetX: 300, offsetY: 100 })
+    expect(sys.args.inputs.mouse.clicks).toEqual([{ button: 'left', x: 150, y: 50 }])
+  })
+
   it('presses buttons on the canvas', () => {
     on_canvas.mousedown({ button: LEFT })
     on_canvas.mousedown({ button: RIGHT })

@@ -68,6 +68,17 @@ describe('ticker', () => {
     })
   })
 
+  it('starts a new clicks list each frame, leaving one the app kept intact', () => {
+    let kept
+    const sys = attached_system({ tick: (env) => { kept = env.inputs.mouse.clicks; return null } })
+    sys.args.inputs.mouse.clicks.push({ button: 'left', x: 1, y: 2 })
+
+    ticker(0, sys)
+    expect(kept).toEqual([{ button: 'left', x: 1, y: 2 }])
+    expect(sys.args.inputs.mouse.clicks).toEqual([])
+    expect(sys.args.inputs.mouse.clicks).not.toBe(kept)
+  })
+
   it('starts a new typed list each frame, leaving one the app kept intact', () => {
     let kept
     const sys = attached_system({ tick: (env) => { kept = env.inputs.key.typed; return null } })

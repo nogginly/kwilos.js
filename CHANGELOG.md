@@ -9,6 +9,7 @@ Notable changes to Kwilos JS. The format follows [Keep a Changelog](https://keep
 - `kwilos.detach()` stops the frames and removes the input listeners.
 - The `on_error` config option receives errors thrown during a frame, so frames continue.
 - The `context_menu` config option, which when `false` suppresses the browser's context menu over the canvas.
+- `env.inputs.mouse.clicks` lists the clicks on the canvas since the previous frame, with the button and position of each, so a click quicker than a frame is not lost.
 - Hit-testing: `env.hit(point)` returns the shape drawn topmost at a point, by default the mouse position, and `contains(shape, point)` tells whether a shape contains a point.
 
 ### Changed

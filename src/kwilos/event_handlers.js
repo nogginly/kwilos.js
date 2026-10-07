@@ -3,7 +3,7 @@
 import { BAL } from './bal.js'
 
 /**
- * @import { System, Keyboard, Mouse } from './types.js'
+ * @import { System, Keyboard, Mouse, Click } from './types.js'
  */
 
 /**
@@ -21,6 +21,9 @@ export function setup_event_handlers(system, canvas) {
   const canvas_events = [
     { name: 'mousemove', handler: (ev) => _canvas_mouse_moved(sys_mouse, canvas, ev) },
     { name: 'mousedown', handler: (ev) => _canvas_mouse_pressed(sys_mouse, ev) },
+    // `click` is the left button; `auxclick` the others
+    { name: 'click', handler: (ev) => _canvas_clicked(sys_mouse, canvas, ev) },
+    { name: 'auxclick', handler: (ev) => _canvas_clicked(sys_mouse, canvas, ev) },
   ]
   if (system.app.config.context_menu === false)
     canvas_events.push({ name: 'contextmenu', handler: (ev) => ev.preventDefault() })
@@ -94,16 +97,44 @@ function _document_key_up(sys_key, event) {
 }
 
 /**
- * Records the pointer position in canvas pixels, scaling from the size the
+ * Returns an event's position in canvas pixels, scaling from the size the
  * canvas is displayed at.
+ * @param {HTMLCanvasElement} canvas
+ * @param {MouseEvent} event
+ * @returns {{ x: number, y: number }}
+ */
+function _canvas_point(canvas, event) {
+  return {
+    x: event.offsetX * (canvas.clientWidth ? canvas.width / canvas.clientWidth : 1),
+    y: event.offsetY * (canvas.clientHeight ? canvas.height / canvas.clientHeight : 1),
+  }
+}
+
+/**
  * @param {Mouse} sys_mouse
  * @param {HTMLCanvasElement} canvas
  * @param {MouseEvent} event
  */
 function _canvas_mouse_moved(sys_mouse, canvas, event) {
-  sys_mouse.x = event.offsetX * (canvas.clientWidth ? canvas.width / canvas.clientWidth : 1)
-  sys_mouse.y = event.offsetY * (canvas.clientHeight ? canvas.height / canvas.clientHeight : 1)
+  const { x, y } = _canvas_point(canvas, event)
+  sys_mouse.x = x
+  sys_mouse.y = y
   sys_mouse.moved = true
+}
+
+/** @type {Record<number, Click['button']>} */
+const BUTTON_NAMES = { 0: 'left', 1: 'middle', 2: 'right' }
+
+/**
+ * Records a click with the button's name and where it was released.
+ * @param {Mouse} sys_mouse
+ * @param {HTMLCanvasElement} canvas
+ * @param {MouseEvent} event
+ */
+function _canvas_clicked(sys_mouse, canvas, event) {
+  const button = BUTTON_NAMES[event.button]
+  if (button)
+    sys_mouse.clicks.push({ button, ..._canvas_point(canvas, event) })
 }
 
 /**

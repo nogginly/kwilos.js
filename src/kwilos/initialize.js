@@ -28,7 +28,8 @@ export function create_system() {
       inputs: {
         mouse: {
           x: 0,
-          y: 0
+          y: 0,
+          clicks: [],
         },
         key: {
           pressed: {},

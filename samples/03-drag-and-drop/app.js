@@ -15,10 +15,13 @@
 //    character.
 //
 // 5. The Reset button is a rect and a label with the same `id`, so the
-//    text and the box around it respond alike.
+//    text and the box around it respond alike. It acts on
+//    `env.inputs.mouse.clicks`, which records every click, even one too
+//    quick for `button_left` to show; dragging uses `button_left`, as it
+//    needs to know the button is still held.
 //
-// 6. Return `null` when the mouse has not moved and no button has
-//    changed, so nothing is redrawn.
+// 6. Return `null` when the mouse has not moved, no button has changed
+//    and there are no clicks, so nothing is redrawn.
 //
 
 import { Kwilos, container, circle, image, label, rect, tile } from "../../src/kwilos.js";
@@ -54,15 +57,16 @@ function tick(env) {
   const first_frame = state.was_pressed === undefined
   state.was_pressed = !!mouse.button_left
 
-  if (!first_frame && !mouse.moved && !pressed && !released)
+  if (!first_frame && !mouse.moved && !pressed && !released && mouse.clicks.length === 0)
     return null
 
   const under_mouse = env.hit()
 
-  if (pressed && under_mouse?.id === 'reset') {
+  if (mouse.clicks.some(click => click.button === 'left' && env.hit(click)?.id === 'reset')) {
     characters = state.characters = starting_positions()
   }
-  else if (pressed && under_mouse?.id?.toString().startsWith('character')) {
+
+  if (pressed && under_mouse?.id?.toString().startsWith('character')) {
     // Pick it up where it was grabbed, and bring it to the front
     const picked = characters.find(c => c.id === under_mouse.id)
     if (picked) {

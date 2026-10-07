@@ -54,9 +54,11 @@ test.describe('input', () => {
   test.beforeEach(async ({ page }) => {
     await page.evaluate(async () => {
       window.typed = []
+      window.clicks = []
       window.kw = await window.kwilos.Kwilos.attach('#c', (env) => {
         window.env = env
         window.typed.push(...env.inputs.key.typed.map(k => k.text))
+        window.clicks.push(...env.inputs.mouse.clicks)
         return null
       }, { context_menu: false })
     })
@@ -80,6 +82,44 @@ test.describe('input', () => {
 
     await page.mouse.up()
     await expect.poll(() => mouse(page)).toMatchObject({ button_left: false })
+  })
+
+  const clicks = (page) => page.evaluate(() => window.clicks)
+
+  test('records a click too quick for the button state to show', async ({ page }) => {
+    await page.mouse.click(30, 40)
+    await expect.poll(() => clicks(page)).toEqual([{ button: 'left', x: 30, y: 40 }])
+  })
+
+  test('records right and middle clicks', async ({ page }) => {
+    await page.mouse.click(10, 20, { button: 'right' })
+    await page.mouse.click(50, 60, { button: 'middle' })
+    await expect.poll(() => clicks(page)).toEqual([
+      { button: 'right', x: 10, y: 20 },
+      { button: 'middle', x: 50, y: 60 },
+    ])
+  })
+
+  test('keeps every click within a single frame', async ({ page }) => {
+    // Both clicks run in one task, so no frame can come between them
+    await page.evaluate(() => {
+      const c = document.querySelector('#c')
+      for (const [x, y] of [[5, 6], [7, 8]])
+        c.dispatchEvent(new MouseEvent('click', { button: 0, clientX: x, clientY: y, bubbles: true }))
+    })
+    await expect.poll(() => clicks(page)).toEqual([
+      { button: 'left', x: 5, y: 6 },
+      { button: 'left', x: 7, y: 8 },
+    ])
+  })
+
+  test('does not count a press released off the canvas as a click', async ({ page }) => {
+    await page.mouse.move(100, 100)
+    await page.mouse.down()
+    await page.mouse.move(400, 400)
+    await page.mouse.up()
+    await frames(page)
+    expect(await clicks(page)).toEqual([])
   })
 
   test('records held keys and typed characters', async ({ page }) => {
