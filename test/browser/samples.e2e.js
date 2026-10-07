@@ -76,13 +76,8 @@ test.describe('samples', () => {
     await frames(page)
     expect(await fingerprint()).not.toBe(before)
 
-    // Reset, holding the button for a frame as a person would; Kwilos
-    // samples buttons once per frame, so a press and release within one
-    // frame is not seen
-    await canvas.hover({ position: { x: 530, y: 366 } })
-    await page.mouse.down()
-    await frames(page)
-    await page.mouse.up()
+    // Reset, with a click quicker than a frame
+    await canvas.click({ position: { x: 530, y: 366 } })
     // then return the mouse to where it was
     await canvas.hover({ position: { x: 300, y: 100 } })
     await expect.poll(fingerprint).toBe(before)

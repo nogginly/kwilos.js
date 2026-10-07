@@ -15,6 +15,7 @@ export { contains } from "./kwilos/hits.js";
  * @typedef {import("./kwilos/types.js").Keyboard} Keyboard
  * @typedef {import("./kwilos/types.js").KeyPress} KeyPress
  * @typedef {import("./kwilos/types.js").Point} Point
+ * @typedef {import("./kwilos/types.js").Click} Click
  * @typedef {import("./kwilos/shapes.js").Scene} Scene
  * @typedef {import("./kwilos/shapes.js").Entity} Entity
  * @typedef {import("./kwilos/shapes.js").Circle} Circle

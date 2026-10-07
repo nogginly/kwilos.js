@@ -70,12 +70,14 @@ export function ticker(_ts, sys) {
     }
   }
   finally {
-    // reset of end of frame state
+    // reset of end of frame state; lists are replaced, not emptied, so
+    // one the app kept from this frame stays as it was
     let mouse = sys.args.inputs.mouse
     mouse.moved = false
     mouse.previous_x = mouse.x
     mouse.previous_y = mouse.y
-    // a new list, so one the app kept from this frame stays as it was
+    if (mouse.clicks.length > 0)
+      mouse.clicks = []
     let key = sys.args.inputs.key
     if (key.typed.length > 0)
       key.typed = []
