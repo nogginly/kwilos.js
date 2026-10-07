@@ -44,3 +44,15 @@ export async function open_harness(page) {
   await page.goto('/test/browser/pages/harness.html')
   await page.waitForFunction(() => window.kwilos)
 }
+
+// Returns a fingerprint of every pixel in a canvas, to compare whole frames
+export function canvas_fingerprint(page, canvas) {
+  return page.evaluate(canvas => {
+    const element = document.querySelector(canvas)
+    const data = element.getContext('2d').getImageData(0, 0, element.width, element.height).data
+    let hash = 0
+    for (let i = 0; i < data.length; i++)
+      hash = (hash * 31 + data[i]) | 0
+    return hash
+  }, canvas)
+}

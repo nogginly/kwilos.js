@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { expect_pixel, pixel, pixels_unlike, frames, page_errors } from './helpers.js'
+import { expect_pixel, pixel, pixels_unlike, frames, page_errors, canvas_fingerprint } from './helpers.js'
 
 const BLACK = [0, 0, 0]
 
@@ -50,6 +50,42 @@ test.describe('samples', () => {
     await page.goto('/samples/02-two-canvases/index.html')
     await expect_pixel(page, '#under-canvas-02', 5, 5, [255, 255, 0, 255])
     await expect_pixel(page, '#over-canvas-02', 5, 5, [120, 255, 120, 64])
+    expect(errors).toEqual([])
+  })
+
+  test('03 drags a character, and Reset puts it back', async ({ page }) => {
+    const errors = page_errors(page)
+    await page.goto('/samples/03-drag-and-drop/index.html')
+    const canvas = page.locator('#canvas-03')
+    const fingerprint = () => canvas_fingerprint(page, '#canvas-03')
+
+    // Wait for the scene, then move the mouse over open desert; the sample
+    // redraws only when the mouse moves or a button changes
+    await expect.poll(() => pixels_unlike(page, '#canvas-03', [470, 340, 120, 50], [0, 0, 0])).toBeGreaterThan(0)
+    await canvas.hover({ position: { x: 310, y: 110 } })
+    await canvas.hover({ position: { x: 300, y: 100 } })
+    await frames(page)
+    const before = await fingerprint()
+
+    // Pick up character 1 and drop it further along
+    await canvas.hover({ position: { x: 80, y: 245 } })
+    await page.mouse.down()
+    await canvas.hover({ position: { x: 300, y: 330 } })
+    await page.mouse.up()
+    await canvas.hover({ position: { x: 300, y: 100 } })
+    await frames(page)
+    expect(await fingerprint()).not.toBe(before)
+
+    // Reset, holding the button for a frame as a person would; Kwilos
+    // samples buttons once per frame, so a press and release within one
+    // frame is not seen
+    await canvas.hover({ position: { x: 530, y: 366 } })
+    await page.mouse.down()
+    await frames(page)
+    await page.mouse.up()
+    // then return the mouse to where it was
+    await canvas.hover({ position: { x: 300, y: 100 } })
+    await expect.poll(fingerprint).toBe(before)
     expect(errors).toEqual([])
   })
 })
