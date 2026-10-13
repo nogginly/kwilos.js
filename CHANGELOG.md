@@ -4,6 +4,8 @@ Notable changes to Kwilos JS. The format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-12
+
 ### Added
 
 - Touch and pen input: `env.inputs.mouse` follows a mouse, a finger or a pen, through the browser's pointer events. A touch presses the left button where it lands; with several fingers, only the first is followed. `mouse.pointer_type` tells which it is.
