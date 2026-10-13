@@ -53,8 +53,8 @@ const template = await readFile(join(SITE, 'template.html'), 'utf8')
 
 const intro = (await readFile(join(SITE, 'index.md'), 'utf8')).replaceAll('{{version}}', version)
 await write_page('index.html', {
-  title: 'Kwilos: drawing on an HTML5 canvas',
-  description: 'Kwilos is an easy-to-use, dependency-free JavaScript toolkit for drawing on an HTML5 canvas.',
+  title: 'Kwilos.js: drawing on an HTML5 canvas',
+  description: 'Kwilos.js is an easy-to-use, dependency-free JavaScript toolkit for drawing on an HTML5 canvas.',
   nav: 'home',
   content: render(intro)
     .replace('<p>{{samples}}</p>', samples.map(sample_html).join('\n'))
@@ -64,8 +64,8 @@ await write_page('index.html', {
 // The README's API sections, with the first retitled to sit under the page's title
 const api = section(readme, '## API', '## Releasing').replace(/^## API\n/, '## Setting up\n')
 await write_page('api.html', {
-  title: 'Kwilos API',
-  description: 'The Kwilos API: attaching to a canvas, the tick function, shapes, hit-testing and input.',
+  title: 'Kwilos.js API',
+  description: 'The Kwilos.js API: attaching to a canvas, the tick function, shapes, hit-testing and input.',
   nav: 'api',
   content: `<h1 id="api">API</h1>\n${toc(api)}\n${render(api)}`,
 })

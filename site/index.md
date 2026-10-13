@@ -1,4 +1,4 @@
-# Kwilos
+# Kwilos.js
 
 <p class="lede">An easy-to-use, dependency-free JavaScript toolkit for drawing on an HTML5 canvas.</p>
 
@@ -22,7 +22,7 @@ The name is a mash-up of *quill* and *kalos*, Greek for beautiful, with some pho
 
 ## Samples
 
-Each sample runs below, using Kwilos {{version}} from the CDN. Switch to **Source** to see its code.
+Each sample runs below, using Kwilos.js {{version}} from the CDN. Switch to **Source** to see its code.
 
 {{samples}}
 
