@@ -1,41 +1,46 @@
-<html>
+<!doctype html>
+<html lang="en">
 
 <head>
-  <title>
-    Kwilos.js - Two layered canvases
-  </title>
-
-  <!-- Load the app as a module -->
-  <script src="app.js" type="module"></script>
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Two layered canvases</title>
+  <meta name="description" content="Two canvases, each with its own Kwilos, one over the other; the upper one is partly transparent. Move the mouse over both.">
+  <link rel="stylesheet" href="../sample.css">
   <style>
-    /* Nest absolutely position CANVAS'es under a relatively positioned
-       parent DIV to place them where we want. */
+    /* The canvases are stacked in a box the size of the larger one, with
+       sizes and offsets in percentages so the pair shrinks together */
     .layered {
       position: relative;
-      /* size of biggest canvas */
-      height: 400;
+      width: min(100%, 400px);
+      aspect-ratio: 1;
     }
 
     .layered canvas {
       position: absolute;
     }
 
-    .layered #over-canvas-02 {
-      left: 200;
-      top: 100;
+    #under-canvas-02 {
+      inset: 0;
+      width: 100%;
+    }
+
+    #over-canvas-02 {
+      left: 50%;
+      top: 25%;
+      width: 75%;
     }
   </style>
+
+  <!-- Load the app as a module -->
+  <script src="app.js" type="module"></script>
 </head>
 
 <body>
-  <h1>Kwilos.js Samples </h1>
-  <h2>Two layered canvases</h2>
   <div class="layered">
     <canvas id="under-canvas-02" width="400" height="400"></canvas>
     <canvas id="over-canvas-02" width="300" height="200"></canvas>
   </div>
-  <p>Move the mouse around in the canvas above.</p>
 </body>
 
 </html>

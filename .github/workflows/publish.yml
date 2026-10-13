@@ -1,7 +1,7 @@
 name: Publish
 
 # Publishes to npm when a version tag such as v0.8.0 is pushed, after the
-# full CI checks pass. Uses npm trusted publishing, so no npm token is
+# full CI checks pass, then deploys the web site. Uses npm trusted publishing, so no npm token is
 # stored; the package's trusted publisher on npmjs.com must name this
 # repository and this workflow file.
 
@@ -45,3 +45,11 @@ jobs:
           else
             npm publish --provenance --access public
           fi
+
+  pages:
+    needs: publish
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml

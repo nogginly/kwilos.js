@@ -1,0 +1,22 @@
+/* Shared by the samples: the canvas centred on a dark backdrop, shrinking
+   to fit narrow windows. Kwilos scales mouse positions to canvas pixels, so
+   a shrunken canvas behaves the same. */
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #1c1c1e;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
