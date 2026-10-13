@@ -4,6 +4,8 @@ Notable changes to Kwilos JS. The format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-10-12
+
 ### Added
 
 - Published on npm as `kwilos.js`, and so on public CDNs such as jsDelivr and unpkg. The package contains the bundles in `_dist`, with source maps and TypeScript declarations, and the source in `src`.
