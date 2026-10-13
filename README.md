@@ -101,6 +101,7 @@ Property | Default value | Description
 `font` | `undefined` | When `undefined` the default font of the browser is used. Otherwise specify a font as you would for the CSS `font-family` property.
 `preload_images` | `[]` | Provide one or more paths to images to preload to ensure the images are ready when `tick` handler is called.
 `context_menu` | `true` | If `false` then the browser's context menu is suppressed over the canvas, so the right mouse button can be used
+`touch_scroll` | `true` | If `false` then a touch on the canvas does not scroll or zoom the page, so the app can follow touch drags. Leave it `true` for a canvas that only needs taps, so visitors can still scroll past it.
 `on_error` | `undefined` | A function that receives errors thrown during a frame, so that frames continue; see [Handling Errors](#handling-errors)
 
 ## The `tick` Function
@@ -175,17 +176,18 @@ The runtime environment object contains properties that are grouped as follows:
 
 #### Inputs
 
-`env.inputs` holds the input state as of the current frame. Mouse positions are in canvas pixels, even when the canvas is displayed at another size with CSS, and only movement over the canvas is tracked. Keys are heard across the whole page, so every attached canvas sees the same keyboard state. When the window loses focus, every button and key is released.
+`env.inputs` holds the input state as of the current frame. `.mouse` follows a mouse, a finger on a touchscreen, or a pen alike: a touch presses the left button where it lands, and while several fingers touch, only the first is followed. Mouse positions are in canvas pixels, even when the canvas is displayed at another size with CSS, and only movement over the canvas is tracked. Keys are heard across the whole page, so every attached canvas sees the same keyboard state. When the window loses focus, every button and key is released.
 
 `env.inputs` | Description
 ----|----
-`.mouse` | Pointer state
+`.mouse` | Pointer state, for a mouse, touch or pen
 &emsp;`.x`, `.y` | Position of the pointer when it was last over the canvas
 &emsp;`.previous_x`, `.previous_y` | `.x` and `.y` as of the previous frame
 &emsp;`.moved` | `true` if the pointer moved since the previous frame; with a button pressed, this is a _drag_
 &emsp;`.button_left` | `true` while the left button is pressed; pressed on the canvas, released anywhere
 &emsp;`.button_middle` | `true` while the middle button (or device equivalent) is pressed
 &emsp;`.button_right` | `true` while the right button (or device equivalent) is pressed
+&emsp;`.pointer_type` | `"mouse"`, `"touch"` or `"pen"`, as of the pointer's last movement or press on the canvas
 &emsp;`.clicks` | The clicks on the canvas since the previous frame, in order; empty when there are none. A click is a button pressed and released over the canvas.
 &emsp;&emsp;`.button` | `"left"`, `"middle"` or `"right"`
 &emsp;&emsp;`.x`, `.y` | Where the button was released, in canvas pixels

@@ -56,3 +56,15 @@ export function canvas_fingerprint(page, canvas) {
     return hash
   }, canvas)
 }
+
+// Returns a touchscreen that sends real touch input through Chromium's
+// DevTools protocol, so the page receives touch pointer events
+export async function touchscreen(page) {
+  const cdp = await page.context().newCDPSession(page)
+  const send = (type, points) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points })
+  return {
+    start: (x, y) => send('touchStart', [{ x, y }]),
+    move: (x, y) => send('touchMove', [{ x, y }]),
+    end: () => send('touchEnd', []),
+  }
+}

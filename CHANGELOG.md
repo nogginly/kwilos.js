@@ -6,6 +6,8 @@ Notable changes to Kwilos JS. The format follows [Keep a Changelog](https://keep
 
 ### Added
 
+- Touch and pen input: `env.inputs.mouse` follows a mouse, a finger or a pen, through the browser's pointer events. A touch presses the left button where it lands; with several fingers, only the first is followed. `mouse.pointer_type` tells which it is.
+- The `touch_scroll` config option, which when `false` stops touches on the canvas scrolling the page, so apps can follow touch drags. The drag-and-drop sample sets it.
 - A web site, [https://nogginly.github.io/kwilos.js/](https://nogginly.github.io/kwilos.js/), with the samples running live from the CDN and the API documentation, published with each release.
 
 ## [0.7.1] - 2026-10-12

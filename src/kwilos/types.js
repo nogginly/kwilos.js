@@ -22,6 +22,7 @@
  * @property {string} [font] Default label font, as for the CSS `font` property
  * @property {string[]} [preload_images] Image paths to load before the first frame
  * @property {boolean} [context_menu] Set to false to suppress the browser's context menu over the canvas, so the right button can be used
+ * @property {boolean} [touch_scroll] Set to false to stop touches on the canvas scrolling or zooming the page, so the app can follow touch drags
  * @property {ErrorHandler} [on_error] Receives errors thrown during a frame, and frames continue; without it, an error detaches Kwilos and is rethrown
  */
 
@@ -57,7 +58,8 @@
 
 /**
  * Pointer state, in canvas pixels, even when the canvas is displayed at
- * another size.
+ * another size. Touch and pens are reported here too: a touch on the
+ * canvas presses the left button.
  * @typedef {object} Mouse
  * @property {number} x
  * @property {number} y
@@ -68,6 +70,7 @@
  * @property {boolean} [button_middle]
  * @property {boolean} [button_right]
  * @property {Click[]} clicks Clicks on the canvas since the previous frame, in order; empty when there are none
+ * @property {'mouse' | 'touch' | 'pen'} [pointer_type] What the pointer was, as of its last movement or press on the canvas
  */
 
 /**
