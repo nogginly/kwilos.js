@@ -9,6 +9,9 @@ import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Marked } from 'marked'
+import hljs from 'highlight.js/lib/core'
+import javascript from 'highlight.js/lib/languages/javascript'
+import shell from 'highlight.js/lib/languages/shell'
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const SITE = join(ROOT, 'site')
@@ -24,8 +27,16 @@ const kwilos_url = from_src
   ? '../../../src/kwilos.js'
   : `https://cdn.jsdelivr.net/npm/kwilos.js@${version}/_dist/kwilos.min.mjs`
 
+hljs.registerLanguage('javascript', javascript)
+hljs.registerLanguage('js', javascript)
+hljs.registerLanguage('sh', shell)
+
 const markdown = new Marked({
   renderer: {
+    // Code blocks in a known language are highlighted when the site is built
+    code({ text, lang }) {
+      return `<pre><code class="hljs">${highlight(text, lang)}</code></pre>\n`
+    },
     // Headings get GitHub-style ids, so links such as #hit-testing work
     heading({ tokens, depth, text }) {
       return `<h${depth} id="${slug(text)}">${this.parser.parseInline(tokens)}</h${depth}>\n`
@@ -84,13 +95,16 @@ async function build_samples() {
     await writeFile(app_path, source)
 
     const html = await readFile(join(dir, 'index.html'), 'utf8')
+    // The sample's size: its sample-size tag if it has one, as when its
+    // canvases are offset, otherwise its largest canvas
     const canvases = [...html.matchAll(/<canvas[^>]*width="(\d+)"[^>]*height="(\d+)"/g)]
+    const declared = html.match(/<meta name="sample-size" content="(\d+)x(\d+)"/)
     found.push({
       name,
       title: html.match(/<title>([^<]*)<\/title>/)?.[1].trim() ?? name,
       description: html.match(/<meta name="description" content="([^"]*)"/)?.[1] ?? '',
-      width: Math.max(...canvases.map(m => Number(m[1]))),
-      height: Math.max(...canvases.map(m => Number(m[2]))),
+      width: declared ? Number(declared[1]) : Math.max(...canvases.map(m => Number(m[1]))),
+      height: declared ? Number(declared[2]) : Math.max(...canvases.map(m => Number(m[2]))),
       source,
     })
   }
@@ -116,7 +130,7 @@ function sample_html({ name, title, description, width, height, source }) {
   </div>
   <div class="sample-panel" id="${id}-source" role="tabpanel" aria-labelledby="${id}-source-tab" hidden>
     <p class="sample-file">samples/${name}/app.js</p>
-    <pre><code>${escape(source)}</code></pre>
+    <pre><code class="hljs">${highlight(source, 'javascript')}</code></pre>
   </div>
   <p class="sample-links"><a href="samples/${name}/index.html">Open on its own</a> · <a href="${REPO}/tree/v${version}/samples/${name}">View on GitHub</a></p>
 </section>`
@@ -173,6 +187,13 @@ function toc(text) {
 // Returns a GitHub-style id for a heading's text
 function slug(text) {
   return text.toLowerCase().replace(/`/g, '').replace(/[^\w\- ]/g, '').trim().replace(/ /g, '-')
+}
+
+// Returns code as highlighted HTML, or escaped as it is for an unknown language
+function highlight(code, language) {
+  return language && hljs.getLanguage(language)
+    ? hljs.highlight(code, { language }).value
+    : escape(code)
 }
 
 function escape(text) {
