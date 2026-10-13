@@ -34,8 +34,25 @@ function tick(env) { ... }
 
 ### Via CDN
 
-> TODO
-> - figure out how to publish with versioning for people to import via CDN
+Kwilos is published on npm as `kwilos.js`, so public CDNs such as [jsDelivr](https://www.jsdelivr.com) and [unpkg](https://unpkg.com) serve it with no build step:
+
+```js
+import { Kwilos, circle } from "https://cdn.jsdelivr.net/npm/kwilos.js@0.7.1/_dist/kwilos.min.mjs"
+```
+
+Name an exact version, as above. Before 1.0, a minor version may break the API, so a range such as `@0` could change a working page without warning; see the [changelog](CHANGELOG.md) before moving to a newer version. `_dist/kwilos.mjs` is the same build unminified, for reading and debugging.
+
+### Via npm
+
+```sh
+npm install kwilos.js
+```
+
+```js
+import { Kwilos, circle } from "kwilos.js"
+```
+
+The package includes TypeScript declarations, so editors complete and check Kwilos's API.
 
 ## API
 
@@ -214,6 +231,10 @@ function tick(env) {
   return [label({ x: 100, y: 50, text: `Frame ${env.state.frames}`, fill_color: 'white' })]
 }
 ```
+
+## Releasing
+
+See [RELEASING.md](RELEASING.md).
 
 ## Contributing
 

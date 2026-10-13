@@ -1,11 +1,14 @@
 {
   "name": "kwilos.js",
   "version": "0.7.0",
-  "description": "kwilos.js is an easy-to-use entity-based Javascript graphics toolkit for use with HTML5 Canvas",
+  "description": "An easy-to-use, dependency-free, entity-based JavaScript graphics toolkit for HTML5 Canvas",
   "keywords": [
-    "Javascript",
-    "Graphics",
-    "ECS"
+    "canvas",
+    "graphics",
+    "2d",
+    "game-loop",
+    "html5",
+    "javascript"
   ],
   "homepage": "https://github.com/nogginly/kwilos.js",
   "bugs": {
@@ -22,16 +25,24 @@
     ".": {
       "types": "./_dist/types/kwilos.d.ts",
       "default": "./_dist/kwilos.min.mjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
+  "files": [
+    "_dist",
+    "src",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "test": "vitest run",
     "test-browser": "playwright test",
     "typecheck": "tsc",
+    "clean": "node -e \"fs.rmSync('_dist', { recursive: true, force: true })\"",
     "build-esm": "esbuild --format=esm --bundle src/kwilos.js  --outfile=_dist/kwilos.mjs",
     "build-esm-min": "esbuild --format=esm --bundle --minify --sourcemap src/kwilos.js --outfile=_dist/kwilos.min.mjs",
     "build-types": "tsc -p tsconfig.build.json",
-    "build": "npm run build-esm && npm run build-esm-min && npm run build-types"
+    "build": "npm run clean && npm run build-esm && npm run build-esm-min && npm run build-types",
+    "prepack": "npm run build"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
