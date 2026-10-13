@@ -10,6 +10,12 @@
   --link: #8a3b12;
   --accent: #8a3b12;
   --stage: #1c1c1e;
+  --hl-keyword: #8a3b12;
+  --hl-string: #3b6b26;
+  --hl-number: #8a5a00;
+  --hl-comment: #6b665c;
+  --hl-name: #1d4f7a;
+  --hl-attr: #6a3d87;
   color-scheme: light;
 }
 
@@ -22,6 +28,12 @@
     --code-bg: #22201e;
     --link: #f0a46c;
     --accent: #f0a46c;
+    --hl-keyword: #f0a46c;
+    --hl-string: #a8cc8c;
+    --hl-number: #e5c07b;
+    --hl-comment: #8f8a82;
+    --hl-name: #8cbbe9;
+    --hl-attr: #c8a8e6;
     color-scheme: dark;
   }
 }
@@ -34,6 +46,12 @@
   --code-bg: #22201e;
   --link: #f0a46c;
   --accent: #f0a46c;
+  --hl-keyword: #f0a46c;
+  --hl-string: #a8cc8c;
+  --hl-number: #e5c07b;
+  --hl-comment: #8f8a82;
+  --hl-name: #8cbbe9;
+  --hl-attr: #c8a8e6;
   color-scheme: dark;
 }
 
@@ -115,6 +133,39 @@ pre code {
   background: none;
   padding: 0;
   font-size: 1em;
+}
+
+/* Syntax highlighting, by highlight.js when the site is built */
+
+.hljs-keyword,
+.hljs-variable.language_ {
+  color: var(--hl-keyword);
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-template-string {
+  color: var(--hl-string);
+}
+
+.hljs-number,
+.hljs-literal {
+  color: var(--hl-number);
+}
+
+.hljs-comment {
+  color: var(--hl-comment);
+  font-style: italic;
+}
+
+.hljs-title,
+.hljs-built_in {
+  color: var(--hl-name);
+}
+
+.hljs-attr,
+.hljs-property {
+  color: var(--hl-attr);
 }
 
 /* Wide tables scroll within the column instead of widening the page */

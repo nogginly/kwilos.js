@@ -6,14 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Two layered canvases</title>
   <meta name="description" content="Two canvases, each with its own Kwilos, one over the other; the upper one is partly transparent. Move the mouse over both.">
+  <meta name="sample-size" content="500x400">
   <link rel="stylesheet" href="../sample.css">
   <style>
-    /* The canvases are stacked in a box the size of the larger one, with
-       sizes and offsets in percentages so the pair shrinks together */
+    /* The canvases are stacked in a box the size of their union, 500 by
+       400: the lower canvas, 400 by 400, at its top left, and the upper,
+       300 by 200, at (200, 100). Sizes and offsets are percentages of the
+       box, so the pair shrinks together. */
     .layered {
       position: relative;
-      width: min(100%, 400px);
-      aspect-ratio: 1;
+      width: min(100%, 500px);
+      aspect-ratio: 500 / 400;
     }
 
     .layered canvas {
@@ -21,14 +24,15 @@
     }
 
     #under-canvas-02 {
-      inset: 0;
-      width: 100%;
+      left: 0;
+      top: 0;
+      width: 80%;
     }
 
     #over-canvas-02 {
-      left: 50%;
+      left: 40%;
       top: 25%;
-      width: 75%;
+      width: 60%;
     }
   </style>
 

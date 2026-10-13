@@ -24,6 +24,33 @@ test.describe('site', () => {
     expect(errors).toEqual([])
   })
 
+  for (const width of [1280, 390]) {
+    test(`shows every sample whole, without scrolling its frame, ${width} wide`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto('/_site/index.html')
+      for (const name of SAMPLES) {
+        const frame_element = page.locator(`#sample-${name} iframe`)
+        await frame_element.scrollIntoViewIfNeeded()
+        const frame = frame_element.contentFrame()
+        await frame.locator('canvas').first().waitFor()
+        const overflow = await frame.locator('html').evaluate(html => ({
+          x: html.scrollWidth - html.clientWidth,
+          y: html.scrollHeight - html.clientHeight,
+        }))
+        expect(overflow, name).toEqual({ x: 0, y: 0 })
+      }
+    })
+  }
+
+  test('highlights the source code', async ({ page }) => {
+    await page.goto('/_site/index.html')
+    await page.locator('#sample-03-drag-and-drop').getByRole('tab', { name: 'Source' }).click()
+    const code = page.locator('#sample-03-drag-and-drop-source code')
+    await expect(code.locator('.hljs-keyword').first()).toBeVisible()
+    await expect(code.locator('.hljs-comment').first()).toBeVisible()
+    await expect(code).toContainText('Kwilos.attach')
+  })
+
   test('switches a sample between its preview and source', async ({ page }) => {
     await page.goto('/_site/index.html')
     const sample = page.locator('#sample-00-get-started')
