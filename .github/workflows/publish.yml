@@ -5,6 +5,7 @@ name: Publish
 # two-factor authentication, to publish it. Uses npm trusted publishing, so
 # no npm token is stored; the package's trusted publisher on npmjs.com must
 # name this repository and this workflow file, and allow `npm stage publish`.
+# The web site is then deployed once a reviewer approves it.
 
 on:
   push:
@@ -45,5 +46,13 @@ jobs:
             echo "$package is already on npm; nothing to stage"
           else
             npm stage publish --provenance --access public
-            echo "::notice::$package is staged; approve it on npmjs.com, then run the Pages workflow on $GITHUB_REF_NAME"
+            echo "::notice::$package is staged; approve it on npmjs.com, then approve the site's deployment"
           fi
+
+  pages:
+    needs: publish
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml

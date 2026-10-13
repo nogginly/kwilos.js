@@ -1,10 +1,13 @@
 name: Pages
 
-# Builds the web site and deploys it to GitHub Pages. Run it by hand from the
-# Actions tab, on a version tag once that version is approved on npm, so the
+# Builds the web site and deploys it to GitHub Pages. The Publish workflow
+# runs it after staging each release, and it can be run by hand from the
+# Actions tab. The deploy waits for a reviewer's approval on the github-pages
+# environment, and stops unless the site's version is on npm, so the
 # samples' CDN imports resolve.
 
 on:
+  workflow_call:
   workflow_dispatch:
 
 permissions:
@@ -17,12 +20,16 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      package: ${{ steps.package.outputs.package }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
+      - id: package
+        run: echo "package=$(node -p "require('./package.json').name")@$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
       - run: npm ci
       - run: npm run build-site
       - uses: actions/upload-pages-artifact@v3
@@ -39,5 +46,13 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Check the version is on npm
+        env:
+          PACKAGE: ${{ needs.build.outputs.package }}
+        run: |
+          if ! npm view "$PACKAGE" version > /dev/null 2>&1; then
+            echo "::error::$PACKAGE is not on npm yet; approve it there, then re-run this job"
+            exit 1
+          fi
       - id: deployment
         uses: actions/deploy-pages@v4

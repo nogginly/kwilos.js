@@ -5,7 +5,7 @@ Releases are published in two stages:
 1. The [Publish workflow](.github/workflows/publish.yml) runs when a version tag is pushed. It runs the full CI checks, confirms the tag matches the version in `package.json`, and [stages](https://docs.npmjs.com/cli/commands/npm-stage) the package on npm with [trusted publishing](https://docs.npmjs.com/trusted-publishers), so no npm token is stored anywhere. A version already on npm is skipped.
 2. A maintainer approves the staged version on npmjs.com, with two-factor authentication, which publishes it. The workflow cannot publish on its own, so a compromised workflow run or dependency cannot release a version nobody has checked.
 
-The [Pages workflow](.github/workflows/pages.yml) then builds the [web site](https://nogginly.github.io/kwilos.js/) from that release and deploys it to GitHub Pages. The site's samples load Kwilos from the CDN at the released version, so it is run by hand once the version is approved.
+The [Pages workflow](.github/workflows/pages.yml) then builds the [web site](https://nogginly.github.io/kwilos.js/) from that release and deploys it to GitHub Pages. The Publish workflow runs it after staging the release, and its deploy then waits for your approval in GitHub. The site's samples load Kwilos from the CDN at the released version, so approve the deploy only after the version itself; if the version is not yet on npm, the deploy stops without changing the site.
 
 ## Each release
 
@@ -31,11 +31,11 @@ The [Pages workflow](.github/workflows/pages.yml) then builds the [web site](htt
    ```
 
    The version then appears on npm and the CDNs. `npm stage download <stage-id>` fetches the staged tarball, to inspect it first; `npm stage reject <stage-id>` discards it.
-6. Run the Pages workflow by hand on the version tag, as described below, to update the web site.
+6. Approve the web site's deployment: open the Publish run in the Actions tab, choose **Review deployments**, tick **github-pages** and approve. If the deploy was approved before the version, it stops with an error; re-run that job once the version is on npm.
 
 A staged version holds its version number, so a re-run of the Publish workflow fails while it waits for approval. Approve or reject the staged version first.
 
-To redeploy the web site without a release, for example after fixing a typo in the docs, run the Pages workflow by hand from the Actions tab: choose **Run workflow**, and select the latest version tag, or `main` when it has no changes since that release. The site describes the branch or tag it is built from, so building from `main` with unreleased changes would document features the CDN does not have yet.
+To redeploy the web site without a release, for example after fixing a typo in the docs, run the Pages workflow by hand from the Actions tab: choose **Run workflow**, and select the latest version tag, or `main` when it has no changes since that release. The deploy waits for approval, as for a release. The site describes the branch or tag it is built from, so building from `main` with unreleased changes would document features the CDN does not have yet.
 
 To preview the site locally, run `npm run build-site -- --from-src` and serve the repository root with any static web server, for example `python3 -m http.server`, then open `_site/`.
 
@@ -73,4 +73,5 @@ From then on, releases follow "Each release". Optionally, set the package on npm
 
 1. In the repository's **Settings → Pages**, set **Source** to **GitHub Actions**.
 2. In **Settings → Environments → github-pages**, under **Deployment branches and tags**, add a rule for tags matching `v*`. GitHub creates this environment allowing deployments from `main` only, so without the rule a release tag cannot deploy the site.
-3. Run the Pages workflow by hand from `main`, as described above, to publish the site for the current release.
+3. In the same environment, tick **Required reviewers** and add yourself, so deployments wait for approval. Pending approvals expire after 30 days.
+4. Run the Pages workflow by hand from `main`, as described above, to publish the site for the current release.
