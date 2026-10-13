@@ -23,6 +23,9 @@
 // 6. Return `null` when the mouse has not moved, no button has changed
 //    and there are no clicks, so nothing is redrawn.
 //
+// 7. Touch works too: a finger acts as the left button. `touch_scroll:
+//    false` stops a drag on the canvas from scrolling the page instead.
+//
 
 import { Kwilos, container, circle, image, label, rect, tile } from "../../src/kwilos.js";
 
@@ -35,6 +38,7 @@ const POSES = [0, 4, 9, 13, 20]
 await Kwilos.attach("#canvas-03", tick, {
   preload_images: [DESERT, SHEET],
   context_menu: false,
+  touch_scroll: false,
 })
 
 /** @typedef {{ id: string, pose: number, x: number, y: number }} Character */

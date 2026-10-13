@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { open_harness, expect_pixel, pixel, frames, page_errors } from './helpers.js'
+import { open_harness, expect_pixel, pixel, frames, page_errors, touchscreen } from './helpers.js'
 
 const RED = [255, 0, 0, 255]
 
@@ -218,6 +218,56 @@ test.describe('hit-testing', () => {
     await page.mouse.move(240, 240)   // canvas pixel (120, 120)
     await expect.poll(() => page.evaluate(() => [window.env.inputs.mouse.x, window.env.inputs.mouse.y])).toEqual([120, 120])
     expect(await page.evaluate(() => window.env.hit()?.id)).toBe('button')
+  })
+})
+
+test.describe('touch', () => {
+  test.use({ hasTouch: true })
+
+  // Attaches Kwilos to #c, keeping each frame's mouse state in window.frames_seen
+  const attach = (config) => async ({ page }) => page.evaluate(async (config) => {
+    window.frames_seen = []
+    window.clicks = []
+    window.kw = await window.kwilos.Kwilos.attach('#c', (env) => {
+      const { x, y, button_left, pointer_type } = env.inputs.mouse
+      window.frames_seen.push({ x, y, button_left, pointer_type })
+      window.clicks.push(...env.inputs.mouse.clicks)
+      return null
+    }, config)
+  }, config)
+
+  const last_frame = (page) => page.evaluate(() => window.frames_seen.at(-1))
+
+  test('follows a touch drag as the left button', async ({ page }) => {
+    await attach({ touch_scroll: false })({ page })
+    const touch = await touchscreen(page)
+
+    await touch.start(20, 30)
+    await expect.poll(() => last_frame(page)).toMatchObject({ x: 20, y: 30, button_left: true, pointer_type: 'touch' })
+    for (const step of [1, 2, 3, 4])
+      await touch.move(20 + step * 25, 30 + step * 20)
+    await expect.poll(() => last_frame(page)).toMatchObject({ x: 120, y: 110, button_left: true })
+
+    await touch.end()
+    await expect.poll(() => last_frame(page)).toMatchObject({ button_left: false })
+  })
+
+  test('records a tap as a click', async ({ page }) => {
+    await attach({})({ page })
+    await page.touchscreen.tap(60, 70)
+    await expect.poll(() => page.evaluate(() => window.clicks)).toEqual([{ button: 'left', x: 60, y: 70 }])
+  })
+
+  test('leaves touch scrolling to the page unless touch_scroll is false', async ({ page }) => {
+    const touch_action = () => page.evaluate(() => getComputedStyle(document.querySelector('#c')).touchAction)
+    await attach({})({ page })
+    expect(await touch_action()).toBe('auto')
+
+    await page.evaluate(() => window.kw.detach())
+    await attach({ touch_scroll: false })({ page })
+    expect(await touch_action()).toBe('none')
+    await page.evaluate(() => window.kw.detach())
+    expect(await touch_action()).toBe('auto')
   })
 })
 

@@ -4,7 +4,7 @@
 
 /**
  * @typedef {object} EventMapping
- * @property {string} name Event name, e.g. "mousemove"
+ * @property {string} name Event name, e.g. "pointermove"
  * @property {(ev: any) => void} handler
  */
 

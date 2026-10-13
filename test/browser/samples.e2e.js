@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { expect_pixel, pixel, pixels_unlike, frames, page_errors, canvas_fingerprint } from './helpers.js'
+import { expect_pixel, pixel, pixels_unlike, frames, page_errors, canvas_fingerprint, touchscreen } from './helpers.js'
 
 const BLACK = [0, 0, 0]
 
@@ -82,5 +82,40 @@ test.describe('samples', () => {
     await canvas.hover({ position: { x: 300, y: 100 } })
     await expect.poll(fingerprint).toBe(before)
     expect(errors).toEqual([])
+  })
+
+  test.describe('on a touchscreen', () => {
+    test.use({ hasTouch: true })
+
+    test('03 drags a character by touch, and a tap on Reset puts it back', async ({ page }) => {
+      const errors = page_errors(page)
+      await page.goto('/samples/03-drag-and-drop/index.html')
+      const canvas = page.locator('#canvas-03')
+      await expect.poll(() => pixels_unlike(page, '#canvas-03', [470, 340, 120, 50], [0, 0, 0])).toBeGreaterThan(0)
+      const box = await canvas.boundingBox()
+      const at = (x, y) => [box.x + x, box.y + y]
+      const fingerprint = () => canvas_fingerprint(page, '#canvas-03')
+
+      await page.touchscreen.tap(...at(300, 100))
+      await frames(page)
+      const before = await fingerprint()
+
+      // Drag character 1 with a finger
+      const touch = await touchscreen(page)
+      await touch.start(...at(80, 245))
+      await frames(page)
+      for (const step of [1, 2, 3, 4, 5])
+        await touch.move(...at(80 + step * 44, 245 + step * 17))
+      await frames(page)
+      await touch.end()
+      await page.touchscreen.tap(...at(300, 100))
+      await frames(page)
+      expect(await fingerprint()).not.toBe(before)
+
+      await page.touchscreen.tap(...at(530, 366))
+      await page.touchscreen.tap(...at(300, 100))
+      await expect.poll(fingerprint).toBe(before)
+      expect(errors).toEqual([])
+    })
   })
 })
