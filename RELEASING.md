@@ -1,8 +1,11 @@
 # Releasing Kwilos
 
-Versions are published to npm by the [Publish workflow](.github/workflows/publish.yml) when a version tag is pushed. It runs the full CI checks, confirms the tag matches the version in `package.json`, and publishes with [npm trusted publishing](https://docs.npmjs.com/trusted-publishers), so no npm token is stored anywhere. A version already on npm is skipped.
+Releases are published in two stages:
 
-It then runs the [Pages workflow](.github/workflows/pages.yml), which builds the [web site](https://nogginly.github.io/kwilos.js/) from that release and deploys it to GitHub Pages. The site's samples load Kwilos from the CDN at the released version, so the site is deployed only once that version is on npm.
+1. The [Publish workflow](.github/workflows/publish.yml) runs when a version tag is pushed. It runs the full CI checks, confirms the tag matches the version in `package.json`, and [stages](https://docs.npmjs.com/cli/commands/npm-stage) the package on npm with [trusted publishing](https://docs.npmjs.com/trusted-publishers), so no npm token is stored anywhere. A version already on npm is skipped.
+2. A maintainer approves the staged version on npmjs.com, with two-factor authentication, which publishes it. The workflow cannot publish on its own, so a compromised workflow run or dependency cannot release a version nobody has checked.
+
+The [Pages workflow](.github/workflows/pages.yml) then builds the [web site](https://nogginly.github.io/kwilos.js/) from that release and deploys it to GitHub Pages. The site's samples load Kwilos from the CDN at the released version, so it is run by hand once the version is approved.
 
 ## Each release
 
@@ -19,7 +22,18 @@ It then runs the [Pages workflow](.github/workflows/pages.yml), which builds the
    git push origin v0.8.0
    ```
 
-4. Watch the Publish workflow in the repository's Actions tab. When it finishes, the version appears on [npmjs.com](https://www.npmjs.com/package/kwilos.js) and the CDNs, and the web site is updated.
+4. Watch the Publish workflow in the repository's Actions tab. When it finishes, the version is staged on npm but not yet public.
+5. Approve it, either on [npmjs.com](https://www.npmjs.com/package/kwilos.js) or from a terminal logged in to npm:
+
+   ```sh
+   npm stage list kwilos.js
+   npm stage approve <stage-id>
+   ```
+
+   The version then appears on npm and the CDNs. `npm stage download <stage-id>` fetches the staged tarball, to inspect it first; `npm stage reject <stage-id>` discards it.
+6. Run the Pages workflow by hand on the version tag, as described below, to update the web site.
+
+A staged version holds its version number, so a re-run of the Publish workflow fails while it waits for approval. Approve or reject the staged version first.
 
 To redeploy the web site without a release, for example after fixing a typo in the docs, run the Pages workflow by hand from the Actions tab: choose **Run workflow**, and select the latest version tag, or `main` when it has no changes since that release. The site describes the branch or tag it is built from, so building from `main` with unreleased changes would document features the CDN does not have yet.
 
@@ -49,10 +63,11 @@ A trusted publisher is configured on an existing package, so the first version i
    - organization or user: `nogginly`
    - repository: `kwilos.js`
    - workflow filename: `publish.yml`
+   - leave **Allow `npm publish`** and **Allow `npm dist-tag`** unchecked; `npm stage publish` is always allowed, and is all the workflow uses
 
 4. Push the version tag as in step 3 above. The workflow runs the checks and skips publishing, since the version is already on npm.
 
-From then on, releases follow "Each release". Optionally, once a release has published through the workflow, set the package on npmjs.com to require two-factor authentication and disallow tokens, so that only the workflow can publish.
+From then on, releases follow "Each release". Optionally, set the package on npmjs.com to require two-factor authentication and disallow tokens, so that every version, staged or not, needs a maintainer's two-factor approval.
 
 ## Setting up the web site, once
 
