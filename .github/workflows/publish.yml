@@ -1,9 +1,10 @@
 name: Publish
 
-# Publishes to npm when a version tag such as v0.8.0 is pushed, after the
-# full CI checks pass, then deploys the web site. Uses npm trusted publishing, so no npm token is
-# stored; the package's trusted publisher on npmjs.com must name this
-# repository and this workflow file.
+# Stages a release on npm when a version tag such as v0.8.0 is pushed, after
+# the full CI checks pass. A maintainer then approves it on npmjs.com, with
+# two-factor authentication, to publish it. Uses npm trusted publishing, so
+# no npm token is stored; the package's trusted publisher on npmjs.com must
+# name this repository and this workflow file, and allow `npm stage publish`.
 
 on:
   push:
@@ -35,21 +36,14 @@ jobs:
             echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version"
             exit 1
           fi
-      - run: npm install --global npm@^11.5.1
+      - run: npm install --global npm@^11.15.0
       - run: npm ci
-      - name: Publish, unless this version is already on npm
+      - name: Stage for publishing, unless this version is already on npm
         run: |
           package="$(node -p "require('./package.json').name")@$(node -p "require('./package.json').version")"
           if npm view "$package" version > /dev/null 2>&1; then
-            echo "$package is already on npm; nothing to publish"
+            echo "$package is already on npm; nothing to stage"
           else
-            npm publish --provenance --access public
+            npm stage publish --provenance --access public
+            echo "::notice::$package is staged; approve it on npmjs.com, then run the Pages workflow on $GITHUB_REF_NAME"
           fi
-
-  pages:
-    needs: publish
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    uses: ./.github/workflows/pages.yml

@@ -1,11 +1,10 @@
 name: Pages
 
-# Builds the web site and deploys it to GitHub Pages. The Publish workflow
-# runs it after each release, once the version is on npm, so the samples'
-# CDN imports resolve. It can also be run by hand from the Actions tab.
+# Builds the web site and deploys it to GitHub Pages. Run it by hand from the
+# Actions tab, on a version tag once that version is approved on npm, so the
+# samples' CDN imports resolve.
 
 on:
-  workflow_call:
   workflow_dispatch:
 
 permissions:
