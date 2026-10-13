@@ -10,6 +10,8 @@ const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)))
 const PORT = Number(process.argv[2] ?? 4173)
 const TYPES = {
   '.html': 'text/html',
+  '.css': 'text/css',
+  '.svg': 'image/svg+xml',
   '.js': 'text/javascript',
   '.mjs': 'text/javascript',
   '.json': 'application/json',

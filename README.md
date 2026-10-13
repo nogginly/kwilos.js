@@ -2,6 +2,8 @@
 
 _Kwilos_ is an easy-to-use, dependency-free, entity-based Javascript graphics toolkit for use with HTML5 Canvas. 
 
+The [Kwilos web site](https://nogginly.github.io/kwilos.js/) has the samples running live, and the API documentation.
+
 _Kwilos_ uses a "game loop" metaphor while providing a way to use it efficiently when the drawings / graphics have limited motion.
 
 > **About the name**
@@ -17,6 +19,7 @@ Clone the repo and then ...
 - Run `npm install` to pull the dev dependencies
 - Run `npm run build` to make the bundled releases in `_dist/`: `kwilos.mjs`, minified `kwilos.min.mjs`, and TypeScript declarations in `types/`
 - Run `npm test` to run the unit tests, and `npm run typecheck` to check the types
+- Run `npm run build-site` to build the web site into `_site/`, from `site/`, the samples and this README's API sections
 - Run `npm run test-browser` to run the browser tests, which draw the samples and drive Kwilos in Chromium with [Playwright](https://playwright.dev). The first time, run `npx playwright install --only-shell chromium` to download the headless browser, or set `CHROMIUM_PATH` to use a Chromium you already have
 
 The source in `src/` runs in the browser as is, without a build. To try the samples, serve the repository root with any static web server, for example `python3 -m http.server`, and open `samples/`.

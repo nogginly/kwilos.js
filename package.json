@@ -10,7 +10,7 @@
     "html5",
     "javascript"
   ],
-  "homepage": "https://github.com/nogginly/kwilos.js",
+  "homepage": "https://nogginly.github.io/kwilos.js/",
   "bugs": {
     "url": "https://github.com/nogginly/kwilos.js/issues"
   },
@@ -35,18 +35,20 @@
   ],
   "scripts": {
     "test": "vitest run",
-    "test-browser": "playwright test",
+    "test-browser": "node site/build.js --from-src && playwright test",
     "typecheck": "tsc",
     "clean": "node -e \"fs.rmSync('_dist', { recursive: true, force: true })\"",
     "build-esm": "esbuild --format=esm --bundle src/kwilos.js  --outfile=_dist/kwilos.mjs",
     "build-esm-min": "esbuild --format=esm --bundle --minify --sourcemap src/kwilos.js --outfile=_dist/kwilos.min.mjs",
     "build-types": "tsc -p tsconfig.build.json",
     "build": "npm run clean && npm run build-esm && npm run build-esm-min && npm run build-types",
+    "build-site": "node site/build.js",
     "prepack": "npm run build"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "esbuild": "^0.28.2",
+    "marked": "^18.1.1",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3"
   },

@@ -4,6 +4,10 @@ Notable changes to Kwilos JS. The format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
+### Added
+
+- A web site, [https://nogginly.github.io/kwilos.js/](https://nogginly.github.io/kwilos.js/), with the samples running live from the CDN and the API documentation, published with each release.
+
 ## [0.7.1] - 2026-10-12
 
 ### Added
