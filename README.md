@@ -100,6 +100,8 @@ Property | Default value | Description
 `background_color` | `black` | Set the background colour between ticks. If `background_clear` is set then use `null` or a colour with alpha to see through the canvas.
 `font` | `undefined` | When `undefined` the default font of the browser is used. Otherwise specify a font as you would for the CSS `font-family` property.
 `preload_images` | `[]` | Provide one or more paths to images to preload to ensure the images are ready when `tick` handler is called.
+`preload_sounds` | `[]` | Paths to sound effects to load before the first frame; a sound that was not preloaded is not played. See [Sound](#sound).
+`background_audio` | `false` | If `true` then tracks keep playing while the page is hidden, as a music player might want. By default they pause, and carry on when the page is shown again.
 `context_menu` | `true` | If `false` then the browser's context menu is suppressed over the canvas, so the right mouse button can be used
 `touch_scroll` | `true` | If `false` then a touch on the canvas does not scroll or zoom the page, so the app can follow touch drags. Leave it `true` for a canvas that only needs taps, so visitors can still scroll past it.
 `on_error` | `undefined` | A function that receives errors thrown during a frame, so that frames continue; see [Handling Errors](#handling-errors)
@@ -173,6 +175,7 @@ The runtime environment object contains properties that are grouped as follows:
 - `env.inputs` contains the properties to access input event information
 - `env.state` is an object into which the app can store data that it can expect to be available across repeated calls to the `tick` handler.
 - `env.hit(point)` returns the shape under a point, by default the mouse position; see [Hit-Testing](#hit-testing).
+- `env.sounds`, `env.tracks` and `env.volume` play sound effects and music; see [Sound](#sound).
 
 #### Inputs
 
@@ -236,6 +239,56 @@ function tick(env) {
   return [label({ x: 100, y: 50, text: `Frame ${env.state.frames}`, fill_color: 'white' })]
 }
 ```
+
+#### Sound
+
+Kwilos plays two kinds of audio:
+
+- **Sound effects** play once, on the frame they happen, such as a coin being picked up. Push a `sound` to `env.sounds`; after the frame, Kwilos plays it and empties the list.
+- **Tracks** play for as long as they are wanted, such as music or an ambient loop. Keep a `track` in `env.tracks`, under a name of your choice. Kwilos starts it when it appears, applies changes to its properties as it plays, and stops it when it is removed.
+
+```js
+import { Kwilos, sound, track } from "kwilos.mjs"
+
+await Kwilos.attach("#canvas", tick, { preload_sounds: ["coin.mp3"] })
+
+function tick(env) {
+  env.tracks.music ??= track({ path: "theme.mp3", looping: true, gain: 0.6 })
+
+  if (picked_up_coin)
+    env.sounds.push(sound({ path: "coin.mp3", pan: -0.5 }))
+
+  return scene
+}
+```
+
+`sound({...})` and `track({...})` return plain objects, as the shape factories do.
+
+Property | Sound | Track | Description
+----|:--:|:--:|----
+`path` | ✓ | ✓ | The audio file's URL. Sounds must be preloaded with `preload_sounds`; tracks are streamed, so need not be.
+`gain` | ✓ | ✓ | Loudness; defaults to `1`, its loudness as recorded
+`rate` | ✓ | ✓ | Playback speed, which also changes the pitch; defaults to `1`
+`pan` | ✓ | ✓ | From `-1`, left, to `1`, right; defaults to `0`, centred
+`looping` | | ✓ | If `true`, plays again from the start when it ends
+`paused` | | ✓ | If `true`, pauses it, keeping its place
+`restart` | | ✓ | If `true`, plays it again from the start. Kwilos sets it back to `false` once done, so set it on one frame only.
+`time` | | ✓ | Set by Kwilos: the seconds played from the start
+`ended` | | ✓ | Set by Kwilos: `true` once it has played to its end without looping
+
+Kwilos compares `env.tracks` with what is playing, so setting a track again with the same `path`, even as a new object on every frame, leaves it playing; only a different `path` starts it afresh. To play it from the start, set `restart` on the frame it should restart, not on every frame that some condition holds:
+
+```js
+// Restarts the music once, when a new game begins
+if (env.state.phase === "playing" && env.state.previous_phase !== "playing")
+  env.tracks.music.restart = true
+```
+
+`env.volume` scales everything, from `0`, silent, to `1`, as given, so it makes a mute button. It defaults to `1`.
+
+Browsers allow audio to play only once the user has clicked, tapped or pressed a key on the page. Until then, sound effects are dropped, since a sound played late is worse than none, and tracks wait, starting as soon as audio is allowed. Kwilos creates its audio only once the app uses sound, so an app without sound never touches the page's audio.
+
+A sound that was not preloaded is not played: Kwilos warns once in the browser console and loads it, so later plays work. A preloaded sound that fails to load makes `attach` reject, as for images. A track from another site plays only if that site allows it, with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS).
 
 ## Releasing
 

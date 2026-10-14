@@ -4,6 +4,7 @@
 
 /**
  * @import { Scene, Entity } from './shapes.js'
+ * @import { Sound, Track, Audio } from './audio.js'
  */
 
 /**
@@ -21,6 +22,8 @@
  * @property {string | null} [background_color] Fills the canvas before each scene; defaults to "black" unless `background_clear` is set
  * @property {string} [font] Default label font, as for the CSS `font` property
  * @property {string[]} [preload_images] Image paths to load before the first frame
+ * @property {string[]} [preload_sounds] Sound paths to load before the first frame; a sound not preloaded is not played
+ * @property {boolean} [background_audio] Set to true to keep tracks playing while the page is hidden, e.g. for a music player; by default they pause
  * @property {boolean} [context_menu] Set to false to suppress the browser's context menu over the canvas, so the right button can be used
  * @property {boolean} [touch_scroll] Set to false to stop touches on the canvas scrolling or zooming the page, so the app can follow touch drags
  * @property {ErrorHandler} [on_error] Receives errors thrown during a frame, and frames continue; without it, an error detaches Kwilos and is rethrown
@@ -41,6 +44,9 @@
  * @property {Inputs} inputs Input state as of this frame
  * @property {Record<string, any>} state Data the app keeps between frames
  * @property {(point?: Point) => Entity | null} hit Returns the shape drawn topmost at the point, by default the mouse position, in the scene last drawn; null if there is none
+ * @property {Array<Sound | null | undefined | false>} sounds Sound effects to play after this frame; push to it, and Kwilos empties it after each frame
+ * @property {Record<string, Track | null | undefined>} tracks Tracks to play, by a name of your choice; they play while they are here
+ * @property {number} volume Scales all sounds and tracks, from 0, silent, to 1, as given; defaults to 1
  */
 
 /**
@@ -103,6 +109,7 @@
  * @typedef {object} System
  * @property {{ width: number, height: number, background_clear?: boolean, background_color?: string | null }} canvas
  * @property {Record<string, HTMLImageElement | Promise<HTMLImageElement>>} atlas Images by path, or their pending loads
+ * @property {Audio} audio
  * @property {{ default: string }} fonts
  * @property {Env} args
  * @property {App} app
@@ -116,7 +123,7 @@
  * @property {Tick} tick
  * @property {Config} config
  * @property {Scene | null} last_scene
- * @property {() => void} detach Stops the frames and removes the listeners; does nothing once detached
+ * @property {() => void} detach Stops the frames and audio, and removes the listeners; does nothing once detached
  */
 
 export {}

@@ -17,6 +17,8 @@ const TYPES = {
   '.json': 'application/json',
   '.map': 'application/json',
   '.png': 'image/png',
+  '.wav': 'audio/wav',
+  '.mp3': 'audio/mpeg',
 }
 
 createServer(async (request, response) => {

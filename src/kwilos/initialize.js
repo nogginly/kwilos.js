@@ -4,6 +4,7 @@ import { BAL } from './bal.js'
 import { setup_event_handlers } from './event_handlers.js';
 import { frame } from './ticker.js';
 import { hit } from './hits.js';
+import { create_audio, setup_audio } from './audio.js';
 
 /**
  * @import { System, App, Config, Tick } from './types.js'
@@ -19,12 +20,16 @@ export function create_system() {
       height: 400,
     },
     atlas: {},
+    audio: create_audio(),
     fonts: {
       default: "14pt serif"
     },
     args: {
       state: {},
       hit: (point) => hit(system, point ?? system.args.inputs.mouse),
+      sounds: [],
+      tracks: {},
+      volume: 1,
       inputs: {
         mouse: {
           x: 0,
@@ -90,11 +95,13 @@ export async function initialize_with_canvas(system, canvas_or_id, tick, config)
   app.draw_context = draw_context
   app.draw_context.font = system.fonts.default
 
-  // Pre-load any images specified
+  // Pre-load any images and sounds specified
   await _preload_images(system, config.preload_images)
+  const undo_audio = await setup_audio(system, config.preload_sounds)
 
   // Listen for input and schedule the frames, keeping the means to undo both
   const undo = [
+    ...undo_audio,
     ...setup_event_handlers(system, canvas),
     BAL.schedule_ticker(frame, system),
   ]

@@ -84,6 +84,44 @@ test.describe('samples', () => {
     expect(errors).toEqual([])
   })
 
+  test('04 plays a sound for each coin, over music that can be paused', async ({ page }) => {
+    const errors = page_errors(page)
+    await page.addInitScript(() => {
+      window.sounds_started = 0
+      const start = AudioBufferSourceNode.prototype.start
+      AudioBufferSourceNode.prototype.start = function (...args) {
+        window.sounds_started++
+        return start.apply(this, args)
+      }
+      window.tracks = []
+      const Original = window.Audio
+      window.Audio = class extends Original {
+        constructor(...args) {
+          super(...args)
+          window.tracks.push(this)
+        }
+      }
+    })
+    await page.goto('/samples/04-sounds/index.html')
+    const canvas = page.locator('#canvas-04')
+    await expect.poll(() => pixels_unlike(page, '#canvas-04', [16, 348, 124, 36], [31, 74, 58])).toBeGreaterThan(0)
+
+    // The first coin's place, as the sample works it out
+    const seed = (7 * 16807) % 2147483647
+    const coin = { x: 40 + (seed % 520), y: 70 + (Math.floor(seed / 600) % 250) }
+    const music = () => page.evaluate(() => ({ paused: window.tracks[0].paused, time: window.tracks[0].currentTime }))
+
+    await canvas.click({ position: coin })
+    await expect.poll(() => page.evaluate(() => window.sounds_started)).toBe(1)
+    await expect.poll(async () => (await music()).time).toBeGreaterThan(0.2)
+
+    await canvas.click({ position: { x: 78, y: 366 } })
+    await expect.poll(async () => (await music()).paused).toBe(true)
+    await canvas.click({ position: { x: 78, y: 366 } })
+    await expect.poll(async () => (await music()).paused).toBe(false)
+    expect(errors).toEqual([])
+  })
+
   test.describe('on a touchscreen', () => {
     test.use({ hasTouch: true })
 
