@@ -4,6 +4,7 @@ import { create_system, initialize_with_canvas } from "./kwilos/initialize.js";
 
 export { circle, rect, label, image, tile, container } from "./kwilos/shapes.js";
 export { contains } from "./kwilos/hits.js";
+export { sound, track } from "./kwilos/audio.js";
 
 /**
  * @typedef {import("./kwilos/types.js").Tick} Tick
@@ -24,6 +25,8 @@ export { contains } from "./kwilos/hits.js";
  * @typedef {import("./kwilos/shapes.js").Image} Image
  * @typedef {import("./kwilos/shapes.js").Tile} Tile
  * @typedef {import("./kwilos/shapes.js").Container} Container
+ * @typedef {import("./kwilos/audio.js").Sound} Sound
+ * @typedef {import("./kwilos/audio.js").Track} Track
  */
 
 export class Kwilos {
@@ -34,7 +37,7 @@ export class Kwilos {
    * @param {HTMLElement | string | null} canvas The canvas, or its element ID or a CSS selector; throws a TypeError if no canvas is found
    * @param {Tick} tick
    * @param {Config} [config]
-   * @returns {Promise<Kwilos>} Resolves once preloaded images have loaded
+   * @returns {Promise<Kwilos>} Resolves once preloaded images and sounds have loaded
    */
   static async attach(canvas, tick, config = {}) {
     let kwilos = new Kwilos()
@@ -45,8 +48,8 @@ export class Kwilos {
   }
 
   /**
-   * Stops calling `tick` and stops listening for input. The canvas keeps
-   * its last frame. Does nothing once detached.
+   * Stops calling `tick`, stops all audio, and stops listening for input.
+   * The canvas keeps its last frame. Does nothing once detached.
    */
   detach() {
     this.#system.app.detach()

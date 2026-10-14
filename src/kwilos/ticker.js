@@ -1,6 +1,7 @@
 /* Don't use sloppy JS. */ "use strict";
 
 import { render } from './renderers.js'
+import { update_audio } from './audio.js'
 
 /**
  * @import { System } from './types.js'
@@ -42,7 +43,8 @@ function _detach_and_throw(sys, error) {
   throw error
 }
 
-// Runs one frame: calls the app's `tick` and draws the scene it returns.
+// Runs one frame: calls the app's `tick`, draws the scene it returns, then
+// plays its sounds and updates its tracks.
 // - An array clears the background and renders its entities in order.
 // - `null` leaves the canvas untouched, unless the canvas was resized,
 //   in which case the last scene is drawn again.
@@ -68,6 +70,7 @@ export function ticker(_ts, sys) {
       throw new TypeError(
         `Kwilos: tick must return an array of entities or null, got ${typeof scene}`)
     }
+    update_audio(sys)
   }
   finally {
     // reset of end of frame state; lists are replaced, not emptied, so
@@ -81,6 +84,8 @@ export function ticker(_ts, sys) {
     let key = sys.args.inputs.key
     if (key.typed.length > 0)
       key.typed = []
+    if (!Array.isArray(sys.args.sounds) || sys.args.sounds.length > 0)
+      sys.args.sounds = []
   }
 }
 

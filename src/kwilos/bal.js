@@ -22,6 +22,46 @@ export const BAL = {
     })
   },
   /**
+   * Fetches and decodes a sound. Decoding needs no AudioContext, so sounds
+   * can load before the user has interacted with the page.
+   * @param {string} path
+   * @returns {Promise<AudioBuffer>} Rejects when the sound fails to load or decode
+   */
+  load_sound: async function (path) {
+    try {
+      const response = await fetch(path)
+      if (!response.ok)
+        throw new Error(`HTTP ${response.status}`)
+      const decoder = new OfflineAudioContext(1, 1, 48000)
+      return await decoder.decodeAudioData(await response.arrayBuffer())
+    }
+    catch (error) {
+      throw new Error(`Kwilos: could not load sound ${path}`, { cause: error })
+    }
+  },
+  /** @returns {AudioContext} */
+  create_audio_context: function () {
+    return new AudioContext()
+  },
+  /**
+   * @param {string} path
+   * @returns {HTMLAudioElement} Set to load `path`, with CORS, so that a track from another site plays, rather than silently, only if that site allows it
+   */
+  create_audio_element: function (path) {
+    const element = new Audio()
+    element.crossOrigin = 'anonymous'
+    element.src = path
+    return element
+  },
+  /** @returns {boolean} The user has clicked, tapped or pressed a key on the page */
+  has_user_activation: function () {
+    return navigator.userActivation?.hasBeenActive ?? false
+  },
+  /** @returns {boolean} */
+  page_hidden: function () {
+    return document.hidden
+  },
+  /**
    * @param {EventMapping[]} event_mappings
    * @returns {() => void} Removes the listeners
    */
