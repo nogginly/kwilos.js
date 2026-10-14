@@ -4,6 +4,8 @@ Notable changes to Kwilos JS. The format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-14
+
 ### Added
 
 - Sound: sound effects pushed to `env.sounds`, tracks such as music kept in `env.tracks`, and `env.volume` for everything. The `sound` and `track` factories make them, `preload_sounds` loads sound effects before the first frame, and `background_audio` keeps tracks playing while the page is hidden.
