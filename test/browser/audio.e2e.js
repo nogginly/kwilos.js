@@ -23,9 +23,10 @@ test.beforeEach(async ({ page }) => {
 })
 
 // Attaches Kwilos with a tick that plays a sound on each click, keeps the
-// track `window.music` playing as `music`, and records `env`
-function attach(page, config = {}) {
-  return page.evaluate(async (config) => {
+// track `window.music` playing as `music`, and records `env`; returns once
+// the first frame has run
+async function attach(page, config = {}) {
+  await page.evaluate(async (config) => {
     const { Kwilos, sound, track } = window.kwilos
     window.music = track({ path: 'tone.wav', looping: true })
     window.kw = await Kwilos.attach('#c', (env) => {
@@ -36,6 +37,7 @@ function attach(page, config = {}) {
       return []
     }, { preload_sounds: ['beep.wav'], ...config })
   }, config)
+  await page.waitForFunction(() => window.env)
 }
 
 const track_time = (page) => page.evaluate(() => window.env.tracks.music.time)
