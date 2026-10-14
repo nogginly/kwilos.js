@@ -4,6 +4,11 @@ Notable changes to Kwilos JS. The format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
+### Added
+
+- Positional audio: sounds and tracks with `x` and `y` are placed on the canvas and heard from `env.listener`, panning towards their side and fading with distance to silence at their `range`.
+- A sample, "Find the cricket", played by ear.
+
 ## [0.9.0] - 2026-10-14
 
 ### Added

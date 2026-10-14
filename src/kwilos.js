@@ -27,6 +27,7 @@ export { sound, track } from "./kwilos/audio.js";
  * @typedef {import("./kwilos/shapes.js").Container} Container
  * @typedef {import("./kwilos/audio.js").Sound} Sound
  * @typedef {import("./kwilos/audio.js").Track} Track
+ * @typedef {import("./kwilos/audio.js").Listener} Listener
  */
 
 export class Kwilos {

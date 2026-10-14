@@ -122,6 +122,36 @@ test.describe('samples', () => {
     expect(errors).toEqual([])
   })
 
+  test('05 chirps where the cricket is, and catching it moves it', async ({ page }) => {
+    const errors = page_errors(page)
+    await page.addInitScript(() => {
+      window.sounds_started = 0
+      const start = AudioBufferSourceNode.prototype.start
+      AudioBufferSourceNode.prototype.start = function (...args) {
+        window.sounds_started++
+        return start.apply(this, args)
+      }
+    })
+    await page.goto('/samples/05-find-the-cricket/index.html')
+    const canvas = page.locator('#canvas-05')
+    await expect.poll(() => pixels_unlike(page, '#canvas-05', [16, 348, 170, 36], [11, 20, 36])).toBeGreaterThan(0)
+
+    // The cricket's first place, as the sample works it out
+    const seed = (11 * 16807) % 2147483647
+    const cricket = { x: 40 + (seed % 520), y: 70 + (Math.floor(seed / 600) % 250) }
+
+    await canvas.click({ position: { x: 300, y: 200 } })
+    await expect.poll(() => page.evaluate(() => window.sounds_started), { timeout: 4000 }).toBeGreaterThanOrEqual(2)
+
+    // Under the lantern the cricket shows; catching it moves it elsewhere
+    await canvas.hover({ position: cricket })
+    await expect.poll(() => pixel(page, '#canvas-05', cricket.x, cricket.y)).not.toEqual([11, 20, 36, 255])
+    const before = await canvas_fingerprint(page, '#canvas-05')
+    await canvas.click({ position: cricket })
+    await expect.poll(() => canvas_fingerprint(page, '#canvas-05')).not.toBe(before)
+    expect(errors).toEqual([])
+  })
+
   test.describe('on a touchscreen', () => {
     test.use({ hasTouch: true })
 
