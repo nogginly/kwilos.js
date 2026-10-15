@@ -143,6 +143,16 @@ test.describe('samples', () => {
     await canvas.click({ position: { x: 300, y: 200 } })
     await expect.poll(() => page.evaluate(() => window.sounds_started), { timeout: 4000 }).toBeGreaterThanOrEqual(2)
 
+    // The range buttons change how far the lantern hears, drawn as a ring
+    // around it: at 200, the ring passes 200 pixels to its left
+    const ring = { x: 300 - 200, y: 200 }
+    await canvas.hover({ position: { x: 300, y: 200 } })
+    expect(await pixel(page, '#canvas-05', ring.x, ring.y)).toEqual([11, 20, 36, 255])
+    for (let i = 0; i < 6; i++)
+      await canvas.click({ position: { x: 402, y: 366 } })
+    await canvas.hover({ position: { x: 300, y: 200 } })
+    await expect.poll(() => pixel(page, '#canvas-05', ring.x, ring.y)).not.toEqual([11, 20, 36, 255])
+
     // Under the lantern the cricket shows; catching it moves it elsewhere
     await canvas.hover({ position: cricket })
     await expect.poll(() => pixel(page, '#canvas-05', cricket.x, cricket.y)).not.toEqual([11, 20, 36, 255])
