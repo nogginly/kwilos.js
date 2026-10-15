@@ -22,7 +22,7 @@ The name is a mash-up of *quill* and *kalos*, Greek for beautiful, with some pho
 
 ## Samples
 
-Each sample runs below, using Kwilos.js {{version}} from the CDN. Switch to **Source** to see its code.
+Each sample runs below, using Kwilos.js {{version}}. Switch to **Source** to see its code, which loads Kwilos from the CDN as shown above.
 
 {{samples}}
 

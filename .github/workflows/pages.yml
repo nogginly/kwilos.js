@@ -3,8 +3,9 @@ name: Pages
 # Builds the web site and deploys it to GitHub Pages. The Publish workflow
 # runs it after staging each release, and it can be run by hand from the
 # Actions tab. The deploy waits for a reviewer's approval on the github-pages
-# environment, and stops unless the site's version is on npm and the CDN
-# serves it, so the samples' CDN imports resolve.
+# environment, and stops unless the site's version is on npm, as the site's
+# Get started section shows the CDN address for that version. The samples
+# run with the site's own copy of Kwilos.
 
 on:
   workflow_call:
@@ -52,18 +53,6 @@ jobs:
         run: |
           if ! npm view "$PACKAGE" version > /dev/null 2>&1; then
             echo "::error::$PACKAGE is not on npm yet; approve it there, then re-run this job"
-            exit 1
-          fi
-      # Retries for a few minutes, as the CDN may fail at first for a new
-      # version; fetching it also puts it in the CDN's cache for visitors
-      - name: Check the CDN serves the version
-        env:
-          PACKAGE: ${{ needs.build.outputs.package }}
-        run: |
-          url="https://cdn.jsdelivr.net/npm/$PACKAGE/_dist/kwilos.min.mjs"
-          if ! curl --fail --silent --show-error --output /dev/null --max-time 60 \
-              --retry 5 --retry-delay 20 --retry-all-errors "$url"; then
-            echo "::error::The CDN does not serve $url yet; re-run this job later"
             exit 1
           fi
       - id: deployment

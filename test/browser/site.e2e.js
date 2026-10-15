@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test'
 import { page_errors } from './helpers.js'
 
-// The site is built into _site/ with the samples importing src/, by the
-// test-browser script, before these tests run
+// The site is built into _site/, with its own copy of Kwilos from _dist/,
+// by the test-browser script, before these tests run
 
 const SAMPLES = ['00-get-started', '01-different-types', '02-two-canvases', '03-drag-and-drop']
 
@@ -22,6 +22,20 @@ test.describe('site', () => {
       )).toBe(255)
     }
     expect(errors).toEqual([])
+  })
+
+  test('runs the samples with its own copy of Kwilos, and shows the CDN address in their source', async ({ page }) => {
+    const requests = []
+    page.on('request', request => requests.push(request.url()))
+    await page.goto('/_site/samples/00-get-started/index.html')
+    await page.locator('canvas').first().waitFor()
+    await expect.poll(() => requests.some(url => url.endsWith('/_site/kwilos/kwilos.min.mjs'))).toBe(true)
+    expect(requests.filter(url => url.includes('cdn.jsdelivr.net'))).toEqual([])
+
+    await page.goto('/_site/index.html')
+    const source = await page.locator('#sample-00-get-started pre').textContent()
+    expect(source).toContain('https://cdn.jsdelivr.net/npm/kwilos.js@')
+    expect(source).not.toContain('../../kwilos/')
   })
 
   for (const width of [1280, 390]) {
