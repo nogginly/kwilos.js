@@ -4,6 +4,10 @@ Notable changes to Kwilos JS. The format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
+### Added
+
+- The `claim_keys` config option: key codes whose browser actions, such as Space and the arrow keys scrolling the page, are stopped while the canvas has focus. The canvas then takes focus when pressed, and with the Tab key. The sprites sample claims Space and the arrow keys.
+
 ## [0.10.0] - 2026-10-15
 
 ### Added

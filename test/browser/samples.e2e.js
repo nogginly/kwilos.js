@@ -200,14 +200,15 @@ test.describe('samples', () => {
     const errors = page_errors(page)
     await page.goto('/samples/07-sprites/index.html')
     const canvas = page.locator('#canvas-07')
-    // The bounds of the character: pixels above the grass unlike the sky
+    // The bounds of the character: pixels between the labels and the grass
+    // unlike the sky
     const hero = () => page.evaluate(() => {
-      const data = document.querySelector('#canvas-07').getContext('2d').getImageData(0, 50, 600, 226).data
+      const data = document.querySelector('#canvas-07').getContext('2d').getImageData(0, 60, 600, 216).data
       let left = 600, right = -1, top = 999
       for (let i = 0; i < data.length; i += 4) {
         const sky = data[i] === 223 && data[i + 1] === 241 && data[i + 2] === 247
         if (sky) continue
-        const p = i / 4, x = p % 600, y = 50 + Math.floor(p / 600)
+        const p = i / 4, x = p % 600, y = 60 + Math.floor(p / 600)
         left = Math.min(left, x); right = Math.max(right, x); top = Math.min(top, y)
       }
       return { left, right, top }

@@ -103,6 +103,7 @@ Property | Default value | Description
 `preload_sounds` | `[]` | Paths to sound effects to load before the first frame; a sound that was not preloaded is not played. See [Sound](#sound).
 `background_audio` | `false` | If `true` then tracks keep playing while the page is hidden, as a music player might want. By default they pause, and carry on when the page is shown again.
 `context_menu` | `true` | If `false` then the browser's context menu is suppressed over the canvas, so the right mouse button can be used
+`claim_keys` | `[]` | Key codes, such as `"Space"` or `"ArrowUp"`, that the app uses, so the browser does not act on them too, such as scrolling the page, while the canvas has focus. The canvas then takes focus when pressed, and with the Tab key; elsewhere on the page the keys work as usual. See [Inputs](#inputs).
 `touch_scroll` | `true` | If `false` then a touch on the canvas does not scroll or zoom the page, so the app can follow touch drags. Leave it `true` for a canvas that only needs taps, so visitors can still scroll past it.
 `on_error` | `undefined` | A function that receives errors thrown during a frame, so that frames continue; see [Handling Errors](#handling-errors)
 
@@ -232,7 +233,7 @@ The runtime environment object contains properties that are grouped as follows:
 
 #### Inputs
 
-`env.inputs` holds the input state as of the current frame. `.mouse` follows a mouse, a finger on a touchscreen, or a pen alike: a touch presses the left button where it lands, and while several fingers touch, only the first is followed. Mouse positions are in canvas pixels, even when the canvas is displayed at another size with CSS, and only movement over the canvas is tracked. Keys are heard across the whole page, so every attached canvas sees the same keyboard state. When the window loses focus, every button and key is released.
+`env.inputs` holds the input state as of the current frame. `.mouse` follows a mouse, a finger on a touchscreen, or a pen alike: a touch presses the left button where it lands, and while several fingers touch, only the first is followed. Mouse positions are in canvas pixels, even when the canvas is displayed at another size with CSS, and only movement over the canvas is tracked. Keys are heard across the whole page, so every attached canvas sees the same keyboard state. Keys such as Space and the arrow keys also scroll the page; list the ones the app uses in `claim_keys` to stop that while the canvas has focus. When the window loses focus, every button and key is released.
 
 `env.inputs` | Description
 ----|----

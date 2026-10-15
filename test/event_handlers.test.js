@@ -214,3 +214,59 @@ describe('when the window loses focus', () => {
     expect(sys.args.inputs.key.pressed).toBe(pressed)
   })
 })
+
+describe('claiming keys', () => {
+  // A canvas that records its tabindex attribute and its focusing
+  function attach_with(config, attributes = {}) {
+    sys = attached_system({ config })
+    Object.assign(sys.app.canvas, {
+      attributes: { ...attributes },
+      hasAttribute(name) { return name in this.attributes },
+      removeAttribute(name) { delete this.attributes[name] },
+      focus: vi.fn(),
+    })
+    Object.defineProperty(sys.app.canvas, 'tabIndex', {
+      set(value) { this.attributes.tabindex = String(value) },
+    })
+    return setup_event_handlers(sys, sys.app.canvas)
+  }
+
+  it('leaves the canvas and keys alone by default', () => {
+    attach_with({})
+    on_canvas.pointerdown(pointer({ buttons: 1 }))
+    expect(sys.app.canvas.attributes).toEqual({})
+    expect(sys.app.canvas.focus).not.toHaveBeenCalled()
+    expect(on_canvas.keydown).toBeUndefined()
+  })
+
+  it('makes the canvas focusable, focuses it when pressed, and restores it on detach', () => {
+    const undo = attach_with({ claim_keys: ['Space'] })
+    expect(sys.app.canvas.attributes.tabindex).toBe('0')
+
+    on_canvas.pointerdown(pointer({ buttons: 1 }))
+    expect(sys.app.canvas.focus).toHaveBeenCalledWith({ preventScroll: true })
+    expect(sys.args.inputs.mouse.button_left).toBe(true)
+
+    for (const undo_one of undo) undo_one?.()
+    expect(sys.app.canvas.attributes).toEqual({})
+  })
+
+  it('keeps a tabindex the page gave the canvas', () => {
+    const undo = attach_with({ claim_keys: ['Space'] }, { tabindex: '-1' })
+    for (const undo_one of undo) undo_one?.()
+    expect(sys.app.canvas.attributes).toEqual({ tabindex: '-1' })
+  })
+
+  it('stops the browser acting on claimed keys that reach the canvas, and only those', () => {
+    attach_with({ claim_keys: ['Space', 'ArrowUp'] })
+    const space = { ...key('Space', ' '), preventDefault: vi.fn() }
+    const tab = { ...key('Tab', 'Tab'), preventDefault: vi.fn() }
+    on_canvas.keydown(space)
+    on_canvas.keydown(tab)
+    expect(space.preventDefault).toHaveBeenCalled()
+    expect(tab.preventDefault).not.toHaveBeenCalled()
+
+    on_document.keydown(space)
+    expect(sys.args.inputs.key.pressed.Space).toEqual({ code: 'Space', text: ' ' })
+  })
+})

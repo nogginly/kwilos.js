@@ -323,3 +323,44 @@ test.describe('lifecycle', () => {
     expect(errors).toEqual([])
   })
 })
+
+test.describe('claiming keys', () => {
+  // Makes the page long enough to scroll, and attaches with the config
+  async function attach(page, config) {
+    await page.evaluate(async (config) => {
+      document.body.style.height = '3000px'
+      window.kw = await window.kwilos.Kwilos.attach('#c', (env) => { window.env = env; return [] }, config)
+    }, config)
+    await page.waitForFunction(() => window.env)
+  }
+  const scrolled = (page) => page.evaluate(() => window.scrollY)
+
+  test('stops Space scrolling the page while the canvas has focus, and only then', async ({ page }) => {
+    await attach(page, { claim_keys: ['Space'] })
+
+    await page.mouse.click(100, 100)
+    await page.keyboard.press('Space')
+    await frames(page, 3)
+    expect(await scrolled(page)).toBe(0)
+    expect(await page.evaluate(() => document.activeElement?.id)).toBe('c')
+
+    await page.mouse.click(400, 400)
+    await page.keyboard.press('Space')
+    await expect.poll(() => scrolled(page)).toBeGreaterThan(0)
+  })
+
+  test('leaves Space to scroll the page without claim_keys', async ({ page }) => {
+    await attach(page, {})
+    await page.mouse.click(100, 100)
+    await page.keyboard.press('Space')
+    await expect.poll(() => scrolled(page)).toBeGreaterThan(0)
+  })
+
+  test('still reports claimed keys to the app', async ({ page }) => {
+    await attach(page, { claim_keys: ['Space'] })
+    await page.mouse.click(100, 100)
+    await page.keyboard.down('Space')
+    await expect.poll(() => page.evaluate(() => !!window.env.inputs.key.pressed.Space)).toBe(true)
+    await page.keyboard.up('Space')
+  })
+})
