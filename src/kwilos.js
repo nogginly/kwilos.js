@@ -5,6 +5,7 @@ import { create_system, initialize_with_canvas } from "./kwilos/initialize.js";
 export { circle, rect, label, image, tile, container } from "./kwilos/shapes.js";
 export { contains } from "./kwilos/hits.js";
 export { sound, track } from "./kwilos/audio.js";
+export { animation, sprite, animation_status } from "./kwilos/sprites.js";
 
 /**
  * @typedef {import("./kwilos/types.js").Tick} Tick
@@ -25,6 +26,11 @@ export { sound, track } from "./kwilos/audio.js";
  * @typedef {import("./kwilos/shapes.js").Image} Image
  * @typedef {import("./kwilos/shapes.js").Tile} Tile
  * @typedef {import("./kwilos/shapes.js").Container} Container
+ * @typedef {import("./kwilos/sprites.js").Sprite} Sprite
+ * @typedef {import("./kwilos/sprites.js").Animation} Animation
+ * @typedef {import("./kwilos/sprites.js").Frame} Frame
+ * @typedef {import("./kwilos/sprites.js").Easing} Easing
+ * @typedef {import("./kwilos/sprites.js").AnimationStatus} AnimationStatus
  * @typedef {import("./kwilos/audio.js").Sound} Sound
  * @typedef {import("./kwilos/audio.js").Track} Track
  * @typedef {import("./kwilos/audio.js").Listener} Listener
