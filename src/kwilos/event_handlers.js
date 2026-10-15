@@ -10,7 +10,8 @@ import { BAL } from './bal.js'
  * Listens for input on the canvas, document and window, and for the
  * context menu when `context_menu` is false in the config. Pointer events
  * cover the mouse, touch and pens alike; with several touches, only the
- * first is followed.
+ * first is followed. With `claim_keys`, the canvas can take focus, and
+ * while it has it, the browser's own actions for those keys are stopped.
  * @param {System} system
  * @param {HTMLCanvasElement} canvas
  * @returns {Array<() => void>} Functions that remove the listeners
@@ -19,20 +20,33 @@ export function setup_event_handlers(system, canvas) {
   let sys_key = system.args.inputs.key
   let sys_mouse = system.args.inputs.mouse
 
+  const claimed = new Set(system.app.config.claim_keys ?? [])
+
   /** @type {import('./bal.js').EventMapping[]} */
   const canvas_events = [
     { name: 'pointermove', handler: (ev) => _canvas_pointer_moved(sys_mouse, canvas, ev) },
-    { name: 'pointerdown', handler: (ev) => _canvas_pointer_pressed(sys_mouse, canvas, ev) },
+    {
+      name: 'pointerdown', handler: (ev) => {
+        if (claimed.size > 0)
+          canvas.focus({ preventScroll: true })
+        _canvas_pointer_pressed(sys_mouse, canvas, ev)
+      }
+    },
     // `click` is the left button; `auxclick` the others
     { name: 'click', handler: (ev) => _canvas_clicked(sys_mouse, canvas, ev) },
     { name: 'auxclick', handler: (ev) => _canvas_clicked(sys_mouse, canvas, ev) },
   ]
   if (system.app.config.context_menu === false)
     canvas_events.push({ name: 'contextmenu', handler: (ev) => ev.preventDefault() })
+  // Keys reach the canvas only while it has focus, then go on to the
+  // document, where they are recorded
+  if (claimed.size > 0)
+    canvas_events.push({ name: 'keydown', handler: (ev) => { if (claimed.has(ev.code)) ev.preventDefault() } })
 
   return [
     BAL.add_event_listeners(canvas, canvas_events),
     ..._touch_scroll(canvas, system.app.config.touch_scroll),
+    ..._focusable(canvas, claimed.size > 0),
 
     // Releases are heard on the whole document, so a button released
     // outside the canvas does not stay pressed
@@ -218,4 +232,18 @@ function _touch_scroll(canvas, touch_scroll) {
   const previous = canvas.style.touchAction
   canvas.style.touchAction = 'none'
   return [() => { canvas.style.touchAction = previous }]
+}
+
+/**
+ * Makes the canvas focusable, unless the page already chose whether it is,
+ * so that it can take focus when pressed or with the Tab key.
+ * @param {HTMLCanvasElement} canvas
+ * @param {boolean} claiming
+ * @returns {Array<() => void>} A function that restores the canvas, if it was changed
+ */
+function _focusable(canvas, claiming) {
+  if (!claiming || canvas.hasAttribute('tabindex'))
+    return []
+  canvas.tabIndex = 0
+  return [() => canvas.removeAttribute('tabindex')]
 }

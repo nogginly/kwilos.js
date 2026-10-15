@@ -17,6 +17,9 @@
 // 5. `animation_status` tells when a `once` animation is done, to go back
 //    to idle after a jump or a cheer.
 //
+// 6. `claim_keys` stops Space and the arrow keys scrolling the page while
+//    the game has focus; clicking it gives it focus.
+//
 // Arrow keys or the buttons walk; space, the up arrow or Jump jumps; click
 // or tap her to cheer.
 //
@@ -58,6 +61,7 @@ await Kwilos.attach("#canvas-07", tick, {
   background_color: '#dff1f7',
   preload_images: [SHEET.path],
   touch_scroll: false,
+  claim_keys: ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'],
 })
 
 /**
@@ -125,6 +129,10 @@ function tick(env) {
     label({
       x: WIDTH - 16, y: 30, text: 'Arrows walk, space jumps, click her to cheer',
       text_align: 'right', font_size: 13, font_name: 'sans-serif', fill_color: '#24505f',
+    }),
+    label({
+      x: WIDTH - 16, y: 50, text: 'Click the game first to play with the keyboard',
+      text_align: 'right', font_size: 11, font_name: 'sans-serif', fill_color: '#4f7c8a',
     }),
     button('left', 16, '◀', held),
     button('jump', WIDTH / 2 - 40, 'Jump', held),
