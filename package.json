@@ -35,14 +35,14 @@
   ],
   "scripts": {
     "test": "vitest run",
-    "test-browser": "node site/build.js --from-src && playwright test",
+    "test-browser": "npm run build-site && playwright test",
     "typecheck": "tsc",
     "clean": "node -e \"fs.rmSync('_dist', { recursive: true, force: true })\"",
     "build-esm": "esbuild --format=esm --bundle src/kwilos.js  --outfile=_dist/kwilos.mjs",
     "build-esm-min": "esbuild --format=esm --bundle --minify --sourcemap src/kwilos.js --outfile=_dist/kwilos.min.mjs",
     "build-types": "tsc -p tsconfig.build.json",
     "build": "npm run clean && npm run build-esm && npm run build-esm-min && npm run build-types",
-    "build-site": "node site/build.js",
+    "build-site": "npm run build && node site/build.js",
     "prepack": "npm run build"
   },
   "devDependencies": {

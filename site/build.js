@@ -1,11 +1,12 @@
-// Builds the Kwilos web site into _site/: an opening page with the samples
-// running from the CDN, and an API page rendered from the README.
+// Builds the Kwilos web site into _site/: an opening page with the samples,
+// and an API page rendered from the README. The site carries its own copy of
+// Kwilos, from _dist/, which the samples run with, so they do not depend on
+// a CDN; their Source tabs show the CDN address, for readers to copy.
 //
-// Usage: node site/build.js [--from-src]
-//   --from-src  The samples import Kwilos from the repository's src/
-//               instead of the CDN, for testing without a network.
+// Usage: node site/build.js, after `npm run build`; `npm run build-site`
+// does both.
 
-import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { access, cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Marked } from 'marked'
@@ -19,13 +20,12 @@ const OUT = join(ROOT, '_site')
 const REPO = 'https://github.com/nogginly/kwilos.js'
 
 const { version } = JSON.parse(await readFile(join(ROOT, 'package.json'), 'utf8'))
-const from_src = process.argv.includes('--from-src')
 
-// The address each sample imports Kwilos from, written relative to a
-// sample's own folder when using the repository's src/
-const kwilos_url = from_src
-  ? '../../../src/kwilos.js'
-  : `https://cdn.jsdelivr.net/npm/kwilos.js@${version}/_dist/kwilos.min.mjs`
+// Where the samples run Kwilos from: the site's own copy, relative to a
+// sample's folder; and the CDN address their Source tabs show
+const KWILOS_FILES = ['kwilos.min.mjs', 'kwilos.min.mjs.map']
+const local_url = '../../kwilos/kwilos.min.mjs'
+const cdn_url = `https://cdn.jsdelivr.net/npm/kwilos.js@${version}/_dist/kwilos.min.mjs`
 
 hljs.registerLanguage('javascript', javascript)
 hljs.registerLanguage('js', javascript)
@@ -45,7 +45,14 @@ const markdown = new Marked({
 })
 
 await rm(OUT, { recursive: true, force: true })
-await mkdir(OUT, { recursive: true })
+await mkdir(join(OUT, 'kwilos'), { recursive: true })
+for (const file of KWILOS_FILES) {
+  const built = join(ROOT, '_dist', file)
+  await access(built).catch(() => {
+    throw new Error(`site/build.js: ${built} is missing; run npm run build first, or npm run build-site`)
+  })
+  await cp(built, join(OUT, 'kwilos', file))
+}
 
 const samples = await build_samples()
 const readme = await readFile(join(ROOT, 'README.md'), 'utf8')
@@ -75,11 +82,11 @@ await cp(join(SITE, 'site.js'), join(OUT, 'site.js'))
 // GitHub Pages would otherwise process the site with Jekyll
 await writeFile(join(OUT, '.nojekyll'), '')
 
-console.log(`Built _site/ for Kwilos ${version}, ${samples.length} samples, Kwilos from ${from_src ? 'src/' : 'the CDN'}`)
+console.log(`Built _site/ for Kwilos ${version}, ${samples.length} samples, with its own copy of Kwilos`)
 
-// Copies samples/ into the site with each sample importing Kwilos from
-// `kwilos_url`, and returns each sample's title, description, canvas size
-// and source.
+// Copies samples/ into the site with each sample importing the site's own
+// copy of Kwilos, and returns each sample's title, description, canvas size
+// and source, which shows the CDN address instead.
 async function build_samples() {
   await cp(join(ROOT, 'samples'), join(OUT, 'samples'), { recursive: true })
   const names = (await readdir(join(OUT, 'samples'), { withFileTypes: true }))
@@ -91,8 +98,9 @@ async function build_samples() {
   for (const name of names) {
     const dir = join(OUT, 'samples', name)
     const app_path = join(dir, 'app.js')
-    const source = (await readFile(app_path, 'utf8')).replaceAll('../../src/kwilos.js', kwilos_url)
-    await writeFile(app_path, source)
+    const original = await readFile(app_path, 'utf8')
+    await writeFile(app_path, original.replaceAll('../../src/kwilos.js', local_url))
+    const source = original.replaceAll('../../src/kwilos.js', cdn_url)
 
     const html = await readFile(join(dir, 'index.html'), 'utf8')
     // The sample's size: its sample-size tag if it has one, as when its
