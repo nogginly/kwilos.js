@@ -40,7 +40,7 @@ function tick(env) { ... }
 Kwilos is published on npm as `kwilos.js`, so public CDNs such as [jsDelivr](https://www.jsdelivr.com) and [unpkg](https://unpkg.com) serve it with no build step:
 
 ```js
-import { Kwilos, circle } from "https://cdn.jsdelivr.net/npm/kwilos.js@0.9.1/_dist/kwilos.min.mjs"
+import { Kwilos, circle } from "https://cdn.jsdelivr.net/npm/kwilos.js@0.9.2/_dist/kwilos.min.mjs"
 ```
 
 Name an exact version, as above. Before 1.0, a minor version may break the API, so a range such as `@0` could change a working page without warning; see the [changelog](CHANGELOG.md) before moving to a newer version. `_dist/kwilos.mjs` is the same build unminified, for reading and debugging.
