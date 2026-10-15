@@ -1,13 +1,13 @@
 # Kwilos JS
 
-_Kwilos_ is an easy-to-use, dependency-free, entity-based Javascript graphics toolkit for use with HTML5 Canvas. 
+_Kwilos_ is an easy-to-use, dependency-free, entity-based Javascript graphics toolkit for use with HTML5 Canvas.
 
 The [Kwilos web site](https://nogginly.github.io/kwilos.js/) has the samples running live, and the API documentation.
 
 _Kwilos_ uses a "game loop" metaphor while providing a way to use it efficiently when the drawings / graphics have limited motion.
 
 > **About the name**
-> 
+>
 > A mashup of 'Quill' and 'Kalos' with phonetic jiggery-pokery to get something unique that doesn't lose its flavour.
 
 ## Using Kwilos JS
@@ -40,7 +40,7 @@ function tick(env) { ... }
 Kwilos is published on npm as `kwilos.js`, so public CDNs such as [jsDelivr](https://www.jsdelivr.com) and [unpkg](https://unpkg.com) serve it with no build step:
 
 ```js
-import { Kwilos, circle } from "https://cdn.jsdelivr.net/npm/kwilos.js@0.10.0/_dist/kwilos.min.mjs"
+import { Kwilos, circle } from "https://cdn.jsdelivr.net/npm/kwilos.js@0.10.1/_dist/kwilos.min.mjs"
 ```
 
 Name an exact version, as above. Before 1.0, a minor version may break the API, so a range such as `@0` could change a working page without warning; see the [changelog](CHANGELOG.md) before moving to a newer version. `_dist/kwilos.mjs` is the same build unminified, for reading and debugging.
@@ -92,20 +92,20 @@ const kwilos = await Kwilos.attach("canvas", tick, {
 
 ### Configuring Kwilos
 
-When attaching a canvas, you can configure Kwilos with the following properties that you can provide in an object. 
+When attaching a canvas, you can configure Kwilos with the following properties that you can provide in an object.
 
-Property | Default value | Description
-----|-----|----
-`background_clear` | `false` | If `true` then the background is cleared, allowing layered canvases to be transparent
-`background_color` | `black` | Set the background colour between ticks. If `background_clear` is set then use `null` or a colour with alpha to see through the canvas.
-`font` | `undefined` | When `undefined` the default font of the browser is used. Otherwise specify a font as you would for the CSS `font-family` property.
-`preload_images` | `[]` | Provide one or more paths to images to preload to ensure the images are ready when `tick` handler is called.
-`preload_sounds` | `[]` | Paths to sound effects to load before the first frame; a sound that was not preloaded is not played. See [Sound](#sound).
-`background_audio` | `false` | If `true` then tracks keep playing while the page is hidden, as a music player might want. By default they pause, and carry on when the page is shown again.
-`context_menu` | `true` | If `false` then the browser's context menu is suppressed over the canvas, so the right mouse button can be used
-`claim_keys` | `[]` | Key codes, such as `"Space"` or `"ArrowUp"`, that the app uses, so the browser does not act on them too, such as scrolling the page, while the canvas has focus. The canvas then takes focus when pressed, and with the Tab key; elsewhere on the page the keys work as usual. See [Inputs](#inputs).
-`touch_scroll` | `true` | If `false` then a touch on the canvas does not scroll or zoom the page, so the app can follow touch drags. Leave it `true` for a canvas that only needs taps, so visitors can still scroll past it.
-`on_error` | `undefined` | A function that receives errors thrown during a frame, so that frames continue; see [Handling Errors](#handling-errors)
+Property          |Default value|Description                                                                                                                                                                                                                                                                                          
+------------------|-------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+`background_clear`|`false`      |If `true` then the background is cleared, allowing layered canvases to be transparent                                                                                                                                                                                                                
+`background_color`|`black`      |Set the background colour between ticks. If `background_clear` is set then use `null` or a colour with alpha to see through the canvas.                                                                                                                                                              
+`font`            |`undefined`  |When `undefined` the default font of the browser is used. Otherwise specify a font as you would for the CSS `font-family` property.                                                                                                                                                                  
+`preload_images`  |`[]`         |Provide one or more paths to images to preload to ensure the images are ready when `tick` handler is called.                                                                                                                                                                                         
+`preload_sounds`  |`[]`         |Paths to sound effects to load before the first frame; a sound that was not preloaded is not played. See [Sound](#sound).                                                                                                                                                                            
+`background_audio`|`false`      |If `true` then tracks keep playing while the page is hidden, as a music player might want. By default they pause, and carry on when the page is shown again.                                                                                                                                         
+`context_menu`    |`true`       |If `false` then the browser's context menu is suppressed over the canvas, so the right mouse button can be used                                                                                                                                                                                      
+`claim_keys`      |`[]`         |Key codes, such as `"Space"` or `"ArrowUp"`, that the app uses, so the browser does not act on them too, such as scrolling the page, while the canvas has focus. The canvas then takes focus when pressed, and with the Tab key; elsewhere on the page the keys work as usual. See [Inputs](#inputs).
+`touch_scroll`    |`true`       |If `false` then a touch on the canvas does not scroll or zoom the page, so the app can follow touch drags. Leave it `true` for a canvas that only needs taps, so visitors can still scroll past it.                                                                                                  
+`on_error`        |`undefined`  |A function that receives errors thrown during a frame, so that frames continue; see [Handling Errors](#handling-errors)                                                                                                                                                                              
 
 ## The `tick` Function
 
@@ -115,11 +115,11 @@ It is called with an `env` parameter that contains runtime state properties and 
 
 ### The Return Value
 
-`tick` returns | Effect
-----|----
-An array of entities | The background is cleared, then the entities are drawn in array order. An empty array draws only the background.
-`null` | The canvas is left as it is. If the canvas was resized since the last frame, the last scene is drawn again.
-Anything else | Throws a `TypeError`, which stops the frame loop.
+`tick` returns      |Effect                                                                                                          
+--------------------|----------------------------------------------------------------------------------------------------------------
+An array of entities|The background is cleared, then the entities are drawn in array order. An empty array draws only the background.
+`null`              |The canvas is left as it is. If the canvas was resized since the last frame, the last scene is drawn again.     
+Anything else       |Throws a `TypeError`, which stops the frame loop.                                                               
 
 Within the array, nested arrays are drawn in place, and `null`, `undefined` and `false` entries are skipped, so conditional entities can be written inline:
 
@@ -139,14 +139,14 @@ function tick(env) {
 
 Each shape has a factory, exported alongside `Kwilos`, that takes the shape's properties and returns a plain object tagged with its `type`. A hand-written object with the same `type` is drawn the same way. An entity without a recognised `type` throws a `TypeError`.
 
-Factory | Required | Optional
-----|----|----
-`circle` | `x`, `y` (centre), `radius` | `fill_color`, `stroke_color`
-`rect` | `x`, `y` (top-left), `w`, `h` | `fill_color`, `stroke_color`
-`label` | `x`, `y`, `text` | `font_name`, `font_size` (points), `fill_color`, `stroke_color`, `text_align` (default `center`), `text_baseline` (default `alphabetic`)
-`image` | `path`, `x`, `y` | `w`, `h`, and `source_x`, `source_y`, `source_w`, `source_h` to draw part of the image
-`tile` | `path`, `x`, `y`, `tile_index`, and either `tile_w` + `tile_h` or `tile_rows` + `tile_cols` | `w`, `h`
-`container` | `scene` | `x`, `y` (default `0`), and `clip` with `w`, `h` to hide drawing outside that area
+Factory    |Required                                                                                   |Optional                                                                                                                                
+-----------|-------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------
+`circle`   |`x`, `y` (centre), `radius`                                                                |`fill_color`, `stroke_color`                                                                                                            
+`rect`     |`x`, `y` (top-left), `w`, `h`                                                              |`fill_color`, `stroke_color`                                                                                                            
+`label`    |`x`, `y`, `text`                                                                           |`font_name`, `font_size` (points), `fill_color`, `stroke_color`, `text_align` (default `center`), `text_baseline` (default `alphabetic`)
+`image`    |`path`, `x`, `y`                                                                           |`w`, `h`, and `source_x`, `source_y`, `source_w`, `source_h` to draw part of the image                                                  
+`tile`     |`path`, `x`, `y`, `tile_index`, and either `tile_w` + `tile_h` or `tile_rows` + `tile_cols`|`w`, `h`                                                                                                                                
+`container`|`scene`                                                                                    |`x`, `y` (default `0`), and `clip` with `w`, `h` to hide drawing outside that area                                                      
 
 A `circle`, `rect` or `label` with neither `fill_color` nor `stroke_color` draws nothing. A `container` draws its `scene` with the origin moved to its `x` and `y`, which makes containers useful as layers: the containers in a scene are drawn in order, each one over the last.
 
@@ -175,26 +175,26 @@ function tick(env) {
 
 `animation({...})` is made once and shared by any number of sprites:
 
-Property | Description
-----|----
-`frames` | The frames, in order. Each is a `tile` from the `sheet`, or an image `path` of its own, with optional `source_x`, `source_y`, `source_w` and `source_h` to show part of it.
-&emsp;`.duration` | How long the frame shows, in milliseconds
-&emsp;`.dx`, `.dy` | Shift the frame while it shows, such as a bounce in a walk. They are not added up from frame to frame: moving a character is the app's job, so its `x` and `y` stay where the game logic puts them.
-`sheet` | The tile sheet for frames with a `tile`: its `path`, and `tile_w` and `tile_h`, or `tile_rows` and `tile_cols`, as for a tile
-`play` | `"loop"`, the default, repeats; `"once"` stops on the last frame; `"ping-pong"` plays forwards then backwards, repeating
-`duration` | The length of one pass, shared among the frames in proportion to their own durations. Without it, the frames' durations add up to the pass; frames without one show for 100 ms.
-`easing` | Spaces the frames along a curve within each pass: `"linear"`, the default, or `"ease-in"`, `"ease-out"` and `"ease-in-out"`, which are cubic, or a function from progress through the pass, `0` to `1`, to the progress to show. With `"ease-in"`, the first frames show longest.
+Property          |Description                                                                                                                                                                                                                                                                      
+------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+`frames`          |The frames, in order. Each is a `tile` from the `sheet`, or an image `path` of its own, with optional `source_x`, `source_y`, `source_w` and `source_h` to show part of it.                                                                                                      
+&emsp;`.duration` |How long the frame shows, in milliseconds                                                                                                                                                                                                                                        
+&emsp;`.dx`, `.dy`|Shift the frame while it shows, such as a bounce in a walk. They are not added up from frame to frame: moving a character is the app's job, so its `x` and `y` stay where the game logic puts them.                                                                              
+`sheet`           |The tile sheet for frames with a `tile`: its `path`, and `tile_w` and `tile_h`, or `tile_rows` and `tile_cols`, as for a tile                                                                                                                                                    
+`play`            |`"loop"`, the default, repeats; `"once"` stops on the last frame; `"ping-pong"` plays forwards then backwards, repeating                                                                                                                                                         
+`duration`        |The length of one pass, shared among the frames in proportion to their own durations. Without it, the frames' durations add up to the pass; frames without one show for 100 ms.                                                                                                  
+`easing`          |Spaces the frames along a curve within each pass: `"linear"`, the default, or `"ease-in"`, `"ease-out"` and `"ease-in-out"`, which are cubic, or a function from progress through the pass, `0` to `1`, to the progress to show. With `"ease-in"`, the first frames show longest.
 
 `sprite({...})` is a scene entity, drawn in order with the other shapes:
 
-Property | Description
-----|----
-`animation` | The animation to play
-`start` | When it began, in `env.time` milliseconds; defaults to `0`. Set it to `env.time` when the animation changes, so the new one starts from its first frame.
-`x`, `y` | Top-left corner
-`w`, `h` | Size to draw at; defaults to the frame's size
-`flip_x`, `flip_y` | Mirror the frames, such as to face the other way with right-facing frames
-`id` | Identifies the sprite, as for other shapes
+Property          |Description                                                                                                                                             
+------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------
+`animation`       |The animation to play                                                                                                                                   
+`start`           |When it began, in `env.time` milliseconds; defaults to `0`. Set it to `env.time` when the animation changes, so the new one starts from its first frame.
+`x`, `y`          |Top-left corner                                                                                                                                         
+`w`, `h`          |Size to draw at; defaults to the frame's size                                                                                                           
+`flip_x`, `flip_y`|Mirror the frames, such as to face the other way with right-facing frames                                                                               
+`id`              |Identifies the sprite, as for other shapes                                                                                                              
 
 Frames are timed in milliseconds rather than ticks, so an animation plays at the same speed on a 60 Hz and a 120 Hz display. A sprite animates only while scenes are drawn, so return a scene, not `null`, while one moves.
 
@@ -235,25 +235,25 @@ The runtime environment object contains properties that are grouped as follows:
 
 `env.inputs` holds the input state as of the current frame. `.mouse` follows a mouse, a finger on a touchscreen, or a pen alike: a touch presses the left button where it lands, and while several fingers touch, only the first is followed. Mouse positions are in canvas pixels, even when the canvas is displayed at another size with CSS, and only movement over the canvas is tracked. Keys are heard across the whole page, so every attached canvas sees the same keyboard state. Keys such as Space and the arrow keys also scroll the page; list the ones the app uses in `claim_keys` to stop that while the canvas has focus. When the window loses focus, every button and key is released.
 
-`env.inputs` | Description
-----|----
-`.mouse` | Pointer state, for a mouse, touch or pen
-&emsp;`.x`, `.y` | Position of the pointer when it was last over the canvas
-&emsp;`.previous_x`, `.previous_y` | `.x` and `.y` as of the previous frame
-&emsp;`.moved` | `true` if the pointer moved since the previous frame; with a button pressed, this is a _drag_
-&emsp;`.button_left` | `true` while the left button is pressed; pressed on the canvas, released anywhere
-&emsp;`.button_middle` | `true` while the middle button (or device equivalent) is pressed
-&emsp;`.button_right` | `true` while the right button (or device equivalent) is pressed
-&emsp;`.pointer_type` | `"mouse"`, `"touch"` or `"pen"`, as of the pointer's last movement or press on the canvas
-&emsp;`.clicks` | The clicks on the canvas since the previous frame, in order; empty when there are none. A click is a button pressed and released over the canvas.
-&emsp;&emsp;`.button` | `"left"`, `"middle"` or `"right"`
-&emsp;&emsp;`.x`, `.y` | Where the button was released, in canvas pixels
-`.key` | Keyboard state
-&emsp;`.alt`, `.shift`, `.ctrl`, `.meta` | `true` while the modifier key is held
-&emsp;`.pressed[C]` | Present while the key with [key code](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_code_values) `C` is held, e.g. `.pressed.KeyA` or `.pressed.ArrowUp`
-&emsp;&emsp;`.code` | The key code, `C`
-&emsp;&emsp;`.text` | The character or key name produced, e.g. `"a"`, `"A"` or `"ArrowUp"`
-&emsp;`.typed` | The printable keys pressed since the previous frame, in order, each with the same `.code` and `.text` properties; empty when there are none
+`env.inputs`                            |Description                                                                                                                                                                         
+----------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+`.mouse`                                |Pointer state, for a mouse, touch or pen                                                                                                                                            
+&emsp;`.x`, `.y`                        |Position of the pointer when it was last over the canvas                                                                                                                            
+&emsp;`.previous_x`, `.previous_y`      |`.x` and `.y` as of the previous frame                                                                                                                                              
+&emsp;`.moved`                          |`true` if the pointer moved since the previous frame; with a button pressed, this is a _drag_                                                                                       
+&emsp;`.button_left`                    |`true` while the left button is pressed; pressed on the canvas, released anywhere                                                                                                   
+&emsp;`.button_middle`                  |`true` while the middle button (or device equivalent) is pressed                                                                                                                    
+&emsp;`.button_right`                   |`true` while the right button (or device equivalent) is pressed                                                                                                                     
+&emsp;`.pointer_type`                   |`"mouse"`, `"touch"` or `"pen"`, as of the pointer's last movement or press on the canvas                                                                                           
+&emsp;`.clicks`                         |The clicks on the canvas since the previous frame, in order; empty when there are none. A click is a button pressed and released over the canvas.                                   
+&emsp;&emsp;`.button`                   |`"left"`, `"middle"` or `"right"`                                                                                                                                                   
+&emsp;&emsp;`.x`, `.y`                  |Where the button was released, in canvas pixels                                                                                                                                     
+`.key`                                  |Keyboard state                                                                                                                                                                      
+&emsp;`.alt`, `.shift`, `.ctrl`, `.meta`|`true` while the modifier key is held                                                                                                                                               
+&emsp;`.pressed[C]`                     |Present while the key with [key code](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_code_values) `C` is held, e.g. `.pressed.KeyA` or `.pressed.ArrowUp`
+&emsp;&emsp;`.code`                     |The key code, `C`                                                                                                                                                                   
+&emsp;&emsp;`.text`                     |The character or key name produced, e.g. `"a"`, `"A"` or `"ArrowUp"`                                                                                                                
+&emsp;`.typed`                          |The printable keys pressed since the previous frame, in order, each with the same `.code` and `.text` properties; empty when there are none                                         
 
 The `button_` properties are sampled once per frame, so a click quicker than a frame may never show in them; it always appears in `clicks`. Use `button_left` for something held, such as a drag, and `clicks` for something done once, such as pressing a button:
 
@@ -318,22 +318,22 @@ function tick(env) {
 
 `sound({...})` and `track({...})` return plain objects, as the shape factories do.
 
-Property | Sound | Track | Description
-----|:--:|:--:|----
-`path` | ✓ | ✓ | The audio file's URL. Sounds must be preloaded with `preload_sounds`; tracks are streamed, so need not be.
-`paths` | | ✓ | A list of audio file URLs, played in turn, in place of `path`; see [Playlists](#playlists)
-`index` | | ✓ | Which of `paths` is playing, from `0`, kept up to date by Kwilos; set it to play another song
-`gain` | ✓ | ✓ | Loudness; defaults to `1`, its loudness as recorded
-`rate` | ✓ | ✓ | Playback speed, which also changes the pitch; defaults to `1`
-`pan` | ✓ | ✓ | From `-1`, left, to `1`, right; defaults to `0`, centred. Ignored for a sound with a position.
-`x`, `y` | ✓ | ✓ | Where the sound is, in canvas coordinates; see [Positions](#positions). Give both or neither.
-`range` | ✓ | ✓ | For a sound with a position, the distance from the listener at which it falls silent; defaults to the canvas width
-`looping` | | ✓ | If `true`, plays again from the start when it ends; with `paths`, goes back to the first song after the last
-`paused` | | ✓ | If `true`, pauses it, keeping its place
-`restart` | | ✓ | If `true`, plays it again from the start, from its first song. Kwilos sets it back to `false` once done, so set it on one frame only.
-`time` | | ✓ | Set by Kwilos: the seconds played from the start of the song
-`duration` | | ✓ | Set by Kwilos: the song's length in seconds, or `0` until it is known
-`ended` | | ✓ | Set by Kwilos: `true` once it has played to its end, or past its last song, without looping
+Property  |Sound|Track|Description                                                                                                                          
+----------|:---:|:---:|-------------------------------------------------------------------------------------------------------------------------------------
+`path`    |  ✓  |  ✓  |The audio file's URL. Sounds must be preloaded with `preload_sounds`; tracks are streamed, so need not be.                           
+`paths`   |     |  ✓  |A list of audio file URLs, played in turn, in place of `path`; see [Playlists](#playlists)                                           
+`index`   |     |  ✓  |Which of `paths` is playing, from `0`, kept up to date by Kwilos; set it to play another song                                        
+`gain`    |  ✓  |  ✓  |Loudness; defaults to `1`, its loudness as recorded                                                                                  
+`rate`    |  ✓  |  ✓  |Playback speed, which also changes the pitch; defaults to `1`                                                                        
+`pan`     |  ✓  |  ✓  |From `-1`, left, to `1`, right; defaults to `0`, centred. Ignored for a sound with a position.                                       
+`x`, `y`  |  ✓  |  ✓  |Where the sound is, in canvas coordinates; see [Positions](#positions). Give both or neither.                                        
+`range`   |  ✓  |  ✓  |For a sound with a position, the distance from the listener at which it falls silent; defaults to the canvas width                   
+`looping` |     |  ✓  |If `true`, plays again from the start when it ends; with `paths`, goes back to the first song after the last                         
+`paused`  |     |  ✓  |If `true`, pauses it, keeping its place                                                                                              
+`restart` |     |  ✓  |If `true`, plays it again from the start, from its first song. Kwilos sets it back to `false` once done, so set it on one frame only.
+`time`    |     |  ✓  |Set by Kwilos: the seconds played from the start of the song                                                                         
+`duration`|     |  ✓  |Set by Kwilos: the song's length in seconds, or `0` until it is known                                                                
+`ended`   |     |  ✓  |Set by Kwilos: `true` once it has played to its end, or past its last song, without looping                                          
 
 Kwilos compares `env.tracks` with what is playing, so setting a track again with the same `path`, even as a new object on every frame, leaves it playing; only a different `path` starts it afresh. To play it from the start, set `restart` on the frame it should restart, not on every frame that some condition holds:
 
