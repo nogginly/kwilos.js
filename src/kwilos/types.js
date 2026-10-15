@@ -26,6 +26,7 @@
  * @property {boolean} [background_audio] Set to true to keep tracks playing while the page is hidden, e.g. for a music player; by default they pause
  * @property {boolean} [context_menu] Set to false to suppress the browser's context menu over the canvas, so the right button can be used
  * @property {boolean} [touch_scroll] Set to false to stop touches on the canvas scrolling or zooming the page, so the app can follow touch drags
+ * @property {string[]} [claim_keys] Key codes, e.g. "Space" or "ArrowUp", whose browser actions, such as scrolling, are stopped while the canvas has focus; the canvas then takes focus when pressed, and with the Tab key
  * @property {ErrorHandler} [on_error] Receives errors thrown during a frame, and frames continue; without it, an error detaches Kwilos and is rethrown
  */
 
