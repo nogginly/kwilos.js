@@ -44,6 +44,7 @@
  * @property {Inputs} inputs Input state as of this frame
  * @property {Record<string, any>} state Data the app keeps between frames
  * @property {(point?: Point) => Entity | null} hit Returns the shape drawn topmost at the point, by default the mouse position, in the scene last drawn; null if there is none
+ * @property {number} time Milliseconds since the first frame, as of this frame; sprites animate by it
  * @property {Array<Sound | null | undefined | false>} sounds Sound effects to play after this frame; push to it, and Kwilos empties it after each frame
  * @property {Record<string, Track | null | undefined>} tracks Tracks to play, by a name of your choice; they play while they are here
  * @property {number} volume Scales all sounds and tracks, from 0, silent, to 1, as given; defaults to 1
@@ -124,6 +125,8 @@
  * @property {Tick} tick
  * @property {Config} config
  * @property {Scene | null} last_scene
+ * @property {number} drawn_time `env.time` when the last scene was drawn, so hit-tests see the frames that were shown
+ * @property {number} [time_origin] The animation frame timestamp of the first frame
  * @property {() => void} detach Stops the frames and audio, and removes the listeners; does nothing once detached
  */
 

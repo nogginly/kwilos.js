@@ -50,11 +50,13 @@ function _detach_and_throw(sys, error) {
 //   in which case the last scene is drawn again.
 // - Anything else throws a TypeError.
 /**
- * @param {number} _ts
+ * @param {number} ts The animation frame's timestamp, in milliseconds
  * @param {System} sys
  */
-export function ticker(_ts, sys) {
+export function ticker(ts, sys) {
   try {
+    sys.app.time_origin ??= ts
+    sys.args.time = ts - sys.app.time_origin
     const resized = _sync_canvas_size(sys)
     const scene = sys.app.tick(sys.args)
 
@@ -104,6 +106,7 @@ function _draw_scene(sys, scene) {
     draw.fillStyle = bgcolor
     draw.fillRect(0, 0, sys.canvas.width, sys.canvas.height)
   }
+  sys.app.drawn_time = sys.args.time
   render(sys, scene)
 }
 

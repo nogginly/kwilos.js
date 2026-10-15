@@ -1,10 +1,13 @@
 /* Don't use sloppy JS. */ "use strict";
 
 import { load_image } from "./initialize.js";
+import { sprite_frame } from "./sprites.js";
+import { drawn_size } from "./hits.js";
 
 /**
  * @import { System } from './types.js'
  * @import { Scene, Circle, Rect, Label, Image, Tile, Container } from './shapes.js'
+ * @import { Sprite } from './sprites.js'
  */
 
 /** @typedef {(sys: System, entity: any) => void} Renderer */
@@ -16,6 +19,7 @@ const RENDERABLES = {
   image: _render_image,
   label: _render_label,
   rect: _render_rectangle,
+  sprite: _render_sprite,
   tile: _render_tile
 }
 
@@ -220,5 +224,34 @@ function _render_image(sys,
     source_h ||= img.height
 
     draw.drawImage(img, source_x, source_y, source_w, source_h, x, y, w, h)
+  }
+}
+
+// Draws the frame a sprite shows now, as a tile or image, mirrored about
+// its own box when flipped
+/**
+ * @param {System} sys
+ * @param {Sprite} entity
+ */
+function _render_sprite(sys, entity) {
+  const frame = sprite_frame(entity, sys.args.time)
+  const draw_frame = frame.type === 'tile' ? _render_tile : _render_image
+  if (!entity.flip_x && !entity.flip_y) {
+    draw_frame(sys, /** @type {any} */ (frame))
+    return
+  }
+
+  const size = drawn_size(frame, sys)
+  if (size === null)
+    return
+  const draw = sys.app.draw_context
+  const save = draw.getTransform()
+  try {
+    draw.translate(frame.x + (entity.flip_x ? size.w : 0), frame.y + (entity.flip_y ? size.h : 0))
+    draw.scale(entity.flip_x ? -1 : 1, entity.flip_y ? -1 : 1)
+    draw_frame(sys, /** @type {any} */ ({ ...frame, x: 0, y: 0, w: size.w, h: size.h }))
+  }
+  finally {
+    draw.setTransform(save)
   }
 }

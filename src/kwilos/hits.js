@@ -2,6 +2,7 @@
 
 import { load_image } from './initialize.js'
 import { label_font } from './renderers.js'
+import { sprite_frame } from './sprites.js'
 
 /**
  * @import { System, Point } from './types.js'
@@ -85,12 +86,17 @@ function _within(entity, x, y, sys) {
       return _in_box(x, y, entity.x, entity.y, entity.w, entity.h)
     case 'image':
     case 'tile': {
-      const size = _drawn_size(entity, sys)
+      const size = drawn_size(entity, sys)
       return size !== null && _in_box(x, y, entity.x, entity.y, size.w, size.h)
     }
     case 'label': {
       const box = _label_box(entity, sys)
       return _in_box(x, y, box.x, box.y, box.w, box.h)
+    }
+    case 'sprite': {
+      if (!sys)
+        throw new TypeError('Kwilos: contains cannot measure a sprite; env.hit can')
+      return _within(sprite_frame(entity, sys.app.drawn_time), x, y, sys)
     }
     default:
       throw new TypeError(`Kwilos: cannot hit-test an entity of type ${JSON.stringify(/** @type {any} */ (entity).type)}`)
@@ -111,14 +117,14 @@ function _in_box(x, y, left, top, w, h) {
     && y >= Math.min(top, top + h) && y <= Math.max(top, top + h)
 }
 
-// Returns the size an image or tile is drawn at, as the renderer works it
-// out, or null when it is not drawn because its image has not loaded yet.
 /**
+ * Returns the size an image or tile is drawn at, as the renderer works it
+ * out, or null when it is not drawn because its image has not loaded yet.
  * @param {Image | Tile} entity
  * @param {System | null} sys
  * @returns {{ w: number, h: number } | null}
  */
-function _drawn_size(entity, sys) {
+export function drawn_size(entity, sys) {
   const own = entity.type === 'image'
     ? { w: entity.w || entity.source_w, h: entity.h || entity.source_h }
     : { w: entity.w || entity.tile_w, h: entity.h || entity.tile_h }

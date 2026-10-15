@@ -4,6 +4,12 @@ Notable changes to Kwilos JS. The format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
+### Added
+
+- Sprites: a `sprite` scene entity draws the frame of an `animation` for the time since its `start`. Animations take frames from a tile sheet or images, each with a duration in milliseconds and an optional `dx` and `dy` offset, and play in a loop, once or ping-pong, optionally along an easing curve. Sprites can be flipped, and `animation_status` tells which frame shows and when a `once` animation is done.
+- `env.time`, the milliseconds since the first frame.
+- A sample, "Sprites", a character that idles, walks, jumps and cheers.
+
 ## [0.9.2] - 2026-10-15
 
 ### Added

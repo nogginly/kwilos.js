@@ -27,6 +27,7 @@ export function create_system() {
     args: {
       state: {},
       hit: (point) => hit(system, point ?? system.args.inputs.mouse),
+      time: 0,
       sounds: [],
       tracks: {},
       volume: 1,
@@ -45,6 +46,7 @@ export function create_system() {
     // the remaining fields are set by `initialize_with_canvas`
     app: /** @type {App} */ ({
       last_scene: null,
+      drawn_time: 0,
       detach: () => {}
     })
   }

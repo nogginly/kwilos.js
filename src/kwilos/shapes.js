@@ -1,5 +1,7 @@
 /* Don't use sloppy JS. */ "use strict";
 
+/** @import { Sprite } from './sprites.js' */
+
 // Factories for the entities a `tick` function returns. Each takes the
 // shape's properties and returns a plain object tagged with its `type`.
 
@@ -10,7 +12,7 @@
  */
 
 /**
- * @typedef {Circle | Rect | Label | Image | Tile | Container} Entity
+ * @typedef {Circle | Rect | Label | Image | Tile | Container | Sprite} Entity
  */
 
 /**

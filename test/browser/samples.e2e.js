@@ -196,6 +196,49 @@ test.describe('samples', () => {
     expect(errors).toEqual([])
   })
 
+  test('07 walks, jumps and cheers, by playing its sprites', async ({ page }) => {
+    const errors = page_errors(page)
+    await page.goto('/samples/07-sprites/index.html')
+    const canvas = page.locator('#canvas-07')
+    // The bounds of the character: pixels above the grass unlike the sky
+    const hero = () => page.evaluate(() => {
+      const data = document.querySelector('#canvas-07').getContext('2d').getImageData(0, 50, 600, 226).data
+      let left = 600, right = -1, top = 999
+      for (let i = 0; i < data.length; i += 4) {
+        const sky = data[i] === 223 && data[i + 1] === 241 && data[i + 2] === 247
+        if (sky) continue
+        const p = i / 4, x = p % 600, y = 50 + Math.floor(p / 600)
+        left = Math.min(left, x); right = Math.max(right, x); top = Math.min(top, y)
+      }
+      return { left, right, top }
+    })
+    await expect.poll(async () => (await hero()).right).toBeGreaterThan(0)
+    const standing = await hero()
+
+    await page.keyboard.down('ArrowRight')
+    await expect.poll(async () => (await hero()).right).toBeGreaterThan(standing.right + 40)
+    await page.keyboard.up('ArrowRight')
+
+    await frames(page, 3)
+    const landed = await hero()
+    await page.keyboard.press('Space')
+    await expect.poll(async () => (await hero()).top).toBeLessThan(landed.top - 40)
+    await expect.poll(async () => (await hero()).top, { timeout: 3000 }).toBeGreaterThan(landed.top - 5)
+
+    // Clicking her cheers: the status, top left, reads "cheer" for "idle"
+    const status_width = () => page.evaluate(() => {
+      const data = document.querySelector('#canvas-07').getContext('2d').getImageData(0, 10, 240, 30).data
+      let right = -1
+      for (let i = 0; i < data.length; i += 4)
+        if (data[i] < 120) right = Math.max(right, (i / 4) % 240)
+      return right
+    })
+    const idle_width = await status_width()
+    await canvas.click({ position: { x: Math.round((landed.left + landed.right) / 2), y: landed.top + 50 } })
+    await expect.poll(status_width).toBeGreaterThan(idle_width + 5)
+    expect(errors).toEqual([])
+  })
+
   test.describe('on a touchscreen', () => {
     test.use({ hasTouch: true })
 

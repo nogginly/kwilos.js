@@ -149,6 +149,58 @@ Factory | Required | Optional
 
 A `circle`, `rect` or `label` with neither `fill_color` nor `stroke_color` draws nothing. A `container` draws its `scene` with the origin moved to its `x` and `y`, which makes containers useful as layers: the containers in a scene are drawn in order, each one over the last.
 
+### Sprites
+
+A sprite draws a frame of an animation: a sequence of tiles from a tile sheet, or of images, each shown for a time. The app decides which animation a character is in, such as idle, walking or jumping, and since when; the sprite works out which frame to show.
+
+```js
+import { Kwilos, animation, animation_status, sprite } from "kwilos.mjs"
+
+const sheet = { path: "hero.png", tile_w: 32, tile_h: 32 }
+const walk = animation({
+  sheet,
+  frames: [{ tile: 4, duration: 120 }, { tile: 5, duration: 120, dy: -2 }],
+})
+const jump = animation({ sheet, play: "once", frames: [{ tile: 8, duration: 150 }, { tile: 9, duration: 300, dy: -30 }] })
+
+function tick(env) {
+  const hero = env.state.hero ??= { animation: walk, since: 0, x: 100, y: 200 }
+  if (jump_pressed) Object.assign(hero, { animation: jump, since: env.time })
+  if (hero.animation === jump && animation_status(jump, env.time - hero.since).done)
+    Object.assign(hero, { animation: walk, since: env.time })
+  return [sprite({ animation: hero.animation, start: hero.since, x: hero.x, y: hero.y, flip_x: facing_left })]
+}
+```
+
+`animation({...})` is made once and shared by any number of sprites:
+
+Property | Description
+----|----
+`frames` | The frames, in order. Each is a `tile` from the `sheet`, or an image `path` of its own, with optional `source_x`, `source_y`, `source_w` and `source_h` to show part of it.
+&emsp;`.duration` | How long the frame shows, in milliseconds
+&emsp;`.dx`, `.dy` | Shift the frame while it shows, such as a bounce in a walk. They are not added up from frame to frame: moving a character is the app's job, so its `x` and `y` stay where the game logic puts them.
+`sheet` | The tile sheet for frames with a `tile`: its `path`, and `tile_w` and `tile_h`, or `tile_rows` and `tile_cols`, as for a tile
+`play` | `"loop"`, the default, repeats; `"once"` stops on the last frame; `"ping-pong"` plays forwards then backwards, repeating
+`duration` | The length of one pass, shared among the frames in proportion to their own durations. Without it, the frames' durations add up to the pass; frames without one show for 100 ms.
+`easing` | Spaces the frames along a curve within each pass: `"linear"`, the default, or `"ease-in"`, `"ease-out"` and `"ease-in-out"`, which are cubic, or a function from progress through the pass, `0` to `1`, to the progress to show. With `"ease-in"`, the first frames show longest.
+
+`sprite({...})` is a scene entity, drawn in order with the other shapes:
+
+Property | Description
+----|----
+`animation` | The animation to play
+`start` | When it began, in `env.time` milliseconds; defaults to `0`. Set it to `env.time` when the animation changes, so the new one starts from its first frame.
+`x`, `y` | Top-left corner
+`w`, `h` | Size to draw at; defaults to the frame's size
+`flip_x`, `flip_y` | Mirror the frames, such as to face the other way with right-facing frames
+`id` | Identifies the sprite, as for other shapes
+
+Frames are timed in milliseconds rather than ticks, so an animation plays at the same speed on a 60 Hz and a 120 Hz display. A sprite animates only while scenes are drawn, so return a scene, not `null`, while one moves.
+
+`animation_status(animation, elapsed)` returns `{ frame, done }`: which frame shows after `elapsed` milliseconds, and, for a `"once"` animation, whether it has reached its end, to move on to another state.
+
+`env.hit` tests the frame of a sprite that was last drawn, with its offset, and returns the sprite. `contains` cannot measure a sprite, as it has no clock.
+
 ### Hit-Testing
 
 Two functions tell which shapes lie under a point, such as the mouse. Both count a shape's whole area, whether or not it is filled, so a shape with neither `fill_color` nor `stroke_color` makes an invisible hit area.
@@ -175,6 +227,7 @@ The runtime environment object contains properties that are grouped as follows:
 - `env.inputs` contains the properties to access input event information
 - `env.state` is an object into which the app can store data that it can expect to be available across repeated calls to the `tick` handler.
 - `env.hit(point)` returns the shape under a point, by default the mouse position; see [Hit-Testing](#hit-testing).
+- `env.time` is the milliseconds since the first frame, as of this frame; sprites animate by it, see [Sprites](#sprites).
 - `env.sounds`, `env.tracks`, `env.volume` and `env.listener` play sound effects and music; see [Sound](#sound).
 
 #### Inputs
