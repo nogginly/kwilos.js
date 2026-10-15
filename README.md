@@ -267,16 +267,19 @@ function tick(env) {
 Property | Sound | Track | Description
 ----|:--:|:--:|----
 `path` | ✓ | ✓ | The audio file's URL. Sounds must be preloaded with `preload_sounds`; tracks are streamed, so need not be.
+`paths` | | ✓ | A list of audio file URLs, played in turn, in place of `path`; see [Playlists](#playlists)
+`index` | | ✓ | Which of `paths` is playing, from `0`, kept up to date by Kwilos; set it to play another song
 `gain` | ✓ | ✓ | Loudness; defaults to `1`, its loudness as recorded
 `rate` | ✓ | ✓ | Playback speed, which also changes the pitch; defaults to `1`
 `pan` | ✓ | ✓ | From `-1`, left, to `1`, right; defaults to `0`, centred. Ignored for a sound with a position.
 `x`, `y` | ✓ | ✓ | Where the sound is, in canvas coordinates; see [Positions](#positions). Give both or neither.
 `range` | ✓ | ✓ | For a sound with a position, the distance from the listener at which it falls silent; defaults to the canvas width
-`looping` | | ✓ | If `true`, plays again from the start when it ends
+`looping` | | ✓ | If `true`, plays again from the start when it ends; with `paths`, goes back to the first song after the last
 `paused` | | ✓ | If `true`, pauses it, keeping its place
-`restart` | | ✓ | If `true`, plays it again from the start. Kwilos sets it back to `false` once done, so set it on one frame only.
-`time` | | ✓ | Set by Kwilos: the seconds played from the start
-`ended` | | ✓ | Set by Kwilos: `true` once it has played to its end without looping
+`restart` | | ✓ | If `true`, plays it again from the start, from its first song. Kwilos sets it back to `false` once done, so set it on one frame only.
+`time` | | ✓ | Set by Kwilos: the seconds played from the start of the song
+`duration` | | ✓ | Set by Kwilos: the song's length in seconds, or `0` until it is known
+`ended` | | ✓ | Set by Kwilos: `true` once it has played to its end, or past its last song, without looping
 
 Kwilos compares `env.tracks` with what is playing, so setting a track again with the same `path`, even as a new object on every frame, leaves it playing; only a different `path` starts it afresh. To play it from the start, set `restart` on the frame it should restart, not on every frame that some condition holds:
 
@@ -289,6 +292,25 @@ if (env.state.phase === "playing" && env.state.previous_phase !== "playing")
 `env.volume` scales everything, from `0`, silent, to `1`, as given, so it makes a mute button. It defaults to `1`.
 
 Browsers allow audio to play only once the user has clicked, tapped or pressed a key on the page. Until then, sound effects are dropped, since a sound played late is worse than none, and tracks wait, starting as soon as audio is allowed. Kwilos creates its audio only once the app uses sound, so an app without sound never touches the page's audio.
+
+##### Playlists
+
+A track given `paths` in place of `path` plays its songs in turn. Kwilos moves on to the next song itself when one ends, so a playlist carries on while the page is hidden and no frames run, when `background_audio` is set.
+
+```js
+function tick(env) {
+  const music = env.tracks.music ??= track({ paths: ["dawn.mp3", "noon.mp3", "dusk.mp3"], looping: true })
+  if (next_pressed)
+    music.index += 1
+  return scene
+}
+```
+
+`index` is the song playing, kept up to date by Kwilos. Set it to another song, and that song plays from its start. With `looping`, an index past either end wraps round, so `-1` is the last song; without it, the track ends. Giving `index` when the track is made starts it at that song.
+
+Kwilos writes the new `index` into the track as each song ends, so keep a playlist's track between frames, as `??=` does above. A track made afresh on every frame with `index: 0` would jump back to the first song every time the next one began.
+
+Changing `paths` while a song plays keeps that song playing if it is still in the list, so songs can be added or removed around it. If it is gone, the new list plays from its first song. Moving between songs leaves a short gap while the next file starts, so a playlist suits separate songs better than one piece split across files.
 
 ##### Positions
 

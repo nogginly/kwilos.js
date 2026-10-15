@@ -183,3 +183,45 @@ test.describe('positions', () => {
     await expect.poll(async () => Math.max(...await levels(page))).toBeLessThan(0.001)
   })
 })
+
+test.describe('playlists', () => {
+  test('moves on to the next song by itself, even with no frames running', async ({ page }) => {
+    await page.evaluate(async () => {
+      const { Kwilos, track } = window.kwilos
+      window.frames_run = 0
+      window.kw = await Kwilos.attach('#c', (env) => {
+        window.frames_run++
+        window.music = env.tracks.music ??= track({ paths: ['beep.wav', 'tone.wav'] })
+        return []
+      }, { background_audio: true })
+    })
+    await page.waitForFunction(() => window.music)
+    await page.mouse.click(100, 100)
+    await expect.poll(() => page.evaluate(() => window.audio_contexts.length)).toBe(1)
+
+    // Stop the frames, as a hidden page would, then wait for the short
+    // first song to end
+    await page.evaluate(() => { window.requestAnimationFrame = () => 0 })
+    await page.waitForTimeout(50)
+    const frames_before = await page.evaluate(() => window.frames_run)
+    await expect.poll(() => page.evaluate(() => window.music.index)).toBe(1)
+    expect(await page.evaluate(() => window.frames_run)).toBe(frames_before)
+  })
+
+  test('jumps to the song its index is set to, and reports its length', async ({ page }) => {
+    await page.evaluate(async () => {
+      const { Kwilos, track } = window.kwilos
+      window.kw = await Kwilos.attach('#c', (env) => {
+        window.music = env.tracks.music ??= track({ paths: ['tone.wav', 'beep.wav', 'tone.wav'], looping: true })
+        return []
+      })
+    })
+    await page.waitForFunction(() => window.music)
+    await page.mouse.click(100, 100)
+    await expect.poll(() => page.evaluate(() => window.music.duration)).toBeCloseTo(3, 1)
+
+    await page.evaluate(() => { window.music.index = 1 })
+    await expect.poll(() => page.evaluate(() => window.music.duration)).toBeCloseTo(0.15, 1)
+    await expect.poll(() => page.evaluate(() => window.music.index)).toBe(2)
+  })
+})

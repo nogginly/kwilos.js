@@ -40,20 +40,27 @@ import { BAL } from './bal.js'
  * it when it appears, stops it when it is removed, and applies changes to
  * its properties as it plays. Setting a track with the same `path` again
  * leaves it playing.
+ *
+ * Given `paths` instead of a `path`, it plays the songs in turn, moving on
+ * by itself, even while the page is hidden. Keep such a track between
+ * frames, e.g. with `??=`, as Kwilos updates its `index` as songs end.
  * @typedef {object} Track
  * @property {'track'} [type]
- * @property {string} path Audio file URL; tracks are streamed, so need no preloading
+ * @property {string} [path] Audio file URL; tracks are streamed, so need no preloading
+ * @property {string[]} [paths] Audio file URLs, played in turn, in place of `path`
+ * @property {number} [index] Which of `paths` is playing, counting from 0; set by Kwilos as songs end. Set it to another song to play that one from its start. A track can start at a song other than the first by giving it.
  * @property {number} [gain] Loudness; defaults to 1, its loudness as recorded
  * @property {number} [rate] Playback speed, which also changes the pitch, from 0.0625 to 16; defaults to 1
  * @property {number} [pan] From -1, left, to 1, right; defaults to 0, centred; ignored when the track has a position
  * @property {number} [x] Where the track is, with `y`, in canvas coordinates; it is then heard from `env.listener`, and moves as they change
  * @property {number} [y]
  * @property {number} [range] For a track with a position: the distance from the listener at which it falls silent; defaults to the canvas width
- * @property {boolean} [looping] Plays again from the start when it ends
+ * @property {boolean} [looping] Plays again from the start when it ends; with `paths`, from the first song after the last, and an `index` past either end wraps round
  * @property {boolean} [paused] Pauses it, keeping its place
- * @property {boolean} [restart] Plays it again from the start; Kwilos sets it back to false once done, so set it on one frame only
- * @property {number} [time] Set by Kwilos: seconds played from the start
- * @property {boolean} [ended] Set by Kwilos: it played to its end without looping; setting `restart` plays it again
+ * @property {boolean} [restart] Plays it again from the start, from the first of its `paths`; Kwilos sets it back to false once done, so set it on one frame only
+ * @property {number} [time] Set by Kwilos: seconds played from the start of the song
+ * @property {number} [duration] Set by Kwilos: the song's length in seconds, or 0 until it is known
+ * @property {boolean} [ended] Set by Kwilos: it played to its end, or past its last song, without looping; setting `restart` plays it again
  */
 
 /**
@@ -100,7 +107,12 @@ import { BAL } from './bal.js'
 
 /**
  * @typedef {object} Playing
- * @property {string} path
+ * @property {string[]} list The songs it plays
+ * @property {number} index The song playing, in `list`
+ * @property {number} reported The index last reported to the track, so another value there asks to jump
+ * @property {boolean} finished It was asked for a song past the end of its list, without looping
+ * @property {boolean} looping
+ * @property {Track} wanted The track it plays, as of the last frame, to report its song to
  * @property {HTMLAudioElement} element
  * @property {MediaElementAudioSourceNode} source
  * @property {Output} output
@@ -437,6 +449,22 @@ function _disconnect(output) {
   output.spatial?.disconnect()
 }
 
+// Returns the songs a track plays: its `paths`, or its one `path`
+/**
+ * @param {Track} wanted
+ * @returns {string[]}
+ */
+function _paths_of(wanted) {
+  if ((wanted.path == null) === (wanted.paths == null))
+    throw new TypeError(`Kwilos: a track needs a path or paths, but not both, got ${JSON.stringify(wanted)}`)
+  if (wanted.path != null)
+    return [_path_of(wanted, 'track')]
+  const paths = wanted.paths
+  if (!Array.isArray(paths) || paths.length === 0 || !paths.every(path => typeof path === 'string'))
+    throw new TypeError(`Kwilos: a track's paths must be a list of one or more paths, got ${JSON.stringify(wanted)}`)
+  return paths
+}
+
 // Returns where a sound or track is, or null when it has no position
 /**
  * @param {Sound | Track} one
@@ -453,8 +481,9 @@ function _position_of(one, kind) {
   return { x, y }
 }
 
-// Stops tracks that were removed or given another path, starts new ones
-// once there is an AudioContext, then applies each track's properties
+// Stops tracks that were removed, or whose song now playing is no longer
+// in their list; starts new ones once there is an AudioContext; then
+// applies each track's properties
 /**
  * @param {Audio} audio
  * @param {Record<string, Track | null | undefined>} tracks
@@ -462,7 +491,7 @@ function _position_of(one, kind) {
 function _update_tracks(audio, tracks) {
   for (const [name, playing] of audio.playing) {
     const wanted = tracks[name]
-    if (!wanted || wanted.path !== playing.path) {
+    if (!wanted || !_paths_of(wanted).includes(_song(playing))) {
       _stop(playing)
       audio.playing.delete(name)
     }
@@ -472,19 +501,21 @@ function _update_tracks(audio, tracks) {
     const wanted = tracks[name]
     if (!wanted)
       continue
-    const path = _path_of(wanted, 'track')
+    const list = _paths_of(wanted)
     let playing = audio.playing.get(name)
     if (playing == null) {
       if (audio.context == null) {
         wanted.restart = false
         wanted.time = 0
+        wanted.duration = 0
         wanted.ended = false
         continue
       }
-      playing = _start(audio, path, wanted)
+      playing = _start(audio, list, wanted)
       audio.playing.set(name, playing)
     }
     else {
+      _relist(playing, list, wanted)
       _place(audio, playing.output, wanted, 'track', true)
     }
     _apply(playing, wanted, audio.hidden)
@@ -493,23 +524,76 @@ function _update_tracks(audio, tracks) {
 
 /**
  * @param {Audio} audio
- * @param {string} path
+ * @param {string[]} list
  * @param {Track} wanted
  * @returns {Playing}
  */
-function _start(audio, path, wanted) {
+function _start(audio, list, wanted) {
   const context = /** @type {AudioContext} */ (audio.context)
-  const element = BAL.create_audio_element(path)
+  const requested = _number(wanted.index)
+  const looping = !!wanted.looping
+  const first = requested == null ? 0 : (_within(requested, list.length, looping) ?? 0)
+  const element = BAL.create_audio_element(list[first])
   element.preservesPitch = false
-  element.addEventListener('error', () => console.error(new Error(`Kwilos: could not load track ${path}`)))
   const source = context.createMediaElementSource(element)
   const output = _output(audio, wanted, 'track')
   source.connect(output.gain)
-  return { path, element, source, output }
+
+  /** @type {Playing} */
+  const playing = { list, index: first, reported: first, finished: false, looping, wanted, element, source, output }
+  element.addEventListener('error', () => console.error(new Error(`Kwilos: could not load track ${_song(playing)}`)))
+  element.addEventListener('ended', () => _song_ended(playing))
+  return playing
+}
+
+// Keeps the song now playing when the list changes around it, moving the
+// index to the song's new place in the list
+/**
+ * @param {Playing} playing
+ * @param {string[]} list
+ * @param {Track} wanted
+ */
+function _relist(playing, list, wanted) {
+  if (list.length === playing.list.length && list.every((path, i) => path === playing.list[i]))
+    return
+  const song = _song(playing)
+  playing.list = list
+  playing.index = list.indexOf(song)
+  playing.reported = playing.index
+  wanted.index = playing.index
+}
+
+// Plays the next song when one ends, from the start of the list again when
+// looping. Runs on the element's `ended` event, not in a frame, so a list
+// plays on while the page is hidden and frames have stopped.
+/** @param {Playing} playing */
+function _song_ended(playing) {
+  const next = playing.index + 1
+  if (next < playing.list.length)
+    _load(playing, next, true)
+  else if (playing.looping && playing.list.length > 1)
+    _load(playing, 0, true)
+}
+
+// Switches the element to a song in the list, from its start
+/**
+ * @param {Playing} playing
+ * @param {number} index
+ * @param {boolean} play
+ */
+function _load(playing, index, play) {
+  playing.index = index
+  playing.reported = index
+  playing.finished = false
+  playing.wanted.index = index
+  playing.element.src = playing.list[index]
+  if (play)
+    playing.element.play().catch(() => {})
 }
 
 // Applies a track's properties, other than its position, to it as it
-// plays, then reports its time and whether it has ended
+// plays, then reports its song, time and whether it has ended. An `index`
+// other than the one last reported asks to jump to that song.
 /**
  * @param {Playing} playing
  * @param {Track} wanted
@@ -517,8 +601,10 @@ function _start(audio, path, wanted) {
  */
 function _apply(playing, wanted, hidden) {
   const element = playing.element
+  playing.wanted = wanted
+  playing.looping = !!wanted.looping
 
-  element.loop = !!wanted.looping
+  element.loop = playing.looping && playing.list.length === 1
   const rate = _clamp(wanted.rate ?? 1, 0.0625, 16)
   if (element.playbackRate !== rate)
     element.playbackRate = rate
@@ -526,19 +612,58 @@ function _apply(playing, wanted, hidden) {
   if (playing.output.gain.gain.value !== gain)
     playing.output.gain.gain.value = gain
 
+  const requested = _number(wanted.index)
   if (wanted.restart) {
-    element.currentTime = 0
+    if (playing.index === 0)
+      element.currentTime = 0
+    else
+      _load(playing, 0, false)
+    playing.finished = false
     wanted.restart = false
   }
+  else if (requested != null && requested !== playing.reported && requested !== playing.index) {
+    const to = _within(requested, playing.list.length, playing.looping)
+    if (to == null) {
+      element.pause()
+      playing.finished = true
+    }
+    else {
+      _load(playing, to, false)
+    }
+  }
 
+  const done = element.ended || playing.finished
   const play = !wanted.paused && !hidden
-  if (play && element.paused && !element.ended)
+  if (play && element.paused && !done)
     element.play().catch(() => {})
   else if (!play && !element.paused)
     element.pause()
 
+  wanted.index = playing.index
+  playing.reported = playing.index
   wanted.time = element.currentTime
-  wanted.ended = element.ended
+  wanted.duration = Number.isFinite(element.duration) ? element.duration : 0
+  wanted.ended = done
+}
+
+// Returns the song at `index` in a list of `length`, wrapping round when
+// looping; null when it is past either end and not looping
+/**
+ * @param {number} index
+ * @param {number} length
+ * @param {boolean} looping
+ * @returns {number | null}
+ */
+function _within(index, length, looping) {
+  const whole = Math.trunc(index)
+  if (looping)
+    return ((whole % length) + length) % length
+  return whole >= 0 && whole < length ? whole : null
+}
+
+/** @param {Playing} playing */
+function _song(playing) {
+  return playing.list[playing.index]
 }
 
 /** @param {Playing} playing */
