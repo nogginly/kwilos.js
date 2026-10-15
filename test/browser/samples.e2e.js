@@ -162,6 +162,40 @@ test.describe('samples', () => {
     expect(errors).toEqual([])
   })
 
+  test('06 plays its songs, and Next and a click on a song change the song', async ({ page }) => {
+    const errors = page_errors(page)
+    await page.addInitScript(() => {
+      window.tracks = []
+      const Original = window.Audio
+      window.Audio = class extends Original {
+        constructor(...args) {
+          super(...args)
+          window.tracks.push(this)
+        }
+      }
+    })
+    await page.goto('/samples/06-jukebox/index.html')
+    const canvas = page.locator('#canvas-06')
+    await expect.poll(() => pixels_unlike(page, '#canvas-06', [255, 330, 90, 36], [26, 22, 37])).toBeGreaterThan(0)
+    const song = () => page.evaluate(() => {
+      const [element] = window.tracks
+      return element && { file: element.src.split('/').pop(), paused: element.paused }
+    })
+
+    await canvas.click({ position: { x: 300, y: 348 } })
+    await expect.poll(song).toEqual({ file: 'dawn.mp3', paused: false })
+
+    await canvas.click({ position: { x: 400, y: 348 } })
+    await expect.poll(song).toEqual({ file: 'noon.mp3', paused: false })
+
+    await canvas.click({ position: { x: 300, y: 220 } })
+    await expect.poll(song).toEqual({ file: 'dusk.mp3', paused: false })
+
+    await canvas.click({ position: { x: 300, y: 348 } })
+    await expect.poll(song).toEqual({ file: 'dusk.mp3', paused: true })
+    expect(errors).toEqual([])
+  })
+
   test.describe('on a touchscreen', () => {
     test.use({ hasTouch: true })
 

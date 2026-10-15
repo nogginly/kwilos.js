@@ -4,6 +4,12 @@ Notable changes to Kwilos JS. The format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
+### Added
+
+- Playlists: a track given `paths` plays its songs in turn, moving on by itself, even while the page is hidden. Its `index` tells which song is playing, and setting it plays another.
+- A track's `duration`, the length of the song playing.
+- A sample, "Jukebox", a small music player.
+
 ## [0.9.1] - 2026-10-15
 
 ### Added

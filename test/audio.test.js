@@ -43,13 +43,26 @@ class FakeContext {
   close = vi.fn(async () => { this.state = 'closed' })
 }
 
+// An audio element; setting `src` starts the new song from its beginning,
+// paused, as browsers do
 function fake_element(path) {
   return {
-    src: path, paused: true, ended: false, currentTime: 0, loop: false, playbackRate: 1,
+    song: path, paused: true, ended: false, currentTime: 0, duration: NaN, loop: false, playbackRate: 1,
+    listeners: {},
+    get src() { return this.song },
+    set src(path) { Object.assign(this, { song: path, paused: true, ended: false, currentTime: 0 }) },
     play: vi.fn(function () { this.paused = false; return Promise.resolve() }),
     pause: vi.fn(function () { this.paused = true }),
-    addEventListener() {}, removeAttribute: vi.fn(), load: vi.fn(),
+    addEventListener(name, handler) { (this.listeners[name] ??= []).push(handler) },
+    removeAttribute: vi.fn(), load: vi.fn(),
   }
+}
+
+// Plays a song to its end, as the browser would
+function finish(element) {
+  Object.assign(element, { ended: true, paused: true })
+  for (const handler of element.listeners.ended ?? [])
+    handler()
 }
 
 // The fakes behind BAL, and the document listeners Kwilos adds
@@ -299,7 +312,7 @@ describe('tracks', () => {
 
   it('throws a TypeError for a track without a path', async () => {
     const { frame } = await audio_system(env => { env.tracks.music = {} })
-    expect(frame).toThrow(new TypeError('Kwilos: a track needs a path, got {}'))
+    expect(frame).toThrow(new TypeError('Kwilos: a track needs a path or paths, but not both, got {}'))
   })
 
   it('pauses tracks while the page is hidden', async () => {
@@ -320,6 +333,129 @@ describe('tracks', () => {
   it('keeps tracks playing while the page is hidden, with background_audio', async () => {
     await audio_system(() => {}, { background_audio: true })
     expect(listeners.visibilitychange).toBeUndefined()
+  })
+})
+
+describe('playlists', () => {
+  // Returns a system whose `tick` keeps one track, made once from `props`,
+  // and records it
+  async function playlist(props) {
+    const seen = {}
+    const run = await audio_system(env => {
+      seen.music = env.tracks.music ??= track(props)
+    })
+    run.frame()
+    return { ...run, music: () => seen.music, element: () => elements.at(-1) }
+  }
+
+  it('plays its songs in turn, moving on as each ends, without waiting for a frame', async () => {
+    const { music, element } = await playlist({ paths: ['a.mp3', 'b.mp3', 'c.mp3'] })
+    expect(element().src).toBe('a.mp3')
+    expect(element().loop).toBe(false)
+    expect(music().index).toBe(0)
+
+    finish(element())
+    expect(element().src).toBe('b.mp3')
+    expect(element().paused).toBe(false)
+    expect(music().index).toBe(1)
+    expect(elements).toHaveLength(1)
+  })
+
+  it('ends after its last song, or goes back to the first when looping', async () => {
+    const once = await playlist({ paths: ['a.mp3', 'b.mp3'] })
+    finish(once.element())
+    finish(once.element())
+    once.frame()
+    expect(once.element().src).toBe('b.mp3')
+    expect(once.music().ended).toBe(true)
+
+    const again = await playlist({ paths: ['a.mp3', 'b.mp3'], looping: true })
+    finish(again.element())
+    finish(again.element())
+    again.frame()
+    expect(again.element().src).toBe('a.mp3')
+    expect(again.music().ended).toBe(false)
+  })
+
+  it('jumps to the song its index is set to', async () => {
+    const { music, element, frame } = await playlist({ paths: ['a.mp3', 'b.mp3', 'c.mp3'] })
+    element().currentTime = 30
+    music().index = 2
+    frame()
+    expect(element().src).toBe('c.mp3')
+    expect(element().currentTime).toBe(0)
+    expect(element().paused).toBe(false)
+
+    music().index += 1
+    frame()
+    expect(music().ended).toBe(true)
+    expect(element().paused).toBe(true)
+  })
+
+  it('wraps an index past either end round when looping', async () => {
+    const { music, element, frame } = await playlist({ paths: ['a.mp3', 'b.mp3', 'c.mp3'], looping: true })
+    music().index = -1
+    frame()
+    expect(element().src).toBe('c.mp3')
+    expect(music().index).toBe(2)
+
+    music().index += 1
+    frame()
+    expect(element().src).toBe('a.mp3')
+    expect(music().index).toBe(0)
+  })
+
+  it('starts at the song its index gives', async () => {
+    const { element } = await playlist({ paths: ['a.mp3', 'b.mp3'], index: 1 })
+    expect(element().src).toBe('b.mp3')
+  })
+
+  it('restarts from its first song', async () => {
+    const { music, element, frame } = await playlist({ paths: ['a.mp3', 'b.mp3'] })
+    finish(element())
+    music().restart = true
+    frame()
+    expect(element().src).toBe('a.mp3')
+    expect(music().index).toBe(0)
+  })
+
+  it('keeps the song playing when the list changes around it', async () => {
+    const { music, element, frame } = await playlist({ paths: ['a.mp3', 'b.mp3'] })
+    finish(element())
+    element().currentTime = 12
+    music().paths = ['b.mp3', 'c.mp3', 'd.mp3']
+    frame()
+
+    expect(elements).toHaveLength(1)
+    expect(element().src).toBe('b.mp3')
+    expect(element().currentTime).toBe(12)
+    expect(music().index).toBe(0)
+    frame()
+    expect(element().src).toBe('b.mp3')
+  })
+
+  it('starts the new list from its first song when the song playing is no longer in it', async () => {
+    const { music, element, frame } = await playlist({ paths: ['a.mp3', 'b.mp3'] })
+    music().paths = ['x.mp3', 'y.mp3']
+    frame()
+    expect(elements).toHaveLength(2)
+    expect(element().src).toBe('x.mp3')
+    expect(music().index).toBe(0)
+  })
+
+  it('reports the length of the song, or 0 until it is known', async () => {
+    const { music, element, frame } = await playlist({ path: 'theme.mp3' })
+    expect(music().duration).toBe(0)
+    element().duration = 42.5
+    frame()
+    expect(music().duration).toBe(42.5)
+  })
+
+  it('throws a TypeError for a track with both path and paths, or no songs in paths', async () => {
+    const both = await audio_system(env => { env.tracks.music = { path: 'a.mp3', paths: ['b.mp3'] } })
+    expect(both.frame).toThrow(/a track needs a path or paths, but not both/)
+    const none = await audio_system(env => { env.tracks.music = { paths: [] } })
+    expect(none.frame).toThrow(/a track's paths must be a list of one or more paths/)
   })
 })
 
