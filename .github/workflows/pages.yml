@@ -32,7 +32,7 @@ jobs:
         run: echo "package=$(node -p "require('./package.json').name")@$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
       - run: npm ci
       - run: npm run build-site
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
@@ -55,4 +55,4 @@ jobs:
             exit 1
           fi
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
