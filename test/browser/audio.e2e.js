@@ -113,3 +113,73 @@ test('stops the audio on detach', async ({ page }) => {
   await page.evaluate(() => window.kw.detach())
   await expect.poll(() => page.evaluate(() => window.audio_contexts[0].state)).toBe('closed')
 })
+
+test.describe('positions', () => {
+  // Taps what reaches the speakers into a meter per channel, so tests can
+  // compare how loud each ear hears it
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      const connect = AudioNode.prototype.connect
+      AudioNode.prototype.connect = function (to, ...rest) {
+        if (to instanceof AudioDestinationNode && !window.meters) {
+          const splitter = this.context.createChannelSplitter(2)
+          window.meters = [0, 1].map(channel => {
+            const meter = this.context.createAnalyser()
+            splitter.connect(meter, channel)
+            return meter
+          })
+          connect.call(this, splitter)
+        }
+        return connect.call(this, to, ...rest)
+      }
+      window.levels = () => window.meters.map(meter => {
+        const samples = new Float32Array(meter.fftSize)
+        meter.getFloatTimeDomainData(samples)
+        return Math.sqrt(samples.reduce((sum, s) => sum + s * s, 0) / samples.length)
+      })
+    })
+  })
+
+  // Plays the looping tone at a position on the 200 by 200 canvas
+  async function place(page, x, y, listener) {
+    await page.evaluate(async ([x, y, listener]) => {
+      const { Kwilos, track } = window.kwilos
+      window.where = { x, y, listener }
+      window.kw = await Kwilos.attach('#c', (env) => {
+        window.env = env
+        env.listener = window.where.listener
+        env.tracks.tone = track({ path: 'tone.wav', looping: true, x: window.where.x, y: window.where.y })
+        return []
+      })
+    }, [x, y, listener])
+    await page.waitForFunction(() => window.env)
+    await page.mouse.click(100, 100)
+    await expect.poll(() => page.evaluate(() => window.env.tracks.tone.time)).toBeGreaterThan(0.2)
+  }
+
+  const levels = (page) => page.evaluate(() => window.levels())
+
+  test('pans a track towards its side of the listener', async ({ page }) => {
+    await place(page, 0, 100)
+    await expect.poll(async () => { const [left, right] = await levels(page); return left > right * 2 }).toBe(true)
+
+    await page.evaluate(() => { window.where.x = 200 })
+    await expect.poll(async () => { const [left, right] = await levels(page); return right > left * 2 }).toBe(true)
+  })
+
+  test('hears a track straight ahead in both ears alike', async ({ page }) => {
+    await place(page, 100, 20)
+    await expect.poll(async () => {
+      const [left, right] = await levels(page)
+      return left > 0.01 && Math.abs(left - right) < left * 0.05
+    }).toBe(true)
+  })
+
+  test('silences a track beyond its range, and follows the listener', async ({ page }) => {
+    await place(page, 100, 100, { x: 100, y: 100 })
+    await expect.poll(async () => (await levels(page))[0]).toBeGreaterThan(0.01)
+
+    await page.evaluate(() => { window.where.listener = { x: 100, y: 400 } })
+    await expect.poll(async () => Math.max(...await levels(page))).toBeLessThan(0.001)
+  })
+})

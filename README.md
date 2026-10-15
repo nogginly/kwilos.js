@@ -175,7 +175,7 @@ The runtime environment object contains properties that are grouped as follows:
 - `env.inputs` contains the properties to access input event information
 - `env.state` is an object into which the app can store data that it can expect to be available across repeated calls to the `tick` handler.
 - `env.hit(point)` returns the shape under a point, by default the mouse position; see [Hit-Testing](#hit-testing).
-- `env.sounds`, `env.tracks` and `env.volume` play sound effects and music; see [Sound](#sound).
+- `env.sounds`, `env.tracks`, `env.volume` and `env.listener` play sound effects and music; see [Sound](#sound).
 
 #### Inputs
 
@@ -269,7 +269,9 @@ Property | Sound | Track | Description
 `path` | ✓ | ✓ | The audio file's URL. Sounds must be preloaded with `preload_sounds`; tracks are streamed, so need not be.
 `gain` | ✓ | ✓ | Loudness; defaults to `1`, its loudness as recorded
 `rate` | ✓ | ✓ | Playback speed, which also changes the pitch; defaults to `1`
-`pan` | ✓ | ✓ | From `-1`, left, to `1`, right; defaults to `0`, centred
+`pan` | ✓ | ✓ | From `-1`, left, to `1`, right; defaults to `0`, centred. Ignored for a sound with a position.
+`x`, `y` | ✓ | ✓ | Where the sound is, in canvas coordinates; see [Positions](#positions). Give both or neither.
+`range` | ✓ | ✓ | For a sound with a position, the distance from the listener at which it falls silent; defaults to the canvas width
 `looping` | | ✓ | If `true`, plays again from the start when it ends
 `paused` | | ✓ | If `true`, pauses it, keeping its place
 `restart` | | ✓ | If `true`, plays it again from the start. Kwilos sets it back to `false` once done, so set it on one frame only.
@@ -287,6 +289,24 @@ if (env.state.phase === "playing" && env.state.previous_phase !== "playing")
 `env.volume` scales everything, from `0`, silent, to `1`, as given, so it makes a mute button. It defaults to `1`.
 
 Browsers allow audio to play only once the user has clicked, tapped or pressed a key on the page. Until then, sound effects are dropped, since a sound played late is worse than none, and tracks wait, starting as soon as audio is allowed. Kwilos creates its audio only once the app uses sound, so an app without sound never touches the page's audio.
+
+##### Positions
+
+A sound or track with `x` and `y` is placed on the canvas and heard from `env.listener`, such as the player or the camera, which defaults to the centre of the canvas:
+
+```js
+function tick(env) {
+  env.listener = { x: player.x, y: player.y }
+  env.tracks.bee = track({ path: "buzz.mp3", looping: true, x: bee.x, y: bee.y })
+  if (chirped)
+    env.sounds.push(sound({ path: "chirp.mp3", x: cricket.x, y: cricket.y, range: 800 }))
+  return scene
+}
+```
+
+The listener hears as if sitting in front of the screen, facing it, half the canvas width away. A sound to one side pans towards that side, smoothly, so one just off-centre is only a little off-centre. Every sound gets quieter with distance, from full straight ahead to silent at its `range`. Which way the player faces makes no difference. A track's position can change on every frame, and it glides to each new place.
+
+Only positions relative to the listener matter, so a scrolling world can use world coordinates for both.
 
 A sound that was not preloaded is not played: Kwilos warns once in the browser console and loads it, so later plays work. A preloaded sound that fails to load makes `attach` reject, as for images. A track from another site plays only if that site allows it, with [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS).
 

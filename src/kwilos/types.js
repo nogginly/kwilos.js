@@ -4,7 +4,7 @@
 
 /**
  * @import { Scene, Entity } from './shapes.js'
- * @import { Sound, Track, Audio } from './audio.js'
+ * @import { Sound, Track, Audio, Listener } from './audio.js'
  */
 
 /**
@@ -47,6 +47,7 @@
  * @property {Array<Sound | null | undefined | false>} sounds Sound effects to play after this frame; push to it, and Kwilos empties it after each frame
  * @property {Record<string, Track | null | undefined>} tracks Tracks to play, by a name of your choice; they play while they are here
  * @property {number} volume Scales all sounds and tracks, from 0, silent, to 1, as given; defaults to 1
+ * @property {Listener | null} [listener] Where sounds and tracks with a position are heard from, in canvas coordinates, e.g. the player; defaults to the centre of the canvas
  */
 
 /**

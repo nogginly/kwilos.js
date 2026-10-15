@@ -9,12 +9,29 @@ function node(kind, props = {}) {
   return { kind, connected: [], connect(to) { this.connected.push(to); return to }, disconnect: vi.fn(), ...props }
 }
 
+// An AudioParam whose gliding changes take effect at once
+function param(value) {
+  return { value, setTargetAtTime: vi.fn(function (to) { this.value = to }) }
+}
+
 class FakeContext {
   state = 'running'
+  currentTime = 0
   destination = node('destination')
+  listener = {
+    positionX: param(0), positionY: param(0), positionZ: param(0),
+    forwardX: param(0), forwardY: param(0), forwardZ: param(-1),
+    upX: param(0), upY: param(1), upZ: param(0),
+  }
   sources = []
+  spatials = []
   createGain() { return node('gain', { gain: { value: 1 } }) }
   createStereoPanner() { return node('panner', { pan: { value: 0 } }) }
+  createPanner() {
+    const spatial = node('spatial', { positionX: param(0), positionY: param(0), positionZ: param(0) })
+    this.spatials.push(spatial)
+    return spatial
+  }
   createBufferSource() {
     const source = node('buffer', { buffer: null, playbackRate: { value: 1 }, start: vi.fn(), addEventListener() {} })
     this.sources.push(source)
@@ -215,9 +232,9 @@ describe('tracks', () => {
     gain = 0.5
     frame()
 
-    const playing = sys.audio.playing.get('music')
-    expect(playing.gain.gain.value).toBe(0.5)
-    expect(playing.panner.pan.value).toBe(-0.5)
+    const { output } = sys.audio.playing.get('music')
+    expect(output.gain.gain.value).toBe(0.5)
+    expect(output.panner.pan.value).toBe(-0.5)
     expect(elements[0].playbackRate).toBe(16)
   })
 
@@ -303,6 +320,104 @@ describe('tracks', () => {
   it('keeps tracks playing while the page is hidden, with background_audio', async () => {
     await audio_system(() => {}, { background_audio: true })
     expect(listeners.visibilitychange).toBeUndefined()
+  })
+})
+
+describe('positions', () => {
+  // The fake canvas is 100 by 80, so the listener defaults to (50, 40), its
+  // ears are 50 in front of the canvas, and sounds fall silent at 100
+
+  it('places a sound with x and y, heard from the centre of the canvas by default', async () => {
+    const { sys, frame } = await audio_system(env => env.sounds.push(sound({ path: 'chirp.wav', x: 20, y: 30, pan: 1 })),
+      { preload_sounds: ['chirp.wav'] })
+    frame()
+
+    const [context] = contexts
+    const [spatial] = context.spatials
+    const panner = context.sources[0].connected[0].connected[0]
+    expect(panner.connected).toEqual([spatial])
+    expect(panner.pan.value).toBe(0)
+    expect(spatial.connected).toEqual([sys.audio.master])
+    expect([spatial.positionX.value, spatial.positionY.value, spatial.positionZ.value]).toEqual([20, -30, 0])
+    expect(spatial.panningModel).toBe('equalpower')
+    expect(spatial.distanceModel).toBe('linear')
+    expect(spatial.refDistance).toBe(50)
+    expect(spatial.maxDistance).toBe(Math.hypot(100, 50))
+    const { listener } = context
+    expect([listener.positionX.value, listener.positionY.value, listener.positionZ.value]).toEqual([50, -40, 50])
+  })
+
+  it('plays a sound without a position through no PannerNode', async () => {
+    const { frame } = await audio_system(env => env.sounds.push(sound({ path: 'coin.mp3', pan: 0.5 })),
+      { preload_sounds: ['coin.mp3'] })
+    frame()
+    expect(contexts[0].spatials).toHaveLength(0)
+    expect(output(contexts[0].sources[0]).pan).toBe(0.5)
+  })
+
+  it('uses a sound\'s own range', async () => {
+    const { frame } = await audio_system(env => env.sounds.push(sound({ path: 'chirp.wav', x: 0, y: 0, range: 300 })),
+      { preload_sounds: ['chirp.wav'] })
+    frame()
+    expect(contexts[0].spatials[0].maxDistance).toBe(Math.hypot(300, 50))
+  })
+
+  it('moves the listener to env.listener, gliding after it is first placed', async () => {
+    let listener = { x: 10, y: 20 }
+    const { frame } = await audio_system(env => {
+      env.listener = listener
+      env.tracks.bee = track({ path: 'buzz.wav', x: 0, y: 0 })
+    })
+    frame()
+    const { positionX, positionY } = contexts[0].listener
+    expect([positionX.value, positionY.value]).toEqual([10, -20])
+    expect(positionX.setTargetAtTime).not.toHaveBeenCalled()
+
+    listener = { x: 60, y: 70 }
+    frame()
+    expect(positionX.setTargetAtTime).toHaveBeenCalledWith(60, 0, 0.02)
+    expect(positionY.setTargetAtTime).toHaveBeenCalledWith(-70, 0, 0.02)
+  })
+
+  it('moves a track smoothly as its position changes, and only then', async () => {
+    let x = 10
+    const { frame } = await audio_system(env => { env.tracks.bee = track({ path: 'buzz.wav', x, y: 5 }) })
+    frame()
+    const [spatial] = contexts[0].spatials
+    expect(spatial.positionX.value).toBe(10)
+
+    frame()
+    expect(spatial.positionX.setTargetAtTime).not.toHaveBeenCalled()
+
+    x = 90
+    frame()
+    expect(spatial.positionX.setTargetAtTime).toHaveBeenCalledWith(90, 0, 0.02)
+    expect(contexts[0].spatials).toHaveLength(1)
+  })
+
+  it('routes a track through a PannerNode only while it has a position', async () => {
+    let placed = true
+    const { sys, frame } = await audio_system(env => {
+      env.tracks.bee = placed
+        ? track({ path: 'buzz.wav', x: 1, y: 2 })
+        : track({ path: 'buzz.wav', pan: -1 })
+    })
+    frame()
+    const out = sys.audio.playing.get('bee').output
+    expect(out.spatial).not.toBeNull()
+
+    placed = false
+    frame()
+    expect(out.spatial).toBeNull()
+    expect(out.panner.connected.at(-1)).toBe(sys.audio.master)
+    expect(out.panner.pan.value).toBe(-1)
+    expect(elements).toHaveLength(1)
+  })
+
+  it('throws a TypeError for a sound with only one of x and y', async () => {
+    const { frame } = await audio_system(env => env.sounds.push(sound({ path: 'chirp.wav', x: 3 })),
+      { preload_sounds: ['chirp.wav'] })
+    expect(frame).toThrow(new TypeError('Kwilos: a sound needs both x and y to be placed, got {"path":"chirp.wav","x":3,"type":"sound"}'))
   })
 })
 
