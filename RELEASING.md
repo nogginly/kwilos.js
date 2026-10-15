@@ -5,7 +5,7 @@ Releases are published in two stages:
 1. The [Publish workflow](.github/workflows/publish.yml) runs when a version tag is pushed. It runs the full CI checks, confirms the tag matches the version in `package.json`, and [stages](https://docs.npmjs.com/cli/commands/npm-stage) the package on npm with [trusted publishing](https://docs.npmjs.com/trusted-publishers), so no npm token is stored anywhere. A version already on npm is skipped.
 2. A maintainer approves the staged version on npmjs.com, with two-factor authentication, which publishes it. The workflow cannot publish on its own, so a compromised workflow run or dependency cannot release a version nobody has checked.
 
-The [Pages workflow](.github/workflows/pages.yml) then builds the [web site](https://nogginly.github.io/kwilos.js/) from that release and deploys it to GitHub Pages. The Publish workflow runs it after staging the release, and its deploy then waits for your approval in GitHub. The site's samples load Kwilos from the CDN at the released version, so approve the deploy only after the version itself; if the version is not yet on npm, the deploy stops without changing the site.
+The [Pages workflow](.github/workflows/pages.yml) then builds the [web site](https://nogginly.github.io/kwilos.js/) from that release and deploys it to GitHub Pages. The Publish workflow runs it after staging the release, and its deploy then waits for your approval in GitHub. The site's samples load Kwilos from the CDN at the released version, so approve the deploy only after the version itself; if the version is not yet on npm, or jsDelivr cannot serve it, the deploy stops without changing the site.
 
 ## Each release
 
@@ -31,7 +31,7 @@ The [Pages workflow](.github/workflows/pages.yml) then builds the [web site](htt
    ```
 
    The version then appears on npm and the CDNs. `npm stage download <stage-id>` fetches the staged tarball, to inspect it first; `npm stage reject <stage-id>` discards it.
-6. Approve the web site's deployment: open the Publish run in the Actions tab, choose **Review deployments**, tick **github-pages** and approve. If the deploy was approved before the version, it stops with an error; re-run that job once the version is on npm.
+6. Approve the web site's deployment: open the Publish run in the Actions tab, choose **Review deployments**, tick **github-pages** and approve. The deploy stops with an error if the version is not on npm yet, as when it is approved first, or if jsDelivr does not serve it after a few minutes of retries; re-run that job once the cause has passed.
 
 A staged version holds its version number, so a re-run of the Publish workflow fails while it waits for approval. Approve or reject the staged version first.
 
