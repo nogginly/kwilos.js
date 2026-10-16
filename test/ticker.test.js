@@ -68,6 +68,52 @@ describe('ticker', () => {
     })
   })
 
+  describe('with entities kept between frames and edited in place', () => {
+    const arc_xs = (sys) => sys.app.draw_context.calls.filter(c => c[0] === 'arc').map(c => c[1])
+    const kept_ball = () => circle({ id: 'ball', x: 10, y: 10, radius: 5, fill_color: 'red' })
+
+    it('draws each edit, and env.hit returns the very object kept', () => {
+      const ball = kept_ball()
+      const scene = [ball]
+      const sys = attached_system({ tick: () => { ball.x += 40; return scene } })
+      ticker(0, sys)
+      ticker(16, sys)
+      ticker(32, sys)
+      expect(arc_xs(sys)).toEqual([50, 90, 130])
+      expect(sys.args.hit({ x: 130, y: 10 })).toBe(ball)
+    })
+
+    it('tests an entity as it is when env.hit is called, so asking before an edit finds what was drawn', () => {
+      const ball = kept_ball()
+      const scene = [ball]
+      const found = {}
+      const sys = attached_system({
+        tick: (env) => {
+          if (env.time > 0)
+            found.before_edit = env.hit({ x: 50, y: 10 })
+          ball.x += 40
+          if (env.time > 0)
+            found.after_edit = env.hit({ x: 50, y: 10 })
+          return scene
+        }
+      })
+      ticker(0, sys)
+      ticker(16, sys)
+      expect(found.before_edit).toBe(ball)
+      expect(found.after_edit).toBeNull()
+    })
+
+    it('stops drawing and hitting an entry set to false', () => {
+      const ball = kept_ball()
+      const scene = [ball]
+      const sys = attached_system({ tick: (env) => { if (env.time > 0) scene[0] = false; return scene } })
+      ticker(0, sys)
+      ticker(16, sys)
+      expect(arc_xs(sys)).toEqual([10])
+      expect(sys.args.hit({ x: 10, y: 10 })).toBeNull()
+    })
+  })
+
   it('starts a new clicks list each frame, leaving one the app kept intact', () => {
     let kept
     const sys = attached_system({ tick: (env) => { kept = env.inputs.mouse.clicks; return null } })
