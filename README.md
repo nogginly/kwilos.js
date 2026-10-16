@@ -1,16 +1,16 @@
-# Kwilos JS
+# Kwilos.js
 
-_Kwilos_ is an easy-to-use, dependency-free, entity-based Javascript graphics toolkit for use with HTML5 Canvas.
+_Kwilos.js_ is an easy-to-use, dependency-free, entity-based JavaScript graphics toolkit for use with HTML5 Canvas.
 
-The [Kwilos web site](https://nogginly.github.io/kwilos.js/) has the samples running live, and the API documentation.
+The [Kwilos.js web site](https://nogginly.github.io/kwilos.js/) has the samples running live, and the API documentation.
 
-_Kwilos_ uses a "game loop" metaphor while providing a way to use it efficiently when the drawings / graphics have limited motion.
+_Kwilos.js_ uses a "game loop" metaphor while providing a way to use it efficiently when the drawings / graphics have limited motion.
 
 > **About the name**
 >
 > A mashup of 'Quill' and 'Kalos' with phonetic jiggery-pokery to get something unique that doesn't lose its flavour.
 
-## Using Kwilos JS
+## Using Kwilos.js
 
 ### From source
 
@@ -26,7 +26,7 @@ The source in `src/` runs in the browser as is, without a build. To try the samp
 
 ### Types
 
-Kwilos is written in JavaScript with types in JSDoc comments, checked by TypeScript. Editors use them for completion and to flag mistakes, such as a misspelt property. Types such as `Env`, `Tick`, `Config` and `Scene` are exported for use in your own JSDoc or TypeScript:
+Kwilos.js is written in JavaScript with types in JSDoc comments, checked by TypeScript. Editors use them for completion and to flag mistakes, such as a misspelt property. Types such as `Env`, `Tick`, `Config` and `Scene` are exported for use in your own JSDoc or TypeScript:
 
 ```js
 /** @import { Env } from "kwilos.js" */
@@ -90,7 +90,7 @@ const kwilos = await Kwilos.attach("canvas", tick, {
 })
 ```
 
-### Configuring Kwilos
+### Configuring Kwilos.js
 
 When attaching a canvas, you can configure Kwilos with the following properties that you can provide in an object.
 

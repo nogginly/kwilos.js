@@ -1,4 +1,4 @@
-# Releasing Kwilos
+# Releasing Kwilos.js
 
 Releases are published in two stages:
 
@@ -18,7 +18,7 @@ The [Pages workflow](.github/workflows/pages.yml) then builds the [web site](htt
 
    ```sh
    git fetch origin
-   git tag -a v0.8.0 origin/main -m "Kwilos JS 0.8.0"
+   git tag -a v0.8.0 origin/main -m "Kwilos.js 0.8.0"
    git push origin v0.8.0
    ```
 
