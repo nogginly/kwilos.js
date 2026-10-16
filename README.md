@@ -135,6 +135,28 @@ function tick(env) {
 }
 ```
 
+### Reusing Entities
+
+Making new entities on every frame is the simplest way to write an app, and cheap enough for most: the browser clears away short-lived objects quickly. To avoid it, make entities once, keep them, edit them in place, and return the same array. Kwilos only reads entities, and keeps nothing of a scene but the array it drew last.
+
+```js
+import { Kwilos, circle } from "kwilos.js"
+
+const ball = circle({ id: 'ball', x: 10, y: 100, radius: 5, fill_color: 'red' })
+const scene = [ball]
+
+function tick(env) {
+  const grabbed = env.hit()?.id === 'ball'
+  ball.x += 1
+  ball.fill_color = grabbed ? 'orange' : 'red'
+  return scene
+}
+```
+
+- Add or remove entities by editing the array, or by setting an entry to `false`, which leaves the others in order.
+- Call `env.hit` before editing, as above. It tests the entities as they are when it is called, not as they were drawn, so after moving the ball it finds the ball at its new place, which the user has not seen yet.
+- Part of a scene that never changes, such as a tile map, can be made once and returned inside the array that is made on each frame, since nested arrays are drawn in place.
+
 ### Shapes
 
 Each shape has a factory, exported alongside `Kwilos`, that takes the shape's properties and returns a plain object tagged with its `type`. A hand-written object with the same `type` is drawn the same way. An entity without a recognised `type` throws a `TypeError`.
@@ -219,6 +241,8 @@ function tick(env) {
   ]
 }
 ```
+
+A shape kept between frames and edited in place is tested as it is when `env.hit` is called; see [Reusing Entities](#reusing-entities).
 
 `contains(shape, point)` tells whether one shape contains the point, and works anywhere, without Kwilos running. It measures shapes from their own properties only: circles, rects, and images and tiles with `w` and `h`. For a label, or an image or tile sized by its file, it throws a `TypeError`; use `env.hit` for those.
 
