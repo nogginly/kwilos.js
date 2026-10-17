@@ -7,6 +7,8 @@
   --muted: #6b665e;
   --rule: #e4e0d8;
   --code-bg: #f1eee8;
+  --add-bg: #e1f1dc;
+  --remove-bg: #f6dfda;
   --link: #8a3b12;
   --accent: #8a3b12;
   --stage: #1c1c1e;
@@ -26,6 +28,8 @@
     --muted: #a39e95;
     --rule: #34312d;
     --code-bg: #22201e;
+  --add-bg: #203a25;
+  --remove-bg: #43241f;
     --link: #f0a46c;
     --accent: #f0a46c;
     --hl-keyword: #f0a46c;
@@ -44,6 +48,8 @@
   --muted: #a39e95;
   --rule: #34312d;
   --code-bg: #22201e;
+  --add-bg: #203a25;
+  --remove-bg: #43241f;
   --link: #f0a46c;
   --accent: #f0a46c;
   --hl-keyword: #f0a46c;
@@ -208,7 +214,8 @@ td {
 
 .site-header nav {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
 }
 
 .site-header nav a {
@@ -379,6 +386,7 @@ body:has(.playground) {
 .pg-console { grid-column: 7 / 13; align-self: stretch; position: relative; }
 .pg-files { grid-column: 1 / 4; }
 .pg-editor { grid-column: 4 / 13; }
+.pg-no-files .pg-editor { grid-column: 1 / -1; }
 
 /* The console is as tall as the preview, and its log scrolls within it, so
    a long log never moves the editor */
@@ -637,4 +645,99 @@ input:focus-visible + .pg-hint {
 
 .pg-file-list button {
   padding: 0 0.5em;
+}
+
+/* The tutorial: text in a reading column, a step's changes marked, and the way on */
+
+.prose {
+  max-width: 46rem;
+}
+
+.step-label {
+  margin: 1.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.step-label + h1 {
+  margin-top: 0.2em;
+}
+
+.diff {
+  padding: 0.75rem 1rem;
+}
+
+.diff code {
+  display: block;
+}
+
+.diff-line {
+  position: relative;
+  display: block;
+  min-height: 1.45em;
+  margin: 0 -1rem;
+  padding: 0 1rem 0 2.25rem;
+  white-space: pre;
+  text-decoration: none;
+}
+
+.diff-added {
+  background: var(--add-bg);
+}
+
+.diff-removed {
+  background: var(--remove-bg);
+}
+
+.diff-mark,
+.diff-gap {
+  color: var(--muted);
+}
+
+.diff-mark {
+  position: absolute;
+  left: 1rem;
+}
+
+.steps {
+  padding-left: 1.5rem;
+}
+
+.steps li {
+  margin: 0.6rem 0;
+}
+
+.steps li span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.button {
+  display: inline-block;
+  padding: 0.4em 1.1em;
+  color: var(--bg);
+  background: var(--accent);
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+.step-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 2.5rem 0 3rem;
+}
+
+.step-nav a {
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+.step-nav .next {
+  margin-left: auto;
 }

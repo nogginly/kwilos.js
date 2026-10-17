@@ -6,6 +6,7 @@ Notable changes to Kwilos.js. The format follows [Keep a Changelog](https://keep
 
 ### Added
 
+- A tutorial on the web site, "Make a game: the Nut Catcher": a squirrel catches nuts that fall from an oak tree, built in small steps that each run, with what is new in each step marked and the playground beside it. The first four steps are there, and more are on the way.
 - A playground on the web site: edit a small Kwilos.js app and run it, add your own images, sounds and data files and use them by name, and share the code with a link. The code runs in a sandboxed frame, and the files stay in the browser.
 
 ## [0.11.0] - 2026-10-17

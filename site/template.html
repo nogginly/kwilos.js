@@ -18,17 +18,18 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
-  <link rel="stylesheet" href="style.css">
-  <script src="site.js" defer></script>
+  <link rel="stylesheet" href="{{root}}style.css">
+  <script src="{{root}}site.js" defer></script>
 </head>
 
 <body>
   <header class="site-header">
-    <a class="site-name" href="index.html">Kwilos.js</a>
+    <a class="site-name" href="{{root}}index.html">Kwilos.js</a>
     <nav aria-label="Site">
-      <a href="index.html" {{nav_home}}>Home</a>
-      <a href="api.html" {{nav_api}}>API</a>
-      <a href="playground.html" {{nav_playground}}>Playground</a>
+      <a href="{{root}}index.html" {{nav_home}}>Home</a>
+      <a href="{{root}}tutorial/index.html" {{nav_tutorial}}>Tutorial</a>
+      <a href="{{root}}api.html" {{nav_api}}>API</a>
+      <a href="{{root}}playground.html" {{nav_playground}}>Playground</a>
       <a href="https://github.com/nogginly/kwilos.js">GitHub</a>
       <a href="https://www.npmjs.com/package/kwilos.js">npm</a>
     </nav>
