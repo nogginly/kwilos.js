@@ -81,8 +81,21 @@ await write_page('api.html', {
   content: `<h1 id="api">API</h1>\n${toc(api)}\n${render(api)}`,
 })
 
+// The playground starts from a small app, which sits in its editor
+const starter = await readFile(join(SITE, 'playground-starter.js'), 'utf8')
+const playground = (await readFile(join(SITE, 'playground.body.html'), 'utf8'))
+  .replaceAll('{{version}}', version)
+  .replace('{{starter}}', () => escape(starter))
+await write_page('playground.html', {
+  title: 'Kwilos.js playground',
+  description: 'Try Kwilos.js in the browser: edit a small app, add your own images and sounds, and share it with a link.',
+  nav: 'playground',
+  content: playground,
+})
+
 await cp(join(SITE, 'style.css'), join(OUT, 'style.css'))
 await cp(join(SITE, 'site.js'), join(OUT, 'site.js'))
+await cp(join(SITE, 'playground.js'), join(OUT, 'playground.js'))
 // GitHub Pages would otherwise process the site with Jekyll
 await writeFile(join(OUT, '.nojekyll'), '')
 
@@ -178,6 +191,7 @@ async function write_page(file, { title, description, nav, content }) {
     .replaceAll('{{version}}', version)
     .replace('{{nav_home}}', nav === 'home' ? 'aria-current="page"' : '')
     .replace('{{nav_api}}', nav === 'api' ? 'aria-current="page"' : '')
+    .replace('{{nav_playground}}', nav === 'playground' ? 'aria-current="page"' : '')
     .replace('{{content}}', content)
   await writeFile(join(OUT, file), page)
 }

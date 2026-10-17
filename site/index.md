@@ -22,7 +22,7 @@ The name is a mash-up of *quill* and *kalos*, Greek for beautiful, with some pho
 
 ## Samples
 
-Each sample runs below, using Kwilos.js {{version}}. Switch to **Source** to see its code, which loads Kwilos from the CDN as shown above. A sample that loads data exported from a tool, such as Aseprite, shows that data in a tab of its own.
+Each sample runs below, using Kwilos.js {{version}}. Switch to **Source** to see its code, which loads Kwilos from the CDN as shown above. A sample that loads data exported from a tool, such as Aseprite, shows that data in a tab of its own. To write your own app, with your own images and sounds, open the [playground](playground.html).
 
 {{samples}}
 

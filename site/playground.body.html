@@ -1,0 +1,51 @@
+    <h1>Playground</h1>
+    <p>Write a Kwilos.js app and run it here. The page runs Kwilos.js {{version}}, which your code imports as
+      <code>kwilos.js</code>, and <code>kwilos.js/aseprite</code> is there too. It draws on a canvas with the id
+      <code>canvas</code>, 600 by 360. Nothing is sent anywhere: your code and files stay in your browser, and
+      a link to your code carries the code itself.</p>
+
+    <div class="playground">
+      <section class="pg-preview" aria-label="Preview">
+        <div class="pg-title">
+          <h3 class="pg-heading">Preview</h3>
+          <span class="pg-hint">Click the app to give it the keyboard.</span>
+        </div>
+        <div id="stage" class="pg-stage"></div>
+      </section>
+
+      <section class="pg-console" aria-label="Console">
+        <div class="pg-title">
+          <h3 class="pg-heading">Console</h3>
+        </div>
+        <div id="log" class="pg-log" role="log" aria-label="Console"></div>
+      </section>
+
+      <div id="errors" class="pg-errors" role="alert" hidden></div>
+
+      <details class="pg-files" id="files" open>
+        <summary>Files <span id="file-count"></span></summary>
+        <div class="pg-files-body">
+          <ul id="file-list" class="pg-file-list" aria-label="Added files"></ul>
+          <label class="pg-button" for="file-input">Add files…</label>
+          <input type="file" id="file-input" class="visually-hidden" multiple>
+          <p class="pg-hint">Or drop them here. Use a file by its name, as in <code>image({ path: "hero.png" })</code>.
+            The folders in a path are ignored, so <code>assets/hero.png</code> finds <code>hero.png</code>.</p>
+        </div>
+      </details>
+
+      <section class="pg-editor" aria-label="Code">
+        <div class="pg-toolbar">
+          <button type="button" id="run" class="pg-primary">Run</button>
+          <button type="button" id="share">Share link</button>
+          <button type="button" id="reset">Reset</button>
+          <span id="status" role="status" aria-live="polite"></span>
+        </div>
+        <p id="notice" class="pg-notice" role="note" hidden></p>
+        <label for="code" class="visually-hidden">Your app's JavaScript</label>
+        <textarea id="code" class="pg-code" spellcheck="false" autocomplete="off" autocapitalize="off"
+          wrap="off">{{starter}}</textarea>
+        <p class="pg-hint">Ctrl or ⌘ and Enter runs the code. Press Escape, then Tab, to leave the editor.</p>
+      </section>
+    </div>
+
+    <script src="playground.js" type="module"></script>
