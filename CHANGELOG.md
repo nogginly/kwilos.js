@@ -4,9 +4,12 @@ Notable changes to Kwilos.js. The format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-17
+
 ### Added
 
-- `from_aseprite`, in the new `kwilos.js/aseprite` module: turns the JSON that Aseprite exports with a sprite sheet into the frames and animations a `sprite` shows, one animation for each tag, in the tag's direction. A sample, "Aseprite", a character that walks and runs in four directions, and the web site shows a sample's data files, such as its JSON, in tabs of their own.
+- `from_aseprite`, in the new `kwilos.js/aseprite` module: turns the JSON that Aseprite exports with a sprite sheet into the frames and animations a `sprite` shows, one animation for each tag, in the tag's direction.
+- A sample, "Aseprite", a character that walks and runs in four directions. The web site shows a sample's data files, such as its JSON, in tabs of their own.
 - Tile sheets with a `margin` around their edge and `spacing` between their tiles, as tile editors such as Tiled can add; an animation's `sheet` takes them too.
 - `flip_x` and `flip_y` for images and tiles, which mirror them about their own box, as they already did for sprites.
 - The `image_smoothing` config option: set it to `false` to draw scaled images, tiles and sprites with hard pixel edges, as pixel art needs.
