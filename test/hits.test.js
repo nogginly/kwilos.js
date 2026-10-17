@@ -92,6 +92,13 @@ describe('env.hit', () => {
     expect(sys.args.hit({ x: 21, y: 19 })).toBeNull()
   })
 
+  it('measures a tile from a sheet with a margin and spacing', () => {
+    const sys = system_showing([tile({ path: 's.png', x: 0, y: 0, tile_rows: 2, tile_cols: 4, margin: 2, spacing: 2, tile_index: 0 })])
+    sys.atlas['s.png'] = { width: 80, height: 40 }
+    expect(sys.args.hit({ x: 16, y: 16 })).not.toBeNull()
+    expect(sys.args.hit({ x: 18, y: 16 })).toBeNull()
+  })
+
   it('misses an image that has not loaded, as it is not drawn', () => {
     vi.spyOn(BAL, 'create_image').mockReturnValue(new Promise(() => {}))
     const sys = system_showing([image({ path: 'later.png', x: 0, y: 0, w: 10, h: 10 })])

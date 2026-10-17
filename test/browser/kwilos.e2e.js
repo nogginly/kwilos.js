@@ -62,6 +62,32 @@ test.describe('drawing', () => {
     await expect_pixel(page, '#c', 20, 10, BLUE)
   })
 
+  test('draws a tile from a sheet with a margin and spacing', async ({ page }) => {
+    await page.evaluate(async () => {
+      const { Kwilos, tile } = window.kwilos
+      await Kwilos.attach('#c', () => [
+        tile({ path: 'spaced.png', x: 0, y: 0, tile_w: 8, tile_h: 8, margin: 1, spacing: 2, tile_index: 3 }),
+        tile({ path: 'spaced.png', x: 20, y: 0, tile_rows: 2, tile_cols: 2, margin: 1, spacing: 2, tile_index: 1 }),
+      ], { preload_images: ['spaced.png'] })
+    })
+    const YELLOW = [255, 255, 0, 255]
+    const GREEN = [0, 255, 0, 255]
+    for (const [x, y] of [[0, 0], [7, 0], [0, 7], [7, 7]])
+      await expect_pixel(page, '#c', x, y, YELLOW)
+    for (const [x, y] of [[20, 0], [27, 0], [20, 7], [27, 7]])
+      await expect_pixel(page, '#c', x, y, GREEN)
+  })
+
+  test('mirrors a flipped image', async ({ page }) => {
+    await page.evaluate(async () => {
+      const { Kwilos, image } = window.kwilos
+      await Kwilos.attach('#c', () => [image({ path: 'stripes.png', x: 0, y: 0, w: 40, h: 20, flip_x: true })],
+        { preload_images: ['stripes.png'], image_smoothing: false })
+    })
+    await expect_pixel(page, '#c', 19, 10, BLUE)
+    await expect_pixel(page, '#c', 20, 10, RED)
+  })
+
   test('draws a container clipped to its size', async ({ page }) => {
     await page.evaluate(async () => {
       const { Kwilos, container, rect } = window.kwilos

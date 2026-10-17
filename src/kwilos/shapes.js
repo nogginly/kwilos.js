@@ -66,11 +66,14 @@
  * @property {number} [source_y] Region of the image to draw; defaults to 0
  * @property {number} [source_w] Region of the image to draw; defaults to the image width
  * @property {number} [source_h] Region of the image to draw; defaults to the image height
+ * @property {boolean} [flip_x] Mirrors the image left to right, about its own box
+ * @property {boolean} [flip_y] Mirrors the image top to bottom, about its own box
  */
 
 /**
  * A tile from a tile sheet, sized either by `tile_w` and `tile_h`, or by
- * `tile_rows` and `tile_cols`.
+ * `tile_rows` and `tile_cols`. A sheet may have a `margin` around its edge
+ * and `spacing` between its tiles, as tile editors can add.
  * @typedef {object} Tile
  * @property {'tile'} type
  * @property {string | number} [id] Identifies the shape, e.g. to compare with what `env.hit` returns; Kwilos does not use it
@@ -84,6 +87,10 @@
  * @property {number} [tile_h]
  * @property {number} [tile_rows]
  * @property {number} [tile_cols]
+ * @property {number} [margin] Pixels between the sheet's edge and its tiles, on every side; defaults to 0
+ * @property {number} [spacing] Pixels between neighbouring tiles; defaults to 0
+ * @property {boolean} [flip_x] Mirrors the tile left to right, about its own box
+ * @property {boolean} [flip_y] Mirrors the tile top to bottom, about its own box
  */
 
 /**
@@ -116,3 +123,27 @@ export const tile = (props) => ({ ...props, type: 'tile' })
 
 /** @param {Omit<Container, 'type'>} props @returns {Container} */
 export const container = (props) => ({ ...props, type: 'container' })
+
+/**
+ * Returns how a tile sheet of the given size is laid out: the size of a tile,
+ * the number of columns, and the margin and spacing. Throws a TypeError for a
+ * tile with neither `tile_w` and `tile_h`, nor `tile_rows` and `tile_cols`.
+ * @param {Pick<Tile, 'tile_w' | 'tile_h' | 'tile_rows' | 'tile_cols' | 'margin' | 'spacing'>} tile
+ * @param {number} sheet_w
+ * @param {number} sheet_h
+ * @returns {{ tile_w: number, tile_h: number, cols: number, margin: number, spacing: number }}
+ */
+export function tile_layout({ tile_w, tile_h, tile_rows, tile_cols, margin = 0, spacing = 0 }, sheet_w, sheet_h) {
+  if (tile_w != null && tile_h != null) {
+    const cols = Math.trunc((sheet_w - 2 * margin + spacing) / (tile_w + spacing))
+    return { tile_w, tile_h, cols, margin, spacing }
+  }
+  if (tile_rows != null && tile_cols != null) {
+    return {
+      tile_w: Math.trunc((sheet_w - 2 * margin - spacing * (tile_cols - 1)) / tile_cols),
+      tile_h: Math.trunc((sheet_h - 2 * margin - spacing * (tile_rows - 1)) / tile_rows),
+      cols: tile_cols, margin, spacing,
+    }
+  }
+  throw new TypeError('Kwilos: a tile needs either tile_w and tile_h, or tile_rows and tile_cols')
+}

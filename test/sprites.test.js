@@ -92,6 +92,14 @@ describe('sprite_frame', () => {
     })
   })
 
+  it('carries the sheet\'s margin and spacing, and the sprite\'s flips, to the tile', () => {
+    const spaced = animation({ sheet: { ...sheet, margin: 1, spacing: 2 }, frames: [{ tile: 0 }] })
+    expect(sprite_frame(sprite({ animation: spaced, x: 0, y: 0, flip_x: true, flip_y: true }), 0))
+      .toMatchObject({ type: 'tile', margin: 1, spacing: 2, flip_x: true, flip_y: true })
+    expect(sprite_frame(sprite({ animation: animation({ frames: [{ path: 'eye.png' }] }), x: 0, y: 0, flip_y: true }), 0))
+      .toMatchObject({ type: 'image', flip_y: true })
+  })
+
   it('gives an image for a frame with its own path', () => {
     const blink = animation({ frames: [{ path: 'eye.png', source_x: 8, source_w: 8, dx: 3 }] })
     expect(sprite_frame(sprite({ animation: blink, x: 0, y: 0, w: 16 }), 0)).toMatchObject({

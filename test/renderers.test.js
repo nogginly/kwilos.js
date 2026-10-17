@@ -52,6 +52,37 @@ describe('render', () => {
     expect(calls).toEqual([['drawImage', sheet, 100, 110, 100, 110, 1, 2, 100, 110]])
   })
 
+  it('draws a tile from a sheet with a margin and spacing, sized by tile size', () => {
+    const sheet = { width: 40, height: 40 }
+    const calls = render_calls([tile({ path: 'sheet.png', x: 1, y: 2, tile_w: 16, tile_h: 16, margin: 2, spacing: 1, tile_index: 3 })],
+      sys => { sys.atlas['sheet.png'] = sheet })
+    expect(calls).toEqual([['drawImage', sheet, 19, 19, 16, 16, 1, 2, 16, 16]])
+  })
+
+  it('draws a tile from a sheet with a margin and spacing, sized by rows and columns', () => {
+    const sheet = { width: 40, height: 40 }
+    const calls = render_calls([tile({ path: 'sheet.png', x: 0, y: 0, tile_rows: 2, tile_cols: 2, margin: 2, spacing: 4, tile_index: 3 })],
+      sys => { sys.atlas['sheet.png'] = sheet })
+    expect(calls).toEqual([['drawImage', sheet, 22, 22, 16, 16, 0, 0, 16, 16]])
+  })
+
+  it.each([
+    ['image', image({ path: 'bg.png', x: 10, y: 20, w: 30, h: 40, flip_x: true }), ['translate', 40, 20], ['scale', -1, 1]],
+    ['image', image({ path: 'bg.png', x: 10, y: 20, w: 30, h: 40, flip_y: true }), ['translate', 10, 60], ['scale', 1, -1]],
+    ['tile', tile({ path: 'bg.png', x: 10, y: 20, tile_w: 30, tile_h: 40, tile_index: 0, flip_x: true, flip_y: true }), ['translate', 40, 60], ['scale', -1, -1]],
+  ])('mirrors a flipped %s about its own box', (_kind, entity, translated, scaled) => {
+    const calls = render_calls([entity], sys => { sys.atlas['bg.png'] = { width: 300, height: 220 } })
+    expect(calls).toContainEqual(translated)
+    expect(calls).toContainEqual(scaled)
+    expect(calls.find(c => c[0] === 'drawImage').slice(6)).toEqual([0, 0, entity.w ?? entity.tile_w, entity.h ?? entity.tile_h])
+    expect(names(calls).at(-1)).toBe('setTransform')
+  })
+
+  it('does not touch the transform for an image that is not flipped', () => {
+    const calls = render_calls([image({ path: 'bg.png', x: 1, y: 2 })], sys => { sys.atlas['bg.png'] = { width: 30, height: 20 } })
+    expect(names(calls)).toEqual(['drawImage'])
+  })
+
   it('throws a TypeError for a tile without tile size or sheet dimensions', () => {
     expect(() => render_calls([tile({ path: 'sheet.png', x: 0, y: 0, tile_index: 0 })],
       sys => { sys.atlas['sheet.png'] = { width: 300, height: 220 } })).toThrow(/tile needs/)

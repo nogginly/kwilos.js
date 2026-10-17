@@ -28,7 +28,7 @@
  * @typedef {object} Animation
  * @property {'animation'} [type]
  * @property {Frame[]} frames
- * @property {{ path: string, tile_w?: number, tile_h?: number, tile_rows?: number, tile_cols?: number }} [sheet] The tile sheet that frames with a `tile` come from, sized as for a tile
+ * @property {{ path: string, tile_w?: number, tile_h?: number, tile_rows?: number, tile_cols?: number, margin?: number, spacing?: number }} [sheet] The tile sheet that frames with a `tile` come from, sized as for a tile
  * @property {'loop' | 'once' | 'ping-pong'} [play] `loop` repeats, the default; `once` stops on the last frame; `ping-pong` plays forwards then backwards, repeating, with each end frame shown once, as in 1, 2, 3, 2, 1, 2, 3; to hold an end frame, give it a longer `duration`
  * @property {number} [duration] The length of one pass, in milliseconds. Frames' own durations share it in proportion; without it, they add up to it. Frames without a duration of their own get an equal share, or 100 ms when there is no `duration`
  * @property {Easing} [easing] Spaces the frames along a curve within each pass, e.g. "ease-in" shows the first frames longest; defaults to "linear"
@@ -156,12 +156,15 @@ export function sprite_frame(entity, time) {
 
   if (frame.path != null) {
     const { source_x, source_y, source_w, source_h } = frame
-    return { type: 'image', path: frame.path, x, y, w: entity.w, h: entity.h, source_x, source_y, source_w, source_h }
+    return { type: 'image', path: frame.path, x, y, w: entity.w, h: entity.h, source_x, source_y, source_w, source_h, flip_x: entity.flip_x, flip_y: entity.flip_y }
   }
   if (frame.tile == null || anim.sheet == null)
     throw new TypeError('Kwilos: an animation frame needs a path, or a tile and the animation a sheet')
-  const { path, tile_w, tile_h, tile_rows, tile_cols } = anim.sheet
-  return { type: 'tile', path, tile_index: frame.tile, x, y, w: entity.w, h: entity.h, tile_w, tile_h, tile_rows, tile_cols }
+  const { path, tile_w, tile_h, tile_rows, tile_cols, margin, spacing } = anim.sheet
+  return {
+    type: 'tile', path, tile_index: frame.tile, x, y, w: entity.w, h: entity.h, tile_w, tile_h, tile_rows, tile_cols, margin, spacing,
+    flip_x: entity.flip_x, flip_y: entity.flip_y,
+  }
 }
 
 // Returns each frame's duration, sharing the animation's `duration` among
