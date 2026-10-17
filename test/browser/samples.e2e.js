@@ -240,6 +240,76 @@ test.describe('samples', () => {
     expect(errors).toEqual([])
   })
 
+  test('08 plays the tags of an Aseprite export: standing, walking and running in each direction', async ({ page }) => {
+    const errors = page_errors(page)
+    // Record the status label the sample draws: its tag, and the Aseprite frame it shows
+    await page.addInitScript(() => {
+      window.labels = []
+      const fill_text = CanvasRenderingContext2D.prototype.fillText
+      CanvasRenderingContext2D.prototype.fillText = function (text, ...rest) {
+        if (typeof text === 'string' && text.includes('Aseprite frame')) window.labels.push(text)
+        return fill_text.call(this, text, ...rest)
+      }
+    })
+    await page.goto('/samples/08-aseprite/index.html')
+    const collect = async (ms) => {
+      await page.evaluate(() => { window.labels = [] })
+      await page.waitForTimeout(ms)
+      return [...new Set(await page.evaluate(() => window.labels))]
+    }
+    const tag = (name, first) => [0, 1, 2, 3, 4].map(i => `${name} · Aseprite frame ${first + i}`)
+    // The left edge of the figure: pixels between the labels unlike the background
+    const left_edge = () => page.evaluate(() => {
+      const data = document.querySelector('#canvas-08').getContext('2d').getImageData(0, 50, 600, 270).data
+      let left = 600
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i] === 231 && data[i + 1] === 239 && data[i + 2] === 220) continue
+        left = Math.min(left, (i / 4) % 600)
+      }
+      return left
+    })
+
+    await expect.poll(() => collect(100)).toEqual(['Standing South · Aseprite frame 20'])
+
+    await page.keyboard.down('ArrowRight')
+    expect(await collect(700)).toEqual(expect.arrayContaining(tag('Walk East', 25)))
+    await page.keyboard.up('ArrowRight')
+
+    await page.keyboard.down('Shift')
+    await page.keyboard.down('ArrowUp')
+    expect(await collect(700)).toEqual(expect.arrayContaining(tag('Run North', 10)))
+    await page.keyboard.up('ArrowUp')
+    await page.keyboard.up('Shift')
+    expect(await collect(150)).toContain('Standing North · Aseprite frame 30')
+
+    // Running covers more ground than walking in the same time, measured
+    // each time as she stands facing west, so her pose is the same
+    const hold = async (keys, ms) => {
+      for (const k of keys) await page.keyboard.down(k)
+      await page.waitForTimeout(ms)
+      for (const k of [...keys].reverse()) await page.keyboard.up(k)
+      await page.waitForTimeout(100)
+    }
+    await hold(['ArrowLeft'], 100)
+    const before = await left_edge()
+    await hold(['ArrowLeft'], 600)
+    const after_walking = await left_edge()
+    await hold(['Shift', 'ArrowLeft'], 600)
+    const after_running = await left_edge()
+    const walked = before - after_walking
+    const ran = after_walking - after_running
+    expect(walked).toBeGreaterThan(20)
+    expect(ran).toBeGreaterThan(walked * 1.4)
+
+    // Holding the pointer far to the left runs west
+    const box = await page.locator('#canvas-08').boundingBox()
+    await page.mouse.move(box.x + 20, box.y + 200)
+    await page.mouse.down()
+    expect(await collect(500)).toEqual(expect.arrayContaining([expect.stringMatching(/^Run West · /)]))
+    await page.mouse.up()
+    expect(errors).toEqual([])
+  })
+
   test.describe('on a touchscreen', () => {
     test.use({ hasTouch: true })
 

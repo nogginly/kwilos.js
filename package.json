@@ -26,6 +26,10 @@
       "types": "./_dist/types/kwilos.d.ts",
       "default": "./_dist/kwilos.min.mjs"
     },
+    "./aseprite": {
+      "types": "./_dist/types/aseprite.d.ts",
+      "default": "./_dist/aseprite.min.mjs"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -38,8 +42,8 @@
     "test-browser": "npm run build-site && playwright test",
     "typecheck": "tsc",
     "clean": "node -e \"fs.rmSync('_dist', { recursive: true, force: true })\"",
-    "build-esm": "esbuild --format=esm --bundle src/kwilos.js  --outfile=_dist/kwilos.mjs",
-    "build-esm-min": "esbuild --format=esm --bundle --minify --sourcemap src/kwilos.js --outfile=_dist/kwilos.min.mjs",
+    "build-esm": "esbuild --format=esm --bundle src/kwilos.js src/aseprite.js --outdir=_dist --out-extension:.js=.mjs",
+    "build-esm-min": "esbuild --format=esm --bundle --minify --sourcemap src/kwilos.js src/aseprite.js --outdir=_dist --entry-names=[name].min --out-extension:.js=.mjs",
     "build-types": "tsc -p tsconfig.build.json",
     "build": "npm run clean && npm run build-esm && npm run build-esm-min && npm run build-types",
     "build-site": "npm run build && node site/build.js",

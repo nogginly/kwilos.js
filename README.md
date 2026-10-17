@@ -43,7 +43,7 @@ Kwilos is published on npm as `kwilos.js`, so public CDNs such as [jsDelivr](htt
 import { Kwilos, circle } from "https://cdn.jsdelivr.net/npm/kwilos.js@0.10.1/_dist/kwilos.min.mjs"
 ```
 
-Name an exact version, as above. Before 1.0, a minor version may break the API, so a range such as `@0` could change a working page without warning; see the [changelog](CHANGELOG.md) before moving to a newer version. `_dist/kwilos.mjs` is the same build unminified, for reading and debugging.
+Name an exact version, as above. Before 1.0, a minor version may break the API, so a range such as `@0` could change a working page without warning; see the [changelog](CHANGELOG.md) before moving to a newer version. `_dist/kwilos.mjs` is the same build unminified, for reading and debugging. Modules beyond the core are beside it, such as `_dist/aseprite.min.mjs`; see [Importing from Aseprite](#importing-from-aseprite).
 
 ### Via npm
 
@@ -55,7 +55,7 @@ npm install kwilos.js
 import { Kwilos, circle } from "kwilos.js"
 ```
 
-The package includes TypeScript declarations, so editors complete and check Kwilos's API.
+Modules beyond the core are imported by name, such as `kwilos.js/aseprite`. The package includes TypeScript declarations, so editors complete and check Kwilos's API.
 
 ## API
 
@@ -226,6 +226,48 @@ Frames are timed in milliseconds rather than ticks, so an animation plays at the
 `animation_status(animation, elapsed)` returns `{ frame, done }`: which frame shows after `elapsed` milliseconds, and, for a `"once"` animation, whether it has reached its end, to move on to another state.
 
 `env.hit` tests the frame of a sprite that was last drawn, with its offset, and returns the sprite. `contains` cannot measure a sprite, as it has no clock.
+
+### Importing from Aseprite
+
+[Aseprite](https://www.aseprite.org), and its free fork LibreSprite, export a sprite sheet with a JSON file that says where each frame is, how long it shows, and which frames each tag covers. `from_aseprite`, in the `aseprite` module, turns that JSON into animations for `sprite`, one per tag, so the artist's timing and tags are what plays:
+
+```js
+import { Kwilos, sprite } from "kwilos.js"
+import { from_aseprite } from "kwilos.js/aseprite"
+
+const DATA = 'art/hero.json'
+const hero = from_aseprite(await (await fetch(DATA)).json(), { base: DATA })
+
+await Kwilos.attach("#canvas", (env) => [
+  sprite({ animation: hero.animations['Walk East'], start: 0, x: 100, y: 100 }),
+], { preload_images: [hero.image], image_smoothing: false })
+```
+
+In Aseprite, choose File, Export Sprite Sheet, and on the Output tab tick **JSON Data**, and **Tags** under Meta. Frames may be listed as a hash or an array. `from_aseprite` takes the parsed JSON and returns:
+
+Property    |Description
+------------|---------------------------------------------------------------------------------------------------------------------------------------
+`image`     |The sheet's image, found beside the JSON when `base` is given, to preload
+`frames`    |Every frame, in Aseprite's order; each is a `Frame` of the image, with the frame's `index` in Aseprite as well
+`animations`|An animation for each tag, by the tag's name, such as `"Walk East"`; a sheet without tags has one animation, `"default"`, of every frame
+
+Its options are `base`, the URL the JSON came from, so `meta.image` is looked up beside it, and `image`, the image's path, for an export whose `meta.image` does not work from the page.
+
+A tag's direction sets the order and play of its animation:
+
+Direction                 |Animation
+--------------------------|-------------------------------------------
+`forward`                 |The tag's frames, looping
+`reverse`                 |The tag's frames backwards, looping
+`pingpong`                |The tag's frames, played ping-pong
+`pingpong_reverse`        |The tag's frames backwards, played ping-pong
+
+Things to know:
+
+- A frame's `index` is its number in Aseprite. `animation_status` gives a position in the animation instead, so the frame showing is `animation.frames[status.frame]`. A reversed tag lists its frames backwards, so `status.frame` counts from the tag's last frame.
+- A tag's `repeat`, layers and slices are not imported, and `from_aseprite` throws a `TypeError` for a rotated frame, so leave rotation off when exporting.
+- A trimmed frame is shifted by where its pixels sit in the whole sprite, so a sprite's `x` and `y` stay at the untrimmed sprite's corner. Giving a sprite `w` and `h` draws every frame at that size, so use them only when all the frames are the same size, as for an untrimmed sheet.
+- Pixel art is smoothed when it is scaled, unless the config sets `image_smoothing` to `false`.
 
 ### Hit-Testing
 
