@@ -391,7 +391,7 @@ body:has(.playground) {
   max-height: none;
 }
 
-@media (max-width: 52rem) {
+@media (width <= 52rem) {
   .playground {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -411,6 +411,29 @@ body:has(.playground) {
   .pg-console .pg-log {
     position: static;
     max-height: 10rem;
+  }
+
+  .pg-files > summary::before { content: "▾ "; }
+  .pg-files:not([open]) > summary::before { content: "▸ "; }
+}
+
+/* On a wide screen the files fold sideways into a rail, and the editor grows
+   to fill the space, as a file list beside an editor does */
+@media (width > 52rem) {
+  .pg-files > summary::before { content: "‹ "; }
+  .pg-files:not([open]) > summary::before { content: "› "; text-orientation: upright; }
+
+  .pg-files:not([open]) {
+    grid-column: 1 / 2;
+    align-self: stretch;
+    padding: 0.5rem 0.25rem;
+  }
+
+  .pg-files:not([open]) + .pg-editor { grid-column: 2 / 13; }
+
+  .pg-files:not([open]) > summary {
+    writing-mode: vertical-rl;
+    white-space: nowrap;
   }
 }
 
@@ -545,10 +568,15 @@ input:focus-visible + .pg-hint {
 }
 
 .pg-files > summary {
+  list-style: none;
   cursor: pointer;
   font-size: 1.05rem;
   font-weight: 600;
   line-height: 1.8rem;
+}
+
+.pg-files > summary::-webkit-details-marker {
+  display: none;
 }
 
 .pg-files > summary:focus-visible {

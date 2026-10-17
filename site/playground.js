@@ -309,8 +309,9 @@ code.addEventListener('keydown', (event) => {
 // The starter runs at once. Code from a link waits for the visitor to read
 // it and press Run, as it is someone else's.
 render_files()
-// The files start folded away on a narrow screen, where they would push the editor down
-if (!matchMedia('(min-width: 52rem)').matches) drop_zone.open = false
+// The files start folded away on a narrow screen, where they would push the editor down;
+// on a wide one they sit beside it
+if (!matchMedia('(width > 52rem)').matches) drop_zone.open = false
 const token = new URLSearchParams(location.hash.slice(1)).get('code')
 if (token) {
   try {

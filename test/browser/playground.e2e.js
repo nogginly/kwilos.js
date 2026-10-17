@@ -253,6 +253,26 @@ test.describe('layout', () => {
     expect((await box(page, '.pg-console')).height).toBeCloseTo((await box(page, '.pg-preview')).height, 0)
   })
 
+  test('folds the files sideways into a rail on a wide screen, so the editor grows', async ({ page }) => {
+    const summary = page.locator('#files summary')
+    const sizes = async () => ({ files: await box(page, '#files'), editor: await box(page, '.pg-editor') })
+    const open = await sizes()
+
+    await summary.click()
+    const folded = await sizes()
+    expect(folded.files.width).toBeLessThan(110)
+    expect(folded.editor.width).toBeGreaterThan(open.editor.width + 100)
+    // The editor's right edge stays put, and the rail runs the editor's height
+    expect(folded.editor.x + folded.editor.width).toBeCloseTo(open.editor.x + open.editor.width, 0)
+    expect(folded.files.height).toBeCloseTo(folded.editor.height, 0)
+    expect(folded.editor.x).toBeGreaterThan(folded.files.x + folded.files.width)
+
+    await summary.click()
+    const unfolded = await sizes()
+    expect(unfolded.files.width).toBeCloseTo(open.files.width, 0)
+    expect(unfolded.editor.width).toBeCloseTo(open.editor.width, 0)
+  })
+
   test('brings the preview into view when the code is run from further down the page', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 600 })
     const in_view = () => page.locator('.pg-preview').evaluate(element => {
