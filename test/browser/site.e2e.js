@@ -84,6 +84,48 @@ test.describe('site', () => {
     await expect(sample.getByRole('tab', { name: 'Preview' })).toBeFocused()
   })
 
+  test('runs a sample that imports a module with its own copy of it, and shows the module\'s CDN address in the source', async ({ page }) => {
+    const errors = page_errors(page)
+    const requests = []
+    page.on('request', request => requests.push(request.url()))
+    await page.goto('/_site/samples/08-aseprite/index.html')
+    await page.locator('canvas').waitFor()
+    await expect.poll(() => requests.some(url => url.endsWith('/_site/kwilos/aseprite.min.mjs'))).toBe(true)
+    await expect.poll(() => requests.some(url => url.endsWith('/_site/samples/08-aseprite/assets/Uncle.png'))).toBe(true)
+    expect(requests.filter(url => url.includes('cdn.jsdelivr.net'))).toEqual([])
+    expect(errors).toEqual([])
+
+    await page.goto('/_site/index.html')
+    const source = await page.locator('#sample-08-aseprite-source pre').textContent()
+    expect(source).toContain('https://cdn.jsdelivr.net/npm/kwilos.js@')
+    expect(source).toMatch(/kwilos\.js@[\d.]+\/_dist\/aseprite\.min\.mjs/)
+    expect(source).not.toContain('../../kwilos/')
+  })
+
+  test('shows a sample\'s data files in tabs of their own, after Preview and Source', async ({ page }) => {
+    await page.goto('/_site/index.html')
+    const tabs = (name) => page.locator(`#sample-${name} [role="tab"]`).allTextContents()
+    expect(await tabs('00-get-started')).toEqual(['Preview', 'Source'])
+    expect(await tabs('08-aseprite')).toEqual(['Preview', 'Source', 'Uncle.json'])
+
+    const sample = page.locator('#sample-08-aseprite')
+    const data = sample.locator('#sample-08-aseprite-data-0')
+    await expect(data).toBeHidden()
+
+    await sample.getByRole('tab', { name: 'Uncle.json' }).click()
+    await expect(data).toBeVisible()
+    await expect(data).toContainText('samples/08-aseprite/assets/Uncle.json')
+    await expect(data).toContainText('"frameTags"')
+    await expect(data.locator('code .hljs-attr').first()).toBeVisible()
+    await expect(sample.locator('#sample-08-aseprite-preview')).toBeHidden()
+
+    await page.keyboard.press('ArrowRight')
+    await expect(sample.getByRole('tab', { name: 'Preview' })).toBeFocused()
+    await expect(sample.locator('#sample-08-aseprite-preview')).toBeVisible()
+    await page.keyboard.press('ArrowLeft')
+    await expect(sample.getByRole('tab', { name: 'Uncle.json' })).toBeFocused()
+  })
+
   test('switches theme, and remembers the choice', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'light' })
     await page.goto('/_site/index.html')
