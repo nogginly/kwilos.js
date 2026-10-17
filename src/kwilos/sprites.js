@@ -29,7 +29,7 @@
  * @property {'animation'} [type]
  * @property {Frame[]} frames
  * @property {{ path: string, tile_w?: number, tile_h?: number, tile_rows?: number, tile_cols?: number }} [sheet] The tile sheet that frames with a `tile` come from, sized as for a tile
- * @property {'loop' | 'once' | 'ping-pong'} [play] `loop` repeats, the default; `once` stops on the last frame; `ping-pong` plays forwards then backwards, repeating
+ * @property {'loop' | 'once' | 'ping-pong'} [play] `loop` repeats, the default; `once` stops on the last frame; `ping-pong` plays forwards then backwards, repeating, with each end frame shown once, as in 1, 2, 3, 2, 1, 2, 3; to hold an end frame, give it a longer `duration`
  * @property {number} [duration] The length of one pass, in milliseconds. Frames' own durations share it in proportion; without it, they add up to it. Frames without a duration of their own get an equal share, or 100 ms when there is no `duration`
  * @property {Easing} [easing] Spaces the frames along a curve within each pass, e.g. "ease-in" shows the first frames longest; defaults to "linear"
  */
@@ -101,6 +101,7 @@ export function animation_status(anim, elapsed) {
 
   // Where in a forward pass the animation is, from 0 to just under `total`
   let within
+  let backward = false
   let done = false
   switch (anim.play ?? 'loop') {
     case 'loop':
@@ -111,8 +112,16 @@ export function animation_status(anim, elapsed) {
       within = Math.min(t, total)
       break
     case 'ping-pong': {
-      const along = t % (2 * total)
-      within = along < total ? along : 2 * total - along
+      // There and back shows the end frames once, so the cycle is shorter
+      // than twice a pass by their durations; a single frame never moves
+      const last = durations.length - 1
+      if (last === 0) {
+        within = 0
+        break
+      }
+      const along = t % (2 * total - durations[0] - durations[last])
+      backward = along >= total
+      within = backward ? 2 * total - durations[last] - along : along
       break
     }
     default:
@@ -124,7 +133,7 @@ export function animation_status(anim, elapsed) {
   let reached = 0
   for (let i = 0; i < durations.length; i++) {
     reached += durations[i]
-    if (eased < reached)
+    if (backward ? eased <= reached : eased < reached)
       return { frame: i, done }
   }
   return { frame: durations.length - 1, done }

@@ -28,9 +28,24 @@ describe('animation_status', () => {
     expect(animation_status(anim, 5000)).toEqual({ frame: 2, done: true })
   })
 
-  it('plays forwards then backwards when played ping-pong', () => {
+  it('plays forwards then backwards when played ping-pong, showing each end frame once', () => {
     const anim = animation({ frames: frames(100, 100, 100), play: 'ping-pong' })
-    expect([50, 150, 250, 350, 450, 550, 650].map(t => frame_at(anim, t))).toEqual([0, 1, 2, 2, 1, 0, 0])
+    expect([50, 150, 250, 350, 450, 550, 650, 750].map(t => frame_at(anim, t))).toEqual([0, 1, 2, 1, 0, 1, 2, 1])
+  })
+
+  it('changes frame exactly at the boundaries of a ping-pong, in both directions', () => {
+    const anim = animation({ frames: frames(100, 100, 100, 100), play: 'ping-pong' })
+    expect([0, 100, 200, 300, 400, 500, 600, 700, 800, 900].map(t => frame_at(anim, t))).toEqual([0, 1, 2, 3, 2, 1, 0, 1, 2, 3])
+  })
+
+  it('gives each frame its own duration in both directions of a ping-pong', () => {
+    const anim = animation({ frames: frames(100, 300, 200), play: 'ping-pong' })
+    expect([50, 150, 450, 599, 600, 899, 900].map(t => frame_at(anim, t))).toEqual([0, 1, 2, 2, 1, 1, 0])
+  })
+
+  it('shows a ping-pong of one frame, or two, as a loop', () => {
+    expect([0, 50, 5000].map(t => frame_at(animation({ frames: frames(100), play: 'ping-pong' }), t))).toEqual([0, 0, 0])
+    expect([50, 150, 250, 350].map(t => frame_at(animation({ frames: frames(100, 100), play: 'ping-pong' }), t))).toEqual([0, 1, 0, 1])
   })
 
   it('shares the animation duration among frames, in proportion to their own', () => {

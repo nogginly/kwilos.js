@@ -4,6 +4,10 @@ Notable changes to Kwilos.js. The format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
+### Changed
+
+- A `ping-pong` animation shows its first and last frames once at each turn, as Aseprite plays them: 1, 2, 3, 2, 1, 2, 3 instead of 1, 2, 3, 3, 2, 1, 1, 2, 3. This changes the timing of existing ping-pong animations; to keep it, double the `duration` of the first and last frames. The sprites sample's idle animation does so.
+
 ## [0.10.1] - 2026-10-16
 
 ### Added

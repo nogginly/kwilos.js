@@ -37,7 +37,7 @@ const SHEET = { path: '../01-different-types/assets/female_tilesheet.png', tile_
 const ANIMATIONS = {
   idle: animation({
     sheet: SHEET, play: 'ping-pong',
-    frames: [{ tile: 0, duration: 400 }, { tile: 0, duration: 300, dy: -1 }, { tile: 0, duration: 400, dy: -2 }],
+    frames: [{ tile: 0, duration: 800 }, { tile: 0, duration: 300, dy: -1 }, { tile: 0, duration: 800, dy: -2 }],
   }),
   walk: animation({
     sheet: SHEET,
