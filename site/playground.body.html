@@ -5,6 +5,29 @@
       a link to your code carries the code itself.</p>
 
     <div class="playground">
+      <section class="pg-preview" aria-label="Preview">
+        <h3 class="pg-heading">Preview</h3>
+        <div id="stage" class="pg-stage"></div>
+        <p class="pg-hint">Click the app to give it the keyboard.</p>
+        <div id="errors" class="pg-errors" role="alert" hidden></div>
+      </section>
+
+      <section class="pg-console" aria-label="Console">
+        <h3 class="pg-heading">Console</h3>
+        <div id="log" class="pg-log" role="log" aria-label="Console"></div>
+      </section>
+
+      <details class="pg-files" id="files" open>
+        <summary>Files <span id="file-count"></span></summary>
+        <div class="pg-files-body">
+          <ul id="file-list" class="pg-file-list" aria-label="Added files"></ul>
+          <label class="pg-button" for="file-input">Add files…</label>
+          <input type="file" id="file-input" class="visually-hidden" multiple>
+          <p class="pg-hint">Or drop them here. Use a file by its name, as in <code>image({ path: "hero.png" })</code>.
+            The folders in a path are ignored, so <code>assets/hero.png</code> finds <code>hero.png</code>.</p>
+        </div>
+      </details>
+
       <section class="pg-editor" aria-label="Code">
         <div class="pg-toolbar">
           <button type="button" id="run" class="pg-primary">Run</button>
@@ -17,24 +40,6 @@
         <textarea id="code" class="pg-code" spellcheck="false" autocomplete="off" autocapitalize="off"
           wrap="off">{{starter}}</textarea>
         <p class="pg-hint">Ctrl or ⌘ and Enter runs the code. Press Escape, then Tab, to leave the editor.</p>
-      </section>
-
-      <section class="pg-output" aria-label="Result">
-        <div id="stage" class="pg-stage"></div>
-        <p class="pg-hint">Click the app to give it the keyboard.</p>
-        <div id="errors" class="pg-errors" role="alert" hidden></div>
-        <h3 class="pg-heading">Console</h3>
-        <div id="log" class="pg-log" role="log" aria-label="Console"></div>
-      </section>
-
-      <section class="pg-files" id="files" aria-labelledby="files-title">
-        <h3 id="files-title" class="pg-heading">Files</h3>
-        <p>Add images, sounds or data files, and use them by name. A name matches the file's name, wherever
-          the path says it is, so <code>assets/hero.png</code> finds <code>hero.png</code>.</p>
-        <label class="pg-button" for="file-input">Add files…</label>
-        <input type="file" id="file-input" class="visually-hidden" multiple>
-        <span class="pg-hint">or drop them here</span>
-        <ul id="file-list" class="pg-file-list" aria-label="Added files"></ul>
       </section>
     </div>
 

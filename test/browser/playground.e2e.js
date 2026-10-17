@@ -226,6 +226,75 @@ await Kwilos.attach("#canvas", () => [rect({ x: 0, y: 0, w: 600, h: 360, fill_co
   })
 })
 
+test.describe('layout', () => {
+  const box = (page, selector) => page.locator(selector).boundingBox()
+
+  test('puts the preview beside the console, and the files beside a wide editor below them', async ({ page }) => {
+    const [preview, console_, files, editor] = await Promise.all(
+      ['.pg-preview', '.pg-console', '#files', '.pg-editor'].map(selector => box(page, selector)))
+    // The preview and console share a row, at the same height, the console to the right
+    expect(console_.x).toBeGreaterThan(preview.x + preview.width)
+    expect(console_.y).toBeCloseTo(preview.y, 0)
+    expect(console_.height).toBeCloseTo(preview.height, 0)
+    // The files and editor share the row below, and the editor is the wider
+    expect(files.y).toBeGreaterThanOrEqual(preview.y + preview.height)
+    expect(editor.y).toBeGreaterThanOrEqual(preview.y + preview.height)
+    expect(editor.x).toBeGreaterThan(files.x + files.width)
+    expect(editor.width).toBeGreaterThan(files.width * 2.5)
+  })
+
+  test('keeps the editor where it is as the console fills', async ({ page }) => {
+    // Measured from the top of the page, as running the code scrolls the window
+    const top = (selector) => page.locator(selector).evaluate(element => element.getBoundingClientRect().top + scrollY)
+    const before = await top('.pg-editor')
+    await write_and_run(page, 'for (let i = 1; i <= 200; i++) console.log("line", i)')
+    await expect(page.locator('#log')).toContainText('line 200')
+    expect(await top('.pg-editor')).toBe(before)
+    expect((await box(page, '.pg-console')).height).toBeCloseTo((await box(page, '.pg-preview')).height, 0)
+  })
+
+  test('brings the preview into view when the code is run from further down the page', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 600 })
+    const in_view = () => page.locator('.pg-preview').evaluate(element => {
+      const { top, bottom } = element.getBoundingClientRect()
+      return top >= -1 && bottom <= innerHeight + 1
+    })
+    await page.locator('#code').scrollIntoViewIfNeeded()
+    await page.evaluate(() => scrollTo(0, document.body.scrollHeight))
+    expect(await in_view()).toBe(false)
+
+    await page.locator('#code').fill(RED_SCREEN)
+    await page.locator('#code').press('Control+Enter')
+    await expect.poll(in_view).toBe(true)
+    await expect.poll(() => pixel(page, 10, 10)).toEqual(RED)
+  })
+
+  test('leaves the page where it is for the first run, and when the preview is in view already', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 500 })
+    await page.reload()
+    expect(await page.evaluate(() => scrollY)).toBe(0)
+  })
+
+  test('folds the files away, keeping their count, and opens them when a file is added', async ({ page }) => {
+    const files = page.locator('#files')
+    const summary = page.locator('#files summary')
+    await expect(files).toHaveJSProperty('open', true)
+    await expect(summary).toHaveText('Files')
+
+    await page.locator('#file-input').setInputFiles(STRIPES)
+    await expect(summary).toHaveText('Files (1)')
+
+    await summary.click()
+    await expect(files).toHaveJSProperty('open', false)
+    await expect(page.locator('#file-list')).toBeHidden()
+    await expect(summary).toHaveText('Files (1)')
+
+    await page.locator('#file-input').setInputFiles({ name: 'more.txt', mimeType: 'text/plain', buffer: Buffer.from('x') })
+    await expect(files).toHaveJSProperty('open', true)
+    await expect(summary).toHaveText('Files (2)')
+  })
+})
+
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 390, height: 844 } })
 
@@ -235,5 +304,13 @@ test.describe('on a phone', () => {
 
     await page.locator('#stage').scrollIntoViewIfNeeded()
     await expect.poll(() => pixel(page, 5, 5)).toEqual([0x1b, 0x24, 0x33, 255])
+  })
+
+  test('stacks the preview, editor, console and files, with the files folded away', async ({ page }) => {
+    const ys = []
+    for (const selector of ['.pg-preview', '.pg-editor', '.pg-console', '#files'])
+      ys.push((await page.locator(selector).boundingBox()).y)
+    expect(ys).toEqual([...ys].sort((a, b) => a - b))
+    await expect(page.locator('#files')).toHaveJSProperty('open', false)
   })
 })

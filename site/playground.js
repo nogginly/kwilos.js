@@ -13,6 +13,7 @@ const MAX_LOG_LINES = 300
 
 const $ = (selector) => /** @type {any} */ (document.querySelector(selector))
 const code = $('#code')
+const preview = $('.pg-preview')
 const stage = $('#stage')
 const status = $('#status')
 const notice = $('#notice')
@@ -20,6 +21,7 @@ const errors = $('#errors')
 const log = $('#log')
 const file_input = $('#file-input')
 const file_list = $('#file-list')
+const file_count = $('#file-count')
 const drop_zone = $('#files')
 
 const starter = code.defaultValue
@@ -112,8 +114,11 @@ const RUNNER = `<!doctype html>
 <script>(${runner_main.toString()})()</script>
 </body></html>`
 
-// Runs the code in a new iframe, replacing the last one, which stops its app
-async function run() {
+// Runs the code in a new iframe, replacing the last one, which stops its app.
+// A browser does not paint an iframe that is out of view, so a run the visitor
+// asked for brings the preview into view, if it is not all in view already.
+async function run({ reveal = true } = {}) {
+  if (reveal) preview.scrollIntoView({ block: 'nearest' })
   errors.hidden = true
   errors.replaceChildren()
   log.replaceChildren()
@@ -237,6 +242,7 @@ function reset() {
 
 function add_files(list) {
   for (const file of list) files.set(file.name, file)
+  drop_zone.open = true
   render_files()
   say(list.length === 1 ? 'File added' : `${list.length} files added`)
   // An app that asked for a file it did not have gets another go
@@ -244,6 +250,7 @@ function add_files(list) {
 }
 
 function render_files() {
+  file_count.textContent = files.size > 0 ? `(${files.size})` : ''
   const items = [...files.values()].sort((a, b) => a.name.localeCompare(b.name)).map((file) => {
     const item = document.createElement('li')
     const name = document.createElement('span')
@@ -268,7 +275,7 @@ function render_files() {
   file_list.replaceChildren(...items)
 }
 
-$('#run').addEventListener('click', run)
+$('#run').addEventListener('click', () => run())
 $('#share').addEventListener('click', share)
 $('#reset').addEventListener('click', reset)
 file_input.addEventListener('change', () => {
@@ -302,11 +309,13 @@ code.addEventListener('keydown', (event) => {
 // The starter runs at once. Code from a link waits for the visitor to read
 // it and press Run, as it is someone else's.
 render_files()
+// The files start folded away on a narrow screen, where they would push the editor down
+if (!matchMedia('(min-width: 52rem)').matches) drop_zone.open = false
 const token = new URLSearchParams(location.hash.slice(1)).get('code')
 if (token) {
   try {
     code.value = await decode(token)
-    if (code.value === starter) run()
+    if (code.value === starter) run({ reveal: false })
     else {
       notice.textContent = 'This code came from a link. Read it, then press Run.'
       notice.hidden = false
@@ -314,6 +323,6 @@ if (token) {
   } catch {
     notice.textContent = 'The code in this link could not be read, so the starter app is shown.'
     notice.hidden = false
-    run()
+    run({ reveal: false })
   }
-} else run()
+} else run({ reveal: false })

@@ -349,7 +349,7 @@ td {
   font-size: 0.95rem;
 }
 
-/* The playground: the code and its result side by side, then the files */
+/* The playground: the preview and console above, then the files beside a wide editor */
 
 body:has(.playground) {
   max-width: 72rem;
@@ -369,21 +369,48 @@ body:has(.playground) {
 
 .playground {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-areas: "editor output" "files output";
-  gap: 0.5rem 1.5rem;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem 1.5rem;
   align-items: start;
   margin: 1.5rem 0 3rem;
 }
 
-.pg-editor { grid-area: editor; }
-.pg-output { grid-area: output; }
-.pg-files { grid-area: files; }
+.pg-preview { grid-column: 1 / 7; }
+.pg-console { grid-column: 7 / 13; align-self: stretch; position: relative; }
+.pg-files { grid-column: 1 / 4; }
+.pg-editor { grid-column: 4 / 13; }
+
+/* The console is as tall as the preview, and its log scrolls within it, so
+   a long log never moves the editor */
+.pg-console .pg-log {
+  position: absolute;
+  top: 2rem;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  max-height: none;
+}
 
 @media (max-width: 52rem) {
   .playground {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "editor" "output" "files";
+  }
+
+  .pg-preview,
+  .pg-console,
+  .pg-files,
+  .pg-editor {
+    grid-column: 1;
+  }
+
+  .pg-preview { order: 1; }
+  .pg-editor { order: 2; }
+  .pg-console { order: 3; }
+  .pg-files { order: 4; }
+
+  .pg-console .pg-log {
+    position: static;
+    max-height: 10rem;
   }
 }
 
@@ -461,8 +488,9 @@ input:focus-visible + .pg-hint {
 }
 
 .pg-heading {
-  margin: 1rem 0 0.4rem;
+  margin: 0 0 0.4rem;
   font-size: 1.05rem;
+  line-height: 1.6rem;
 }
 
 .pg-stage {
@@ -507,8 +535,8 @@ input:focus-visible + .pg-hint {
 .pg-log-error { color: #c0392b; }
 
 .pg-files {
-  padding: 0.5rem 0.75rem 0.75rem;
-  border: 1px dashed transparent;
+  padding: 0.25rem 0.75rem 0.75rem;
+  border: 1px dashed var(--rule);
   border-radius: 6px;
 }
 
@@ -516,14 +544,25 @@ input:focus-visible + .pg-hint {
   border-color: var(--accent);
 }
 
-.pg-files p {
-  margin: 0.25rem 0 0.75rem;
-  font-size: 0.95rem;
+.pg-files > summary {
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.8rem;
+}
+
+.pg-files > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pg-files-body {
+  padding-top: 0.25rem;
 }
 
 .pg-file-list {
   list-style: none;
-  margin: 0.75rem 0 0;
+  margin: 0 0 0.75rem;
   padding: 0;
 }
 
