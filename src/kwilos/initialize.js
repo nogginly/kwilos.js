@@ -2,7 +2,7 @@
 
 import { BAL } from './bal.js'
 import { setup_event_handlers } from './event_handlers.js';
-import { frame } from './ticker.js';
+import { frame, set_context_defaults } from './ticker.js';
 import { hit } from './hits.js';
 import { create_audio, setup_audio } from './audio.js';
 
@@ -95,7 +95,7 @@ export async function initialize_with_canvas(system, canvas_or_id, tick, config)
   if (draw_context == null)
     throw new Error('Kwilos: the canvas has no 2D drawing context')
   app.draw_context = draw_context
-  app.draw_context.font = system.fonts.default
+  set_context_defaults(system)
 
   // Pre-load any images and sounds specified
   await _preload_images(system, config.preload_images)

@@ -110,8 +110,18 @@ function _draw_scene(sys, scene) {
   render(sys, scene)
 }
 
+// Sets the drawing context's defaults, which resizing a canvas resets: the
+// default font, and image smoothing when the app turns it off
+/** @param {System} sys */
+export function set_context_defaults(sys) {
+  const draw = sys.app.draw_context
+  draw.font = sys.fonts.default
+  if (sys.app.config.image_smoothing === false)
+    draw.imageSmoothingEnabled = false
+}
+
 // Resizing a canvas wipes its pixels and resets the drawing context,
-// so record the new size, restore the default font, and report the change
+// so record the new size, restore the context's defaults, and report the change
 /**
  * @param {System} sys
  * @returns {boolean}
@@ -125,6 +135,6 @@ function _sync_canvas_size(sys) {
 
   size.width = canvas.width
   size.height = canvas.height
-  sys.app.draw_context.font = sys.fonts.default
+  set_context_defaults(sys)
   return true
 }

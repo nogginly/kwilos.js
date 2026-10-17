@@ -68,6 +68,13 @@ describe('ticker', () => {
     })
   })
 
+  it('turns image smoothing off again after the canvas is resized, when the app turned it off', () => {
+    const sys = attached_system({ tick: () => null, config: { image_smoothing: false } })
+    sys.app.canvas.height = 300
+    ticker(0, sys)
+    expect(sys.app.draw_context.calls).toEqual([['font=', '14pt serif'], ['imageSmoothingEnabled=', false]])
+  })
+
   describe('with entities kept between frames and edited in place', () => {
     const arc_xs = (sys) => sys.app.draw_context.calls.filter(c => c[0] === 'arc').map(c => c[1])
     const kept_ball = () => circle({ id: 'ball', x: 10, y: 10, radius: 5, fill_color: 'red' })
