@@ -21,6 +21,7 @@
  * @property {boolean} [background_clear] Clears the canvas before each scene, so layered canvases can be transparent
  * @property {string | null} [background_color] Fills the canvas before each scene; defaults to "black" unless `background_clear` is set
  * @property {string} [font] Default label font, as for the CSS `font` property
+ * @property {boolean} [image_smoothing] Set to false to draw scaled images, tiles and sprites with hard pixel edges, as pixel art needs; by default they are smoothed
  * @property {string[]} [preload_images] Image paths to load before the first frame
  * @property {string[]} [preload_sounds] Sound paths to load before the first frame; a sound not preloaded is not played
  * @property {boolean} [background_audio] Set to true to keep tracks playing while the page is hidden, e.g. for a music player; by default they pause

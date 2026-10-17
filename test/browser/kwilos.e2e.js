@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import { open_harness, expect_pixel, pixel, frames, page_errors, touchscreen } from './helpers.js'
 
 const RED = [255, 0, 0, 255]
+const BLUE = [0, 0, 255, 255]
 
 test.beforeEach(async ({ page }) => open_harness(page))
 
@@ -34,6 +35,31 @@ test.describe('drawing', () => {
 
     await page.evaluate(() => { document.querySelector('#c').width = 300 })
     await expect_pixel(page, '#c', 250, 5, RED)
+  })
+
+  test('smooths a scaled image by default', async ({ page }) => {
+    await page.evaluate(async () => {
+      const { Kwilos, image } = window.kwilos
+      await Kwilos.attach('#c', () => [image({ path: 'stripes.png', x: 0, y: 0, w: 40, h: 20 })], { preload_images: ['stripes.png'] })
+    })
+    await frames(page)
+    const edge = await pixel(page, '#c', 19, 10)
+    expect(edge).not.toEqual(RED)
+    expect(edge).not.toEqual(BLUE)
+  })
+
+  test('draws a scaled image with hard edges when image_smoothing is false, and again after a resize', async ({ page }) => {
+    await page.evaluate(async () => {
+      const { Kwilos, image } = window.kwilos
+      await Kwilos.attach('#c', () => [image({ path: 'stripes.png', x: 0, y: 0, w: 40, h: 20 })],
+        { preload_images: ['stripes.png'], image_smoothing: false })
+    })
+    await expect_pixel(page, '#c', 19, 10, RED)
+    await expect_pixel(page, '#c', 20, 10, BLUE)
+
+    await page.evaluate(() => { document.querySelector('#c').width = 300 })
+    await expect_pixel(page, '#c', 19, 10, RED)
+    await expect_pixel(page, '#c', 20, 10, BLUE)
   })
 
   test('draws a container clipped to its size', async ({ page }) => {

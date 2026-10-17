@@ -4,6 +4,10 @@ Notable changes to Kwilos.js. The format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
+### Added
+
+- The `image_smoothing` config option: set it to `false` to draw scaled images, tiles and sprites with hard pixel edges, as pixel art needs.
+
 ### Changed
 
 - A `ping-pong` animation shows its first and last frames once at each turn, as Aseprite plays them: 1, 2, 3, 2, 1, 2, 3 instead of 1, 2, 3, 3, 2, 1, 1, 2, 3. This changes the timing of existing ping-pong animations; to keep it, double the `duration` of the first and last frames. The sprites sample's idle animation does so.
