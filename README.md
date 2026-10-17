@@ -473,6 +473,6 @@ This library is available as open source under the terms of the [MPL 2.0 License
 
 ## Acknowledgements
 
-All images and graphics used in the samples and tests were downloaded from [Kenny.nl](https://kenney.nl/).
+All images and graphics used in the samples and tests were downloaded from [Kenney.nl](https://kenney.nl/), except the character in the Aseprite sample, which the author made with [PixelLab](https://www.pixellab.ai), an AI sprite generator, and tagged in [Aseprite](https://www.aseprite.org).
 
 The entity-based API approach is inspired by [DragonRuby Game Toolkit](https://dragonruby.org/).
