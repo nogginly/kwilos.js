@@ -490,6 +490,8 @@ input:focus-visible + .pg-hint {
   display: block;
   width: 100%;
   min-height: 26rem;
+  max-height: 44rem;
+  field-sizing: content;
   resize: vertical;
   overflow: auto;
   white-space: pre;

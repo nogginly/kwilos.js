@@ -45,6 +45,25 @@ test.describe('the starter app', () => {
     expect(errors).toEqual([])
   })
 
+  test('draws a circle under the mouse once it has entered the app, and a greeting', async ({ page }) => {
+    const TOMATO = [255, 99, 71, 255]
+    await expect.poll(() => pixel(page, 300, 300)).toEqual([0x1b, 0x24, 0x33, 255])
+    expect(await pixel(page, 100, 300)).not.toEqual(TOMATO)
+
+    const canvas = await app(page).locator('canvas').boundingBox()
+    await page.mouse.move(canvas.x + 100 * canvas.width / 600, canvas.y + 300 * canvas.height / 360)
+    await expect.poll(() => pixel(page, 100, 300)).toEqual(TOMATO)
+
+    // The greeting is white, on the line across the top
+    const white = await app(page).locator('canvas').evaluate(element => {
+      const data = element.getContext('2d').getImageData(150, 28, 300, 24).data
+      let count = 0
+      for (let i = 0; i < data.length; i += 4) if (data[i] > 200 && data[i + 1] > 200 && data[i + 2] > 200) count++
+      return count
+    })
+    expect(white).toBeGreaterThan(50)
+  })
+
   test('is linked from the home page', async ({ page }) => {
     await page.goto('/_site/index.html')
     await expect(page.locator('main a[href="playground.html"]')).toHaveText('playground')
