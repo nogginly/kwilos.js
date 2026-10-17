@@ -475,4 +475,6 @@ This library is available as open source under the terms of the [MPL 2.0 License
 
 All images and graphics used in the samples and tests were downloaded from [Kenney.nl](https://kenney.nl/), except the character in the Aseprite sample, which the author made with [PixelLab](https://www.pixellab.ai), an AI sprite generator, and tagged in [Aseprite](https://www.aseprite.org).
 
+That character, Uncle, may be used and shared with Kwilos.js's samples and tests. It may not be used to train machine-learning models, and any use must respect the use restrictions in the [Open RAIL-M license](https://github.com/CompVis/stable-diffusion/blob/main/LICENSE) that PixelLab's terms refer to.
+
 The entity-based API approach is inspired by [DragonRuby Game Toolkit](https://dragonruby.org/).
