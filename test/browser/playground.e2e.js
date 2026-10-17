@@ -243,6 +243,44 @@ test.describe('layout', () => {
     expect(editor.width).toBeGreaterThan(files.width * 2.5)
   })
 
+  test('puts the keyboard hint on the preview\'s title line', async ({ page }) => {
+    const hint = page.locator('.pg-preview .pg-hint')
+    await expect(hint).toHaveText('Click the app to give it the keyboard.')
+    const [title, note] = await Promise.all([box(page, '.pg-preview .pg-heading'), box(page, '.pg-preview .pg-hint')])
+    expect(note.x).toBeGreaterThan(title.x + title.width)
+    expect(Math.abs(note.y + note.height / 2 - (title.y + title.height / 2))).toBeLessThan(title.height / 2)
+  })
+
+  test('keeps the console level with the app, and an error out of the way of both', async ({ page }) => {
+    const level = async () => {
+      const [stage, log] = await Promise.all([box(page, '#stage'), box(page, '#log')])
+      expect(log.y).toBeCloseTo(stage.y, 0)
+      expect(log.y + log.height).toBeCloseTo(stage.y + stage.height, 0)
+      return { stage, log }
+    }
+    await level()
+
+    await write_and_run(page, 'throw new Error("boom")')
+    await expect(page.locator('#errors')).toBeVisible()
+    const { stage } = await level()
+    // The error has a row of its own, below, across the width of both
+    const errors = await box(page, '#errors')
+    expect(errors.y).toBeGreaterThanOrEqual(stage.y + stage.height)
+    expect(errors.width).toBeGreaterThan((await box(page, '.pg-preview')).width * 1.8)
+  })
+
+  test('draws the console as a dark pane, apart from the editor, in light and dark themes', async ({ page }) => {
+    const brightness = (selector) => page.locator(selector).evaluate(element => {
+      const [r, g, b] = getComputedStyle(element).backgroundColor.match(/\d+/g).map(Number)
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    })
+    for (const scheme of ['light', 'dark']) {
+      await page.emulateMedia({ colorScheme: scheme })
+      expect(await brightness('#log')).toBeLessThan(40)
+      expect(await brightness('#log')).toBeLessThan(await brightness('#code') - 5)
+    }
+  })
+
   test('keeps the editor where it is as the console fills', async ({ page }) => {
     // Measured from the top of the page, as running the code scrolls the window
     const top = (selector) => page.locator(selector).evaluate(element => element.getBoundingClientRect().top + scrollY)

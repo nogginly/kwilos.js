@@ -6,16 +6,21 @@
 
     <div class="playground">
       <section class="pg-preview" aria-label="Preview">
-        <h3 class="pg-heading">Preview</h3>
+        <div class="pg-title">
+          <h3 class="pg-heading">Preview</h3>
+          <span class="pg-hint">Click the app to give it the keyboard.</span>
+        </div>
         <div id="stage" class="pg-stage"></div>
-        <p class="pg-hint">Click the app to give it the keyboard.</p>
-        <div id="errors" class="pg-errors" role="alert" hidden></div>
       </section>
 
       <section class="pg-console" aria-label="Console">
-        <h3 class="pg-heading">Console</h3>
+        <div class="pg-title">
+          <h3 class="pg-heading">Console</h3>
+        </div>
         <div id="log" class="pg-log" role="log" aria-label="Console"></div>
       </section>
+
+      <div id="errors" class="pg-errors" role="alert" hidden></div>
 
       <details class="pg-files" id="files" open>
         <summary>Files <span id="file-count"></span></summary>

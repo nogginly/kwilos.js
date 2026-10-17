@@ -404,9 +404,17 @@ body:has(.playground) {
   }
 
   .pg-preview { order: 1; }
-  .pg-editor { order: 2; }
-  .pg-console { order: 3; }
-  .pg-files { order: 4; }
+  .pg-errors { order: 2; }
+  .pg-editor { order: 3; }
+  .pg-console { order: 4; }
+  .pg-files { order: 5; }
+
+  .pg-title {
+    height: auto;
+    min-height: 2rem;
+    flex-wrap: wrap;
+    white-space: normal;
+  }
 
   .pg-console .pg-log {
     position: static;
@@ -510,10 +518,25 @@ input:focus-visible + .pg-hint {
   font-size: 0.85rem;
 }
 
+.pg-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  height: 2rem;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 .pg-heading {
-  margin: 0 0 0.4rem;
+  margin: 0;
   font-size: 1.05rem;
   line-height: 1.6rem;
+}
+
+.pg-title .pg-hint {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pg-stage {
@@ -533,7 +556,8 @@ input:focus-visible + .pg-hint {
 }
 
 .pg-errors {
-  margin: 0.75rem 0;
+  grid-column: 1 / -1;
+  margin: 0;
   padding: 0.5rem 0.75rem;
   border-left: 4px solid #c0392b;
   background: var(--code-bg);
@@ -546,7 +570,9 @@ input:focus-visible + .pg-hint {
   max-height: 10rem;
   overflow: auto;
   padding: 0.5rem 0.75rem;
-  background: var(--code-bg);
+  color: #d6d8de;
+  background: #121317;
+  border: 1px solid #2b2d34;
   border-radius: 6px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.8rem;
@@ -554,8 +580,8 @@ input:focus-visible + .pg-hint {
   white-space: pre-wrap;
 }
 
-.pg-log-warn { color: #a66a00; }
-.pg-log-error { color: #c0392b; }
+.pg-log-warn { color: #e5c07b; }
+.pg-log-error { color: #ff7b72; }
 
 .pg-files {
   padding: 0.25rem 0.75rem 0.75rem;
