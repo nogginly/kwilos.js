@@ -4,6 +4,10 @@ Notable changes to Kwilos.js. The format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
+### Added
+
+- A playground on the web site: edit a small Kwilos.js app and run it, add your own images, sounds and data files and use them by name, and share the code with a link. The code runs in a sandboxed frame, and the files stay in the browser.
+
 ## [0.11.0] - 2026-10-17
 
 ### Added
