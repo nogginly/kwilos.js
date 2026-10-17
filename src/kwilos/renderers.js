@@ -2,7 +2,7 @@
 
 import { load_image } from "./initialize.js";
 import { sprite_frame } from "./sprites.js";
-import { drawn_size } from "./hits.js";
+import { tile_layout } from "./shapes.js";
 
 /**
  * @import { System } from './types.js'
@@ -171,35 +171,23 @@ function _render_circle(sys, { x, y, radius, fill_color, stroke_color }) {
 // Render an image as a tile from a tileset image (tile_index), specified using
 // - either tile size (tile_w, tile_h),
 // - or tileset dimensions (tile_rows, tile_cols)
+// and any margin and spacing between the tiles
 /**
  * @param {System} sys
  * @param {Tile} entity
  */
-function _render_tile(sys,
-  { x, y, w, h, path, tile_w, tile_h, tile_rows, tile_cols, tile_index }) {
-
-  let draw = sys.app.draw_context
-  let img = load_image(sys, path)
+function _render_tile(sys, entity) {
+  const { x, y, tile_index, flip_x, flip_y } = entity
+  let img = load_image(sys, entity.path)
 
   if (img) {
-    if (tile_w != null && tile_h != null) {
-      // draw tile from tile sheet
-      tile_cols = Math.trunc(img.width / tile_w)
-    }
-    else if (tile_rows != null && tile_cols != null) {
-      // draw tile from tile sheet
-      tile_w = Math.trunc(img.width / tile_cols)
-      tile_h = Math.trunc(img.height / tile_rows)
-    }
-    else {
-      throw new TypeError('Kwilos: a tile needs either tile_w and tile_h, or tile_rows and tile_cols')
-    }
-    let source_x = tile_index % tile_cols * tile_w
-    let source_y = Math.trunc(tile_index / tile_cols) * tile_h
-    w ||= tile_w
-    h ||= tile_h
+    const { tile_w, tile_h, cols, margin, spacing } = tile_layout(entity, img.width, img.height)
+    const source_x = margin + tile_index % cols * (tile_w + spacing)
+    const source_y = margin + Math.trunc(tile_index / cols) * (tile_h + spacing)
+    const w = entity.w || tile_w
+    const h = entity.h || tile_h
 
-    draw.drawImage(img, source_x, source_y, tile_w, tile_h, x, y, w, h)
+    _draw_region(sys, img, [source_x, source_y, tile_w, tile_h], [x, y, w, h], flip_x, flip_y)
   }
 }
 
@@ -211,9 +199,8 @@ function _render_tile(sys,
  * @param {Image} entity
  */
 function _render_image(sys,
-  { x, y, w, h, path, source_x, source_y, source_w, source_h }) {
+  { x, y, w, h, path, source_x, source_y, source_w, source_h, flip_x, flip_y }) {
 
-  let draw = sys.app.draw_context
   let img = load_image(sys, path)
   if (img) {
     w ||= source_w || img.width
@@ -223,12 +210,12 @@ function _render_image(sys,
     source_w ||= img.width
     source_h ||= img.height
 
-    draw.drawImage(img, source_x, source_y, source_w, source_h, x, y, w, h)
+    _draw_region(sys, img, [source_x, source_y, source_w, source_h], [x, y, w, h], flip_x, flip_y)
   }
 }
 
 // Draws the frame a sprite shows now, as a tile or image, mirrored about
-// its own box when flipped
+// its own box when the sprite is flipped
 /**
  * @param {System} sys
  * @param {Sprite} entity
@@ -236,20 +223,30 @@ function _render_image(sys,
 function _render_sprite(sys, entity) {
   const frame = sprite_frame(entity, sys.args.time)
   const draw_frame = frame.type === 'tile' ? _render_tile : _render_image
-  if (!entity.flip_x && !entity.flip_y) {
-    draw_frame(sys, /** @type {any} */ (frame))
+  draw_frame(sys, /** @type {any} */ (frame))
+}
+
+// Draws a region of an image into a box, mirrored about the box when flipped
+/**
+ * @param {System} sys
+ * @param {CanvasImageSource} img
+ * @param {[number, number, number, number]} source x, y, w, h in the image
+ * @param {[number, number, number, number]} box x, y, w, h on the canvas
+ * @param {boolean} [flip_x]
+ * @param {boolean} [flip_y]
+ */
+function _draw_region(sys, img, [source_x, source_y, source_w, source_h], [x, y, w, h], flip_x, flip_y) {
+  const draw = sys.app.draw_context
+  if (!flip_x && !flip_y) {
+    draw.drawImage(img, source_x, source_y, source_w, source_h, x, y, w, h)
     return
   }
 
-  const size = drawn_size(frame, sys)
-  if (size === null)
-    return
-  const draw = sys.app.draw_context
   const save = draw.getTransform()
   try {
-    draw.translate(frame.x + (entity.flip_x ? size.w : 0), frame.y + (entity.flip_y ? size.h : 0))
-    draw.scale(entity.flip_x ? -1 : 1, entity.flip_y ? -1 : 1)
-    draw_frame(sys, /** @type {any} */ ({ ...frame, x: 0, y: 0, w: size.w, h: size.h }))
+    draw.translate(x + (flip_x ? w : 0), y + (flip_y ? h : 0))
+    draw.scale(flip_x ? -1 : 1, flip_y ? -1 : 1)
+    draw.drawImage(img, source_x, source_y, source_w, source_h, 0, 0, w, h)
   }
   finally {
     draw.setTransform(save)

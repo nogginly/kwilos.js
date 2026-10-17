@@ -3,6 +3,7 @@
 import { load_image } from './initialize.js'
 import { label_font } from './renderers.js'
 import { sprite_frame } from './sprites.js'
+import { tile_layout } from './shapes.js'
 
 /**
  * @import { System, Point } from './types.js'
@@ -138,10 +139,8 @@ export function drawn_size(entity, sys) {
     return null
   if (entity.type === 'image')
     return { w: own.w || img.width, h: own.h || img.height }
-  return {
-    w: own.w || Math.trunc(img.width / (entity.tile_cols ?? 1)),
-    h: own.h || Math.trunc(img.height / (entity.tile_rows ?? 1)),
-  }
+  const { tile_w, tile_h } = tile_layout(entity, img.width, img.height)
+  return { w: own.w || tile_w, h: own.h || tile_h }
 }
 
 // Measures a label's ink with the font, alignment and baseline it is drawn

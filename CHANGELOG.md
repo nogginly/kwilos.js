@@ -6,6 +6,8 @@ Notable changes to Kwilos.js. The format follows [Keep a Changelog](https://keep
 
 ### Added
 
+- Tile sheets with a `margin` around their edge and `spacing` between their tiles, as tile editors such as Tiled can add; an animation's `sheet` takes them too.
+- `flip_x` and `flip_y` for images and tiles, which mirror them about their own box, as they already did for sprites.
 - The `image_smoothing` config option: set it to `false` to draw scaled images, tiles and sprites with hard pixel edges, as pixel art needs.
 
 ### Changed
