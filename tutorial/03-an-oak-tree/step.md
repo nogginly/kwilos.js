@@ -1,14 +1,16 @@
 ---
 title: An oak tree
 summary: A trunk and some leaves, made of shapes.
+mission: Grow an oak tree for the squirrel.
+time: 5
+meet: circles, the order of the scene
+try: Move the mouse. The squirrel runs in front of the oak.
 ---
 
 Every squirrel needs an oak tree. Ours is made of shapes: a brown trunk and three round bunches of leaves.
 
 <!-- changes -->
 <!-- playground -->
-
-**Press Run.** The oak stands behind the squirrel. Move the mouse to run in front of it.
 
 ## How it works
 

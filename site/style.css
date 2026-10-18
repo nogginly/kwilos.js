@@ -404,18 +404,24 @@ body:has(.playground) {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .pg-aside,
   .pg-preview,
   .pg-console,
+  .pg-changes,
   .pg-files,
-  .pg-editor {
+  .pg-editor,
+  .pg-tutorial .pg-preview,
+  .pg-tutorial .pg-console {
     grid-column: 1;
   }
 
+  .pg-aside { order: 0; }
   .pg-preview { order: 1; }
   .pg-errors { order: 2; }
-  .pg-editor { order: 3; }
-  .pg-console { order: 4; }
-  .pg-files { order: 5; }
+  .pg-changes { order: 3; }
+  .pg-editor { order: 4; }
+  .pg-console { order: 5; }
+  .pg-files { order: 6; }
 
   .pg-title {
     height: auto;
@@ -740,4 +746,78 @@ input:focus-visible + .pg-hint {
 
 .step-nav .next {
   margin-left: auto;
+}
+
+/* A tutorial page opens with its mission beside the running picture, then the
+   changes, folded away, and the editor; its console comes when it is needed */
+
+.pg-aside {
+  align-self: start;
+}
+
+@media (width > 52rem) {
+  .pg-aside {
+    grid-column: 1 / 6;
+  }
+
+  .pg-tutorial .pg-preview {
+    grid-column: 6 / 13;
+  }
+
+  .pg-tutorial .pg-console {
+    grid-column: 6 / 13;
+    position: static;
+    align-self: start;
+  }
+
+  .pg-tutorial .pg-console .pg-log {
+    position: static;
+    max-height: 10rem;
+  }
+}
+
+.pg-mission {
+  margin: 0 0 0.6rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.pg-aside p {
+  margin: 0 0 0.6rem;
+}
+
+.pg-facts {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.pg-try {
+  margin: 1rem 0 0;
+  padding: 0.6rem 0.9rem;
+  background: var(--code-bg);
+  border-left: 4px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+}
+
+.pg-changes {
+  grid-column: 1 / -1;
+  padding: 0.25rem 0.75rem 0.5rem;
+  border: 1px dashed var(--rule);
+  border-radius: 6px;
+}
+
+.pg-changes > summary {
+  cursor: pointer;
+  font-weight: 600;
+  line-height: 1.8rem;
+}
+
+.pg-changes > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pg-changes .diff {
+  margin: 0.25rem 0 0.5rem;
 }

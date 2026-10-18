@@ -1,16 +1,16 @@
 ---
 title: Hello, forest
 summary: A blue sky, some grass and a squirrel.
+mission: Build a forest with a squirrel in it.
+time: 5
+meet: the canvas, the scene
+try: Press **Run** to see the forest. Then change `"skyblue"` to `"orange"` in the code and run it again.
 ---
 
 Welcome! You are going to make a game where a squirrel catches nuts that fall from an oak tree. Nobody makes a game in one go. We will build it one small step at a time, and after every step you will have a program that works.
 
-First, a forest: a blue sky, some green grass, and a squirrel standing on it.
-
 <!-- changes -->
 <!-- playground -->
-
-**Press Run** to see the forest. You can change the program in the editor and press Run again whenever you like.
 
 ## How it works
 

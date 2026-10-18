@@ -171,7 +171,7 @@ async function build_tutorial() {
   for (const name of names) {
     const where = `tutorial/${name}`
     const { meta, body } = parse_step(await readFile(join(dir, name, 'step.md'), 'utf8'))
-    for (const key of ['title', 'summary'])
+    for (const key of ['title', 'summary', 'mission', 'try'])
       if (!meta[key]) throw new Error(`site/build.js: ${where}/step.md needs a ${key}`)
     const [intro, rest] = body.split('<!-- changes -->')
     const [between, after] = (rest ?? '').split('<!-- playground -->')
@@ -182,7 +182,10 @@ async function build_tutorial() {
       await access(join(dir, 'assets', file)).catch(() => {
         throw new Error(`site/build.js: ${where}/step.md lists the file ${file}, which is not in tutorial/assets`)
       })
-    steps.push({ name, title: meta.title, summary: meta.summary, files, intro, between, after, code: await readFile(join(dir, name, 'app.js'), 'utf8') })
+    steps.push({
+      name, title: meta.title, summary: meta.summary, mission: meta.mission, time: meta.time, meet: meta.meet, tryit: meta.try,
+      files, intro, between, after, code: await readFile(join(dir, name, 'app.js'), 'utf8'),
+    })
   }
 
   await mkdir(join(OUT, 'tutorial'), { recursive: true })
@@ -211,12 +214,15 @@ async function build_tutorial() {
       content: `<div class="prose">
 <p class="step-label">Step ${index + 1}</p>
 <h1>${escape(step.title)}</h1>
-${render(step.intro)}
-<h2 id="whats-new">${previous ? "What's new" : 'The program'}</h2>
-${changes_html(previous?.code, step.code)}
-${render(step.between)}
 </div>
-${playground_markup({ starter: step.code, files: step.files.map(file => `assets/${file}`), reset_label: 'Reset to this step', show_files: step.files.length > 0 })}
+${playground_markup({
+        starter: step.code,
+        files: step.files.map(file => `assets/${file}`),
+        reset_label: 'Reset to this step',
+        show_files: step.files.length > 0,
+        aside: aside_html(step),
+        changes: changes_block(previous?.code, step),
+      })}
 <div class="prose">
 ${render(step.after)}
 <nav class="step-nav" aria-label="Steps">
@@ -230,9 +236,37 @@ ${render(step.after)}
   return steps
 }
 
+// Returns the opening of a step's page, beside the picture: its mission, a
+// few words of introduction, how long it takes and what the reader will meet,
+// and the first thing to try
+function aside_html(step) {
+  const facts = [step.time && `⏱ About ${step.time} minutes`, step.meet && `You will meet: ${step.meet}`].filter(Boolean).join(' · ')
+  return `<div class="pg-aside">
+<p class="pg-mission">${escape(step.mission)}</p>
+${render(step.intro)}
+${facts ? `<p class="pg-facts">${escape(facts)}</p>` : ''}
+<p class="pg-try"><strong>Try it.</strong> ${markdown.parseInline(step.tryit)}</p>
+</div>`
+}
+
+// Returns what changed in a step, folded away unless it is short: a closed
+// section whose title counts the new lines
+function changes_block(before, step) {
+  const { html, added } = changes_html(before, step.code)
+  const title = before === undefined
+    ? `The whole program (${added} lines)`
+    : `What changed in the code (${added} new ${added === 1 ? 'line' : 'lines'})`
+  return `<details class="pg-changes"${before !== undefined && added <= 8 ? ' open' : ''}>
+<summary>${title}</summary>
+${html}
+${render(step.between)}
+</details>`
+}
+
 // Returns a step's program with the lines that are new since the last step
-// marked, and a few lines around them; the first step has no last step, so its
-// whole program is shown. Each line is highlighted on its own.
+// marked, and a few lines around them, and how many lines are new; the first
+// step has no last step, so its whole program is shown. Each line is
+// highlighted on its own.
 function changes_html(before, after) {
   const line = (tag, text, mark) =>
     `<${tag} class="diff-line${mark ? ` diff-${tag === 'ins' ? 'added' : 'removed'}` : ''}">${mark ? `<span class="diff-mark" aria-hidden="true">${mark}</span>` : ''}${highlight(text, 'javascript')}</${tag}>`
@@ -244,7 +278,10 @@ function changes_html(before, after) {
       : item.kind === 'added' ? line('ins', item.text, '+')
         : item.kind === 'removed' ? line('del', item.text, '−')
           : `<span class="diff-line">${highlight(item.text, 'javascript')}</span>`).join('')
-  return `<pre class="diff"><code class="hljs">${html}</code></pre>`
+  return {
+    html: `<pre class="diff"><code class="hljs">${html}</code></pre>`,
+    added: shown.filter(item => item.kind === (before === undefined ? 'same' : 'added') && item.text.trim() !== '').length,
+  }
 }
 
 // Returns a sample's section: its title, description, and Preview and
@@ -282,10 +319,15 @@ function sample_html({ name, title, description, width, height, source, data }) 
 
 // Returns the playground's markup, holding `starter` in its editor. `files`
 // are addresses, from the page, of files that arrive with it; without any,
-// the Files section is hidden.
-function playground_markup({ starter, files = [], reset_label = 'Reset', show_files = true }) {
+// the Files section is hidden. A tutorial page gives an `aside`, which opens
+// the page beside the picture, and `changes`, which sit below it; its console
+// appears only when the app writes to it.
+function playground_markup({ starter, files = [], reset_label = 'Reset', show_files = true, aside = '', changes = '' }) {
   return playground_partial
-    .replace('{{classes}}', show_files ? '' : ' pg-no-files')
+    .replace('{{classes}}', (show_files ? '' : ' pg-no-files') + (aside ? ' pg-tutorial' : ''))
+    .replace('{{attrs}}', aside ? ' data-console="auto"' : '')
+    .replace('{{aside}}', () => aside)
+    .replace('{{changes}}', () => changes)
     .replace('{{files}}', files.length ? ` data-files="${escape(files.join(' '))}"` : '')
     .replace('{{files_hidden}}', show_files ? '' : ' hidden')
     .replace('{{reset_label}}', escape(reset_label))

@@ -1,4 +1,5 @@
-    <div class="playground{{classes}}"{{files}}>
+    <div class="playground{{classes}}"{{files}}{{attrs}}>
+      {{aside}}
       <section class="pg-preview" aria-label="Preview">
         <div class="pg-title">
           <h3 class="pg-heading">Preview</h3>
@@ -13,6 +14,8 @@
         </div>
         <div id="log" class="pg-log" role="log" aria-label="Console"></div>
       </section>
+
+      {{changes}}
 
       <div id="errors" class="pg-errors" role="alert" hidden></div>
 

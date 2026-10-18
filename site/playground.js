@@ -15,6 +15,7 @@ const $ = (selector) => /** @type {any} */ (document.querySelector(selector))
 const root = $('.playground')
 const code = $('#code')
 const preview = $('.pg-preview')
+const console_section = $('.pg-console')
 const stage = $('#stage')
 const status = $('#status')
 const notice = $('#notice')
@@ -182,6 +183,7 @@ function show_error(text) {
 }
 
 function add_log(level, text) {
+  console_section.hidden = false
   const line = document.createElement('div')
   line.className = `pg-log-${level}`
   line.textContent = text
@@ -332,6 +334,8 @@ code.addEventListener('keydown', (event) => {
 
 // The starter runs at once. Code from a link waits for the visitor to read
 // it and press Run, as it is someone else's.
+// A tutorial page keeps the console out of sight until the app writes to it
+if (root.dataset.console === 'auto') console_section.hidden = true
 await add_bundled()
 render_files()
 // The files start folded away on a narrow screen, where they would push the editor down;

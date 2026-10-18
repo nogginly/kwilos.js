@@ -1,14 +1,16 @@
 ---
 title: Run, squirrel, run
 summary: The squirrel follows your mouse, or your finger.
+mission: Make the squirrel follow your mouse.
+time: 5
+meet: state, the mouse
+try: Move the mouse over the picture. On a tablet, drag your finger.
 ---
 
-A game is no fun if you cannot play it! Now the squirrel follows your mouse. On a tablet or a phone, it follows your finger.
+A game is no fun if you cannot play it! On a tablet or a phone, the squirrel follows your finger.
 
 <!-- changes -->
 <!-- playground -->
-
-**Press Run**, then move the mouse over the picture. Where the mouse goes, the squirrel goes.
 
 ## How it works
 

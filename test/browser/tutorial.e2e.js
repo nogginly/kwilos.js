@@ -11,6 +11,8 @@ const STEPS = readdirSync('tutorial', { withFileTypes: true })
   .map(entry => entry.name)
   .sort()
 const program = (step) => readFileSync(`tutorial/${step}/app.js`, 'utf8')
+// A line of a step's front matter, such as its mission
+const front = (step, key) => readFileSync(`tutorial/${step}/step.md`, 'utf8').match(new RegExp(`^${key}: (.*)$`, 'm'))?.[1]
 
 const app = (page) => page.frameLocator('#stage iframe')
 const canvas = (page) => app(page).locator('canvas')
@@ -77,17 +79,48 @@ test.describe('the tutorial', () => {
         expect(errors).toEqual([])
       })
 
-      test('shows what is new, marked, unless it is the first step', async ({ page }) => {
+      test('shows what is new, marked and folded away, unless it is short', async ({ page }) => {
         await page.goto(`/_site/tutorial/${step}.html`)
-        const marked = page.locator('pre.diff ins')
+        const block = page.locator('details.pg-changes')
+        const summary = block.locator('summary')
         if (index === 0) {
-          await expect(page.getByRole('heading', { name: 'The program' })).toBeVisible()
-          await expect(marked).toHaveCount(0)
+          await expect(summary).toHaveText(/^The whole program \(\d+ lines\)$/)
+          await expect(page.locator('pre.diff ins')).toHaveCount(0)
+          await expect(block).toHaveJSProperty('open', false)
         } else {
-          await expect(page.getByRole('heading', { name: "What's new" })).toBeVisible()
-          expect(await marked.count()).toBeGreaterThan(0)
+          // The new lines that are not blank, which the title counts
+          const added = await page.locator('pre.diff ins').evaluateAll(lines => lines.filter(line => line.textContent.slice(1).trim() !== '').length)
+          expect(added).toBeGreaterThan(0)
+          await expect(summary).toHaveText(`What changed in the code (${added} new ${added === 1 ? 'line' : 'lines'})`)
+          await expect(block).toHaveJSProperty('open', added <= 8)
           await expect(page.locator('pre.diff del .hljs-comment')).toHaveCount(0)
         }
+      })
+
+      test('opens with its mission beside the picture, and what to try first', async ({ page }) => {
+        await open_step(page, step)
+        await expect(page.locator('.pg-mission')).toHaveText(front(step, 'mission'))
+        await expect(page.locator('.pg-facts')).toContainText(`About ${front(step, 'time')} minutes`)
+        await expect(page.locator('.pg-try')).toContainText('Try it.')
+        const [aside, preview, console_] = await Promise.all(['.pg-aside', '.pg-preview', '.pg-console'].map(selector => page.locator(selector).boundingBox()))
+        // On a wide screen the mission is left of the picture, and they start together
+        expect(aside.x + aside.width).toBeLessThanOrEqual(preview.x)
+        expect(Math.abs(aside.y - preview.y)).toBeLessThan(40)
+        expect(console_).toBeNull()
+      })
+
+      test('has no code in view when it opens, only the mission and the picture', async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 })
+        await page.goto(`/_site/tutorial/${step}.html`)
+        await canvas(page).waitFor()
+        const { top, bottom } = await page.locator('.pg-preview').evaluate(element => element.getBoundingClientRect().toJSON())
+        expect(top).toBeGreaterThanOrEqual(0)
+        expect(bottom).toBeLessThanOrEqual(800)
+        // The listing of what changed is folded away, or short, and the editor is below
+        const open = await page.locator('details.pg-changes').evaluate(element => element.open)
+        if (!open) await expect(page.locator('pre.diff')).toBeHidden()
+        const editor = await page.locator('.pg-editor').boundingBox()
+        expect(editor.y).toBeGreaterThanOrEqual(bottom)
       })
 
       test('leads on to the steps before and after it', async ({ page }) => {
@@ -106,13 +139,28 @@ test.describe('the tutorial', () => {
         await expect(page.locator('#code')).toHaveValue(program(step))
       })
 
-      test('fits a phone screen', async ({ page }) => {
+      test('fits a phone screen, in the order mission, picture, changes, editor', async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 })
         await page.goto(`/_site/tutorial/${step}.html`)
         expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0)
+        const boxes = await Promise.all(['.pg-aside', '.pg-preview', '.pg-changes', '.pg-editor'].map(selector => page.locator(selector).boundingBox()))
+        const ys = boxes.map(box => box.y)
+        expect(ys).toEqual([...ys].sort((a, b) => a - b))
+        expect(new Set(boxes.map(box => Math.round(box.x))).size).toBe(1)
       })
     })
   }
+})
+
+test.describe('the console', () => {
+  test('stays out of sight until the app writes to it', async ({ page }) => {
+    await open_step(page, STEPS[0])
+    await expect(page.locator('.pg-console')).toBeHidden()
+    await page.locator('#code').fill('console.log("hello from the squirrel")')
+    await page.getByRole('button', { name: 'Run', exact: true }).click()
+    await expect(page.locator('.pg-console')).toBeVisible()
+    await expect(page.locator('#log')).toContainText('hello from the squirrel')
+  })
 })
 
 test.describe('what each step does', () => {

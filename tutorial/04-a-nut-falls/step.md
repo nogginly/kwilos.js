@@ -1,14 +1,16 @@
 ---
 title: A nut falls
 summary: A nut drops from the oak, lands in the grass, and drops again.
+mission: Make a nut fall from the oak.
+time: 6
+meet: time and speed
+try: Watch the nut fall, land in the grass, and drop again.
 ---
 
-Oaks drop nuts, and now our squirrel has something to catch. A nut falls from the oak, lands in the grass, and then drops again.
+Oaks drop nuts, and now our squirrel has something to catch.
 
 <!-- changes -->
 <!-- playground -->
-
-**Press Run.** Watch the nut fall, land, and drop again.
 
 ## How it works
 
