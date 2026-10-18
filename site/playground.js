@@ -12,8 +12,10 @@ const MODULES = {
 const MAX_LOG_LINES = 300
 
 const $ = (selector) => /** @type {any} */ (document.querySelector(selector))
+const root = $('.playground')
 const code = $('#code')
 const preview = $('.pg-preview')
+const console_section = $('.pg-console')
 const stage = $('#stage')
 const status = $('#status')
 const notice = $('#notice')
@@ -25,8 +27,12 @@ const file_count = $('#file-count')
 const drop_zone = $('#files')
 
 const starter = code.defaultValue
+// Files that arrive with the page, as data-files lists, as addresses from the page
+const bundled = (root.dataset.files ?? '').split(/\s+/).filter(Boolean)
 /** @type {Map<string, File>} */
 const files = new Map()
+/** @type {Map<string, File>} */
+const bundled_files = new Map()
 /** @type {HTMLIFrameElement | null} */
 let frame = null
 let has_run = false
@@ -151,7 +157,7 @@ async function run({ reveal = true } = {}) {
 // which would point nowhere from the iframe
 async function load_modules() {
   module_texts ??= Object.fromEntries(await Promise.all(Object.entries(MODULES).map(async ([specifier, path]) => {
-    const response = await fetch(path)
+    const response = await fetch(new URL(path, import.meta.url))
     if (!response.ok) throw new Error(`Could not load ${path}`)
     return [specifier, (await response.text()).replace(/\n?\/\/# sourceMappingURL=.*$/m, '')]
   })))
@@ -177,6 +183,7 @@ function show_error(text) {
 }
 
 function add_log(level, text) {
+  console_section.hidden = false
   const line = document.createElement('div')
   line.className = `pg-log-${level}`
   line.textContent = text
@@ -232,12 +239,31 @@ async function share() {
   }
 }
 
-function reset() {
-  if (code.value !== starter && !confirm('Replace your code with the starter app?')) return
+async function reset() {
+  if (code.value !== starter && !confirm('Replace your code with the starting code?')) return
   code.value = starter
   history.replaceState(null, '', location.pathname + location.search)
   notice.hidden = true
+  await add_bundled()
   run()
+}
+
+// Adds the files that came with the page, fetched once, and any that were removed
+async function add_bundled() {
+  for (const path of bundled) {
+    const name = decodeURIComponent(path.split('/').pop())
+    if (files.has(name)) continue
+    if (!bundled_files.has(name)) {
+      const response = await fetch(path)
+      if (!response.ok) {
+        show_error(`Could not load the file ${name}.`)
+        continue
+      }
+      bundled_files.set(name, new File([await response.blob()], name, { type: response.headers.get('content-type') ?? '' }))
+    }
+    files.set(name, bundled_files.get(name))
+  }
+  render_files()
 }
 
 function add_files(list) {
@@ -308,6 +334,9 @@ code.addEventListener('keydown', (event) => {
 
 // The starter runs at once. Code from a link waits for the visitor to read
 // it and press Run, as it is someone else's.
+// A tutorial page keeps the console out of sight until the app writes to it
+if (root.dataset.console === 'auto') console_section.hidden = true
+await add_bundled()
 render_files()
 // The files start folded away on a narrow screen, where they would push the editor down;
 // on a wide one they sit beside it

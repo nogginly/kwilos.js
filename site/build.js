@@ -9,9 +9,10 @@
 // does both.
 
 import { access, cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Marked } from 'marked'
+import { changes, parse_step } from './tutorial.js'
 import hljs from 'highlight.js/lib/core'
 import javascript from 'highlight.js/lib/languages/javascript'
 import json from 'highlight.js/lib/languages/json'
@@ -82,10 +83,11 @@ await write_page('api.html', {
 })
 
 // The playground starts from a small app, which sits in its editor
+const playground_partial = await readFile(join(SITE, 'playground.partial.html'), 'utf8')
 const starter = await readFile(join(SITE, 'playground-starter.js'), 'utf8')
 const playground = (await readFile(join(SITE, 'playground.body.html'), 'utf8'))
   .replaceAll('{{version}}', version)
-  .replace('{{starter}}', () => escape(starter))
+  .replace('{{playground}}', () => playground_markup({ starter }))
 await write_page('playground.html', {
   title: 'Kwilos.js playground',
   description: 'Try Kwilos.js in the browser: edit a small app, add your own images and sounds, and share it with a link.',
@@ -93,13 +95,15 @@ await write_page('playground.html', {
   content: playground,
 })
 
+const tutorial = await build_tutorial()
+
 await cp(join(SITE, 'style.css'), join(OUT, 'style.css'))
 await cp(join(SITE, 'site.js'), join(OUT, 'site.js'))
 await cp(join(SITE, 'playground.js'), join(OUT, 'playground.js'))
 // GitHub Pages would otherwise process the site with Jekyll
 await writeFile(join(OUT, '.nojekyll'), '')
 
-console.log(`Built _site/ for Kwilos ${version}, ${samples.length} samples, with its own copy of Kwilos`)
+console.log(`Built _site/ for Kwilos ${version}, ${samples.length} samples, ${tutorial.length} tutorial steps, with its own copy of Kwilos`)
 
 // Copies samples/ into the site with each sample importing the site's own
 // copy of Kwilos, and returns each sample's title, description, canvas size,
@@ -150,6 +154,136 @@ async function build_samples() {
   return found
 }
 
+// Writes the tutorial's pages from tutorial/: a home page, and a page for each
+// step folder. A step has a step.md, whose front matter gives its title, a
+// summary, and the files from tutorial/assets that arrive with it; and the
+// whole program at that step, app.js. In the text, <!-- changes --> is where
+// the lines that changed since the last step are shown, and <!-- playground -->
+// where the playground goes. Returns the steps.
+async function build_tutorial() {
+  const dir = join(ROOT, 'tutorial')
+  const names = (await readdir(dir, { withFileTypes: true }))
+    .filter(entry => entry.isDirectory() && /^\d/.test(entry.name))
+    .map(entry => entry.name)
+    .sort()
+
+  const steps = []
+  for (const name of names) {
+    const where = `tutorial/${name}`
+    const { meta, body } = parse_step(await readFile(join(dir, name, 'step.md'), 'utf8'))
+    for (const key of ['title', 'summary', 'mission', 'try'])
+      if (!meta[key]) throw new Error(`site/build.js: ${where}/step.md needs a ${key}`)
+    const [intro, rest] = body.split('<!-- changes -->')
+    const [between, after] = (rest ?? '').split('<!-- playground -->')
+    if (rest === undefined || after === undefined)
+      throw new Error(`site/build.js: ${where}/step.md needs <!-- changes --> and then <!-- playground -->`)
+    const files = (meta.files ?? '').split(/\s+/).filter(Boolean)
+    for (const file of files)
+      await access(join(dir, 'assets', file)).catch(() => {
+        throw new Error(`site/build.js: ${where}/step.md lists the file ${file}, which is not in tutorial/assets`)
+      })
+    steps.push({
+      name, title: meta.title, summary: meta.summary, mission: meta.mission, time: meta.time, meet: meta.meet, tryit: meta.try,
+      files, intro, between, after, code: await readFile(join(dir, name, 'app.js'), 'utf8'),
+    })
+  }
+
+  await mkdir(join(OUT, 'tutorial'), { recursive: true })
+  await access(join(dir, 'assets')).then(() => cp(join(dir, 'assets'), join(OUT, 'tutorial', 'assets'), { recursive: true }), () => {})
+
+  const list = `<ol class="steps">${steps.map(step =>
+    `<li><a href="${step.name}.html">${escape(step.title)}</a> <span>${escape(step.summary)}</span></li>`).join('')}</ol>`
+  const home = render(await readFile(join(dir, 'index.md'), 'utf8')).replace('<p>{{steps}}</p>', () =>
+    `${list}\n<p><a class="button" href="${steps[0].name}.html">Start with step 1</a></p>`)
+  await write_page('tutorial/index.html', {
+    title: 'Make a game: the Nut Catcher · Kwilos.js tutorial',
+    description: 'Make a game in small steps: a squirrel catches nuts that fall from an oak tree, and avoids the bees.',
+    nav: 'tutorial',
+    root: '../',
+    content: `<div class="prose">${home}</div>`,
+  })
+
+  for (const [index, step] of steps.entries()) {
+    const previous = steps[index - 1]
+    const next = steps[index + 1]
+    await write_page(`tutorial/${step.name}.html`, {
+      title: `Step ${index + 1}: ${step.title} · Kwilos.js tutorial`,
+      description: step.summary,
+      nav: 'tutorial',
+      root: '../',
+      content: `<div class="prose">
+<p class="step-label">Step ${index + 1}</p>
+<h1>${escape(step.title)}</h1>
+</div>
+${playground_markup({
+        starter: step.code,
+        files: step.files.map(file => `assets/${file}`),
+        reset_label: 'Reset to this step',
+        show_files: step.files.length > 0,
+        aside: aside_html(step),
+        changes: changes_block(previous?.code, step),
+      })}
+<div class="prose">
+${render(step.after)}
+<nav class="step-nav" aria-label="Steps">
+  <a class="prev" href="${previous ? `${previous.name}.html` : 'index.html'}">← ${previous ? `Step ${index}: ${escape(previous.title)}` : 'About the tutorial'}</a>
+  ${next ? `<a class="next" href="${next.name}.html">Step ${index + 2}: ${escape(next.title)} →</a>` : ''}
+</nav>
+</div>
+<script src="{{root}}playground.js" type="module"></script>`,
+    })
+  }
+  return steps
+}
+
+// Returns the opening of a step's page, beside the picture: its mission, a
+// few words of introduction, how long it takes and what the reader will meet,
+// and the first thing to try
+function aside_html(step) {
+  const facts = [step.time && `⏱ About ${step.time} minutes`, step.meet && `You will meet: ${step.meet}`].filter(Boolean).join(' · ')
+  return `<div class="pg-aside">
+<p class="pg-mission">${escape(step.mission)}</p>
+${render(step.intro)}
+${facts ? `<p class="pg-facts">${escape(facts)}</p>` : ''}
+<p class="pg-try"><strong>Try it.</strong> ${markdown.parseInline(step.tryit)}</p>
+</div>`
+}
+
+// Returns what changed in a step, folded away unless it is short: a closed
+// section whose title counts the new lines
+function changes_block(before, step) {
+  const { html, added } = changes_html(before, step.code)
+  const title = before === undefined
+    ? `The whole program (${added} lines)`
+    : `What changed in the code (${added} new ${added === 1 ? 'line' : 'lines'})`
+  return `<details class="pg-changes"${before !== undefined && added <= 8 ? ' open' : ''}>
+<summary>${title}</summary>
+${html}
+${render(step.between)}
+</details>`
+}
+
+// Returns a step's program with the lines that are new since the last step
+// marked, and a few lines around them, and how many lines are new; the first
+// step has no last step, so its whole program is shown. Each line is
+// highlighted on its own.
+function changes_html(before, after) {
+  const line = (tag, text, mark) =>
+    `<${tag} class="diff-line${mark ? ` diff-${tag === 'ins' ? 'added' : 'removed'}` : ''}">${mark ? `<span class="diff-mark" aria-hidden="true">${mark}</span>` : ''}${highlight(text, 'javascript')}</${tag}>`
+  const shown = before === undefined
+    ? after.replace(/\n$/, '').split('\n').map(text => ({ kind: 'same', text }))
+    : changes(before, after)
+  const html = shown.map(item =>
+    item.kind === 'gap' ? '<span class="diff-line diff-gap" role="img" aria-label="Lines that did not change are left out">...</span>'
+      : item.kind === 'added' ? line('ins', item.text, '+')
+        : item.kind === 'removed' ? line('del', item.text, '−')
+          : `<span class="diff-line">${highlight(item.text, 'javascript')}</span>`).join('')
+  return {
+    html: `<pre class="diff"><code class="hljs">${html}</code></pre>`,
+    added: shown.filter(item => item.kind === (before === undefined ? 'same' : 'added') && item.text.trim() !== '').length,
+  }
+}
+
 // Returns a sample's section: its title, description, and Preview and
 // Source tabs over the running sample and its app.js, then a tab for each
 // of its data files
@@ -183,8 +317,27 @@ function sample_html({ name, title, description, width, height, source, data }) 
 </section>`
 }
 
-// Writes a page from the template
-async function write_page(file, { title, description, nav, content }) {
+// Returns the playground's markup, holding `starter` in its editor. `files`
+// are addresses, from the page, of files that arrive with it; without any,
+// the Files section is hidden. A tutorial page gives an `aside`, which opens
+// the page beside the picture, and `changes`, which sit below it; its console
+// appears only when the app writes to it.
+function playground_markup({ starter, files = [], reset_label = 'Reset', show_files = true, aside = '', changes = '' }) {
+  return playground_partial
+    .replace('{{classes}}', (show_files ? '' : ' pg-no-files') + (aside ? ' pg-tutorial' : ''))
+    .replace('{{attrs}}', aside ? ' data-console="auto"' : '')
+    .replace('{{aside}}', () => aside)
+    .replace('{{changes}}', () => changes)
+    .replace('{{files}}', files.length ? ` data-files="${escape(files.join(' '))}"` : '')
+    .replace('{{files_hidden}}', show_files ? '' : ' hidden')
+    .replace('{{reset_label}}', escape(reset_label))
+    .replace('{{starter}}', () => escape(starter))
+}
+
+// Writes a page from the template; a page in a folder gives `root`, the way
+// back to the site's top
+async function write_page(file, { title, description, nav, content, root = '' }) {
+  await mkdir(dirname(join(OUT, file)), { recursive: true })
   const page = template
     .replaceAll('{{title}}', escape(title))
     .replaceAll('{{description}}', escape(description))
@@ -192,7 +345,9 @@ async function write_page(file, { title, description, nav, content }) {
     .replace('{{nav_home}}', nav === 'home' ? 'aria-current="page"' : '')
     .replace('{{nav_api}}', nav === 'api' ? 'aria-current="page"' : '')
     .replace('{{nav_playground}}', nav === 'playground' ? 'aria-current="page"' : '')
-    .replace('{{content}}', content)
+    .replace('{{nav_tutorial}}', nav === 'tutorial' ? 'aria-current="page"' : '')
+    .replace('{{content}}', () => content)
+    .replaceAll('{{root}}', root)
   await writeFile(join(OUT, file), page)
 }
 

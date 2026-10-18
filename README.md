@@ -2,7 +2,7 @@
 
 _Kwilos.js_ is an easy-to-use, dependency-free, entity-based JavaScript graphics toolkit for use with HTML5 Canvas.
 
-The [Kwilos.js web site](https://nogginly.github.io/kwilos.js/) has the samples running live, and the API documentation.
+The [Kwilos.js web site](https://nogginly.github.io/kwilos.js/) has the samples running live, a playground to try your own app in, a tutorial that makes a game, and the API documentation.
 
 _Kwilos.js_ uses a "game loop" metaphor while providing a way to use it efficiently when the drawings / graphics have limited motion.
 

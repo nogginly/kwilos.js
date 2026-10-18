@@ -150,7 +150,7 @@ test.describe('site', () => {
     await expect(page.locator('#hit-testing')).toHaveText('Hit-Testing')
   })
 
-  for (const path of ['index.html', 'api.html', 'playground.html']) {
+  for (const path of ['index.html', 'api.html', 'playground.html', 'tutorial/index.html']) {
     test(`fits a phone screen: ${path}`, async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 })
       await page.goto(`/_site/${path}`)

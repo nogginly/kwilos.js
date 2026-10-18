@@ -152,6 +152,27 @@ await Kwilos.attach("#canvas", () => [image({ path: "${path}", x: 0, y: 0, w: 40
     await expect(page.locator('#errors')).toContainText('stripes.png')
   })
 
+  test('adds the files that arrive with a page, ready for the app, and puts them back on reset', async ({ page }) => {
+    await page.route('**/_site/playground.html', async route => {
+      const response = await route.fetch()
+      const body = (await response.text()).replace('<div class="playground"', '<div class="playground" data-files="../test/browser/pages/stripes.png"')
+      await route.fulfill({ response, body })
+    })
+    await page.goto('/_site/playground.html')
+    await expect(page.locator('#file-list')).toContainText('stripes.png')
+    await expect(page.locator('#files summary')).toHaveText('Files (1)')
+
+    await write_and_run(page, STRIPES_IMAGE('stripes.png'))
+    await expect.poll(() => pixel(page, 19, 10)).toEqual(RED)
+    await expect(page.locator('#errors')).toBeHidden()
+
+    await page.getByRole('button', { name: 'Remove stripes.png' }).click()
+    await expect(page.locator('#file-list')).toContainText('No files added')
+    page.once('dialog', dialog => dialog.accept())
+    await page.getByRole('button', { name: 'Reset', exact: true }).click()
+    await expect(page.locator('#file-list')).toContainText('stripes.png')
+  })
+
   test('serves data and sound files to fetch, and sounds to preload_sounds', async ({ page }) => {
     await page.locator('#file-input').setInputFiles([
       { name: 'beep.wav', mimeType: 'audio/wav', buffer: readFileSync(BEEP) },
