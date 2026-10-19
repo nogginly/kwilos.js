@@ -25,7 +25,7 @@ One rock is a hazard, but a field is a game. This step turns `rock` into `rocks`
 
 - Change `0.7` to `0.2`. Then to `2`. Which makes the best game?
 - Add `console.log(game.rocks.length)` at the end of `update`. How many rocks are there at once? What happens to the number if you delete the `filter` line?
-- **Challenge:** add a starfield behind the rocks: a list of 50 small dots made once in `new_game`, which drift slowly down and wrap from the bottom back to the top.
+- **Challenge:** give each rock one of three colours, picked at random from a list such as `["#6b6f7a", "#7d6650", "#5b6b5e"]`. Where does the colour belong: in `new_rock` or in `draw_rock`?
 
 ## Words we met
 

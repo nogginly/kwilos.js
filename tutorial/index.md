@@ -10,4 +10,4 @@ It is written for anyone of about 13 and over who has done some programming befo
 
 {{steps}}
 
-More steps are on the way: a mining laser and a score, a title and a game-over screen, rising difficulty and a best score, explosions and sound, real art, and your next game.
+More steps are on the way: a mining laser and a score, a title and a game-over screen, rising difficulty and a best score, a starfield, explosions and sound, real art, and your next game.
