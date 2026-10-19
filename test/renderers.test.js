@@ -39,6 +39,23 @@ describe('render', () => {
     expect(calls).toContainEqual(['fillText', 'Hi', 7, 8])
   })
 
+  it('fills a label with no colour in the default text colour', () => {
+    const calls = render_calls([label({ x: 7, y: 8, text: 'Hi' })])
+    expect(calls).toContainEqual(['fillStyle=', 'white'])
+    expect(calls).toContainEqual(['fillText', 'Hi', 7, 8])
+  })
+
+  it('fills a label with no colour in the text_color the app chose', () => {
+    const calls = render_calls([label({ x: 7, y: 8, text: 'Hi' })], sys => { sys.fonts.color = 'navy' })
+    expect(calls).toContainEqual(['fillStyle=', 'navy'])
+  })
+
+  it('outlines a label with only a stroke_color, without filling it', () => {
+    const calls = render_calls([label({ x: 7, y: 8, text: 'Hi', stroke_color: 'red' })])
+    expect(names(calls)).not.toContain('fillText')
+    expect(calls).toContainEqual(['strokeText', 'Hi', 7, 8])
+  })
+
   it('draws a whole image, sized to the image', () => {
     const calls = render_calls([image({ path: 'bg.png', x: 1, y: 2 })],
       sys => { sys.atlas['bg.png'] = { width: 300, height: 220 } })

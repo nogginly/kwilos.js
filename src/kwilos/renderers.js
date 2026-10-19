@@ -110,7 +110,8 @@ export function label_font(sys, { font_name, font_size }) {
  * @param {Label} entity
  */
 function _render_label(sys, entity) {
-  const { x, y, text, fill_color, stroke_color, text_align, text_baseline } = entity
+  const { x, y, text, stroke_color, text_align, text_baseline } = entity
+  const fill_color = entity.fill_color ?? (stroke_color == null ? sys.fonts.color : null)
   let draw = sys.app.draw_context
 
   draw.beginPath()

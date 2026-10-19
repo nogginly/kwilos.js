@@ -43,6 +43,10 @@ function _detach_and_throw(sys, error) {
   throw error
 }
 
+// The longest step `env.dt` reports, so that a pause, such as a hidden
+// tab, does not move everything at once
+const MAX_DT_MS = 100
+
 // Runs one frame: calls the app's `tick`, draws the scene it returns, then
 // plays its sounds and updates its tracks.
 // - An array clears the background and renders its entities in order.
@@ -56,7 +60,9 @@ function _detach_and_throw(sys, error) {
 export function ticker(ts, sys) {
   try {
     sys.app.time_origin ??= ts
-    sys.args.time = ts - sys.app.time_origin
+    const time = ts - sys.app.time_origin
+    sys.args.dt = Math.min(Math.max(time - sys.args.time, 0), MAX_DT_MS) / 1000
+    sys.args.time = time
     const resized = _sync_canvas_size(sys)
     const scene = sys.app.tick(sys.args)
 

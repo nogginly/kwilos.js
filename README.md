@@ -99,6 +99,7 @@ Property          |Default value|Description
 `background_clear`|`false`      |If `true` then the background is cleared, allowing layered canvases to be transparent                                                                                                                                                                                                                
 `background_color`|`black`      |Set the background colour between ticks. If `background_clear` is set then use `null` or a colour with alpha to see through the canvas.                                                                                                                                                              
 `font`            |`undefined`  |When `undefined` the default font of the browser is used. Otherwise specify a font as you would for the CSS `font-family` property.                                                                                                                                                                  
+`text_color`      |`white`      |The colour of a label given neither `fill_color` nor `stroke_color`.
 `image_smoothing` |`true`       |If `false` then scaled images, tiles and sprites are drawn with hard pixel edges instead of smoothed, as pixel art needs. If the page also scales the canvas itself with CSS, set `image-rendering: pixelated` on it too.
 `preload_images`  |`[]`         |Provide one or more paths to images to preload to ensure the images are ready when `tick` handler is called.                                                                                                                                                                                         
 `preload_sounds`  |`[]`         |Paths to sound effects to load before the first frame; a sound that was not preloaded is not played. See [Sound](#sound).                                                                                                                                                                            
@@ -173,7 +174,7 @@ Factory    |Required                                                            
 
 A tile sheet with a border or gaps between its tiles, as tile editors can add, takes `margin`, the pixels between the sheet's edge and its tiles, and `spacing`, the pixels between tiles. `flip_x` and `flip_y` mirror an image or tile left to right, or top to bottom, about its own box, which hit-testing does not change.
 
-A `circle`, `rect` or `label` with neither `fill_color` nor `stroke_color` draws nothing. A `container` draws its `scene` with the origin moved to its `x` and `y`, which makes containers useful as layers: the containers in a scene are drawn in order, each one over the last.
+A `circle` or `rect` with neither `fill_color` nor `stroke_color` draws nothing; a `label` with neither is filled in the `text_color` config option, white unless set. A `container` draws its `scene` with the origin moved to its `x` and `y`, which makes containers useful as layers: the containers in a scene are drawn in order, each one over the last.
 
 ### Sprites
 
@@ -298,6 +299,7 @@ The runtime environment object contains properties that are grouped as follows:
 - `env.state` is an object into which the app can store data that it can expect to be available across repeated calls to the `tick` handler.
 - `env.hit(point)` returns the shape under a point, by default the mouse position; see [Hit-Testing](#hit-testing).
 - `env.time` is the milliseconds since the first frame, as of this frame; sprites animate by it, see [Sprites](#sprites).
+- `env.dt` is the seconds since the previous frame, `0` on the first. Moving things by a speed times `dt`, as in `ship.x += 200 * env.dt` for 200 pixels a second, keeps them at that speed however fast the screen refreshes. It is at most `0.1`, so after a pause, such as a hidden tab, things carry on from where they were instead of leaping ahead.
 - `env.sounds`, `env.tracks`, `env.volume` and `env.listener` play sound effects and music; see [Sound](#sound).
 
 #### Inputs

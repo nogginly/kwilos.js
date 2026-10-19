@@ -47,7 +47,7 @@
  * @property {string} text
  * @property {string} [font_name] Defaults to "serif" when `font_size` is given, else the canvas font
  * @property {number} [font_size] In points; defaults to 14 when `font_name` is given, else the canvas font
- * @property {string} [fill_color] CSS colour; omit for no fill
+ * @property {string} [fill_color] CSS colour; without it or `stroke_color`, the `text_color` config option
  * @property {string} [stroke_color] CSS colour; omit for no outline
  * @property {CanvasTextAlign} [text_align] Defaults to "center"
  * @property {CanvasTextBaseline} [text_baseline] Defaults to "alphabetic"
