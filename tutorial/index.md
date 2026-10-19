@@ -1,11 +1,13 @@
-# Make a game: the Nut Catcher
+# Make a game: Debris Field
 
-In this tutorial you will make a game. A squirrel runs about under an old oak tree. Nuts fall from the branches and you catch them. But watch out: the bees are falling too!
+In this tutorial you will make an arcade game. You fly a salvage ship through a field of drifting rocks. You dodge them, break them up with a mining laser for salvage, and get out before the hull gives way.
 
-You do not need to know how to make games. If you have tried a little programming before, in Scratch, JavaScript, Python or anything else, you are ready.
+It is written for anyone of about 13 and over who has done some programming before, in Scratch, Python, JavaScript or anything else. You do not need to know how games are made. That is what this tutorial is for.
 
-**How it works.** The game is built in small steps. Every step is a whole program that works. You read what is new, press **Run** to see it, and then change things to find out what happens. If you break something, **Reset to this step** puts everything back. You can go back and forth between the steps whenever you like.
+**How it works.** The game is built one step at a time, and every step is a whole program that runs. Read what is new, press **Run**, and then change things to see what happens. If you break something, **Reset to this step** puts it back. You can move between the steps in any order.
+
+**Where it leads.** By the end, your code has the same parts as most 2D games: a player, things that move, lists of things that come and go, collisions, a score, and a title and game-over screen. The last step shows how to turn it into other games, such as a dodger, a catcher or a brick breaker.
 
 {{steps}}
 
-More steps are on the way: it is raining nuts, catching them and keeping score, watching out for the bees, game over, sound, real pictures, and putting your game on your own page.
+More steps are on the way: a mining laser and a score, a title and a game-over screen, rising difficulty and a best score, explosions and sound, real art, and your next game.

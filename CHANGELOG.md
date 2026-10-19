@@ -8,7 +8,7 @@ Notable changes to Kwilos.js. The format follows [Keep a Changelog](https://keep
 
 - `env.dt`, the seconds since the previous frame, at most 0.1: move things by a speed times `dt` and they keep that speed at any refresh rate.
 - The `text_color` config option: the colour of labels given neither `fill_color` nor `stroke_color`.
-- A tutorial on the web site, "Make a game: the Nut Catcher": a squirrel catches nuts that fall from an oak tree, built in small steps that each run. Each step opens with its mission beside the running picture, and has the lines that changed marked, the editor, and things to try. The first four steps are there, and more are on the way.
+- A tutorial on the web site, "Make a game: Debris Field": an arcade game in which a salvage ship flies through a field of rocks, built in small steps that each run, for programmers of about 13 and over. Each step opens with its mission beside the running picture, and has the lines that changed marked, the editor, and things to try. The first six steps are there, up to rocks that wreck the ship, and more are on the way.
 - A playground on the web site: edit a small Kwilos.js app and run it, add your own images, sounds and data files and use them by name, and share the code with a link. The code runs in a sandboxed frame, and the files stay in the browser.
 
 ### Changed
