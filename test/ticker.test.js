@@ -121,6 +121,23 @@ describe('ticker', () => {
     })
   })
 
+  describe('env.dt', () => {
+    const dts_at = (...stamps) => {
+      const dts = []
+      const sys = attached_system({ tick: (env) => { dts.push(env.dt); return null } })
+      for (const ts of stamps) ticker(ts, sys)
+      return dts
+    }
+
+    it('is 0 on the first frame, then the seconds since the previous frame', () => {
+      expect(dts_at(1000, 1016, 1050)).toEqual([0, 0.016, 0.034])
+    })
+
+    it('is at most 0.1 seconds, so a long pause does not jump', () => {
+      expect(dts_at(0, 16, 5016)).toEqual([0, 0.016, 0.1])
+    })
+  })
+
   it('starts a new clicks list each frame, leaving one the app kept intact', () => {
     let kept
     const sys = attached_system({ tick: (env) => { kept = env.inputs.mouse.clicks; return null } })

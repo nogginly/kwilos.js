@@ -21,6 +21,7 @@
  * @property {boolean} [background_clear] Clears the canvas before each scene, so layered canvases can be transparent
  * @property {string | null} [background_color] Fills the canvas before each scene; defaults to "black" unless `background_clear` is set
  * @property {string} [font] Default label font, as for the CSS `font` property
+ * @property {string} [text_color] Colour of labels given neither `fill_color` nor `stroke_color`; defaults to "white"
  * @property {boolean} [image_smoothing] Set to false to draw scaled images, tiles and sprites with hard pixel edges, as pixel art needs; by default they are smoothed
  * @property {string[]} [preload_images] Image paths to load before the first frame
  * @property {string[]} [preload_sounds] Sound paths to load before the first frame; a sound not preloaded is not played
@@ -47,6 +48,7 @@
  * @property {Record<string, any>} state Data the app keeps between frames
  * @property {(point?: Point) => Entity | null} hit Returns the shape drawn topmost at the point, by default the mouse position, in the scene last drawn; null if there is none
  * @property {number} time Milliseconds since the first frame, as of this frame; sprites animate by it
+ * @property {number} dt Seconds since the previous frame, at most 0.1, and 0 on the first frame; move things by speed × `dt`
  * @property {Array<Sound | null | undefined | false>} sounds Sound effects to play after this frame; push to it, and Kwilos empties it after each frame
  * @property {Record<string, Track | null | undefined>} tracks Tracks to play, by a name of your choice; they play while they are here
  * @property {number} volume Scales all sounds and tracks, from 0, silent, to 1, as given; defaults to 1
@@ -114,7 +116,7 @@
  * @property {{ width: number, height: number, background_clear?: boolean, background_color?: string | null }} canvas
  * @property {Record<string, HTMLImageElement | Promise<HTMLImageElement>>} atlas Images by path, or their pending loads
  * @property {Audio} audio
- * @property {{ default: string }} fonts
+ * @property {{ default: string, color: string }} fonts
  * @property {Env} args
  * @property {App} app
  */

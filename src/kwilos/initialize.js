@@ -22,12 +22,14 @@ export function create_system() {
     atlas: {},
     audio: create_audio(),
     fonts: {
-      default: "14pt serif"
+      default: "14pt serif",
+      color: "white"
     },
     args: {
       state: {},
       hit: (point) => hit(system, point ?? system.args.inputs.mouse),
       time: 0,
+      dt: 0,
       sounds: [],
       tracks: {},
       volume: 1,
@@ -89,6 +91,8 @@ export async function initialize_with_canvas(system, canvas_or_id, tick, config)
   // Set a default font for labels, if specified,
   if (typeof config.font == 'string')
     system.fonts.default = config.font
+  if (typeof config.text_color == 'string')
+    system.fonts.color = config.text_color
 
   // Load and store the drawing context
   const draw_context = canvas.getContext('2d')

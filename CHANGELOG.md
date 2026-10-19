@@ -6,8 +6,14 @@ Notable changes to Kwilos.js. The format follows [Keep a Changelog](https://keep
 
 ### Added
 
+- `env.dt`, the seconds since the previous frame, at most 0.1: move things by a speed times `dt` and they keep that speed at any refresh rate.
+- The `text_color` config option: the colour of labels given neither `fill_color` nor `stroke_color`.
 - A tutorial on the web site, "Make a game: the Nut Catcher": a squirrel catches nuts that fall from an oak tree, built in small steps that each run. Each step opens with its mission beside the running picture, and has the lines that changed marked, the editor, and things to try. The first four steps are there, and more are on the way.
 - A playground on the web site: edit a small Kwilos.js app and run it, add your own images, sounds and data files and use them by name, and share the code with a link. The code runs in a sandboxed frame, and the files stay in the browser.
+
+### Changed
+
+- A label with neither `fill_color` nor `stroke_color` is filled in white, or the `text_color` config option, instead of drawing nothing.
 
 ## [0.11.0] - 2026-10-17
 
