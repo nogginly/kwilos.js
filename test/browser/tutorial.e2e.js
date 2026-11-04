@@ -101,6 +101,7 @@ test.describe('the tutorial', () => {
         await expect.poll(() => pixel(page, 5, 5)).toEqual(SPACE)
         await expect(page.locator('#errors')).toBeHidden()
         await expect(page.locator('#log .pg-log-error')).toHaveCount(0)
+        await expect(page.locator('#log .pg-log-warn')).toHaveCount(0)
         await expect(page.locator('#files')).toBeHidden()
         await expect(page.getByRole('button', { name: 'Reset to this step' })).toBeVisible()
         expect(errors).toEqual([])
@@ -187,6 +188,17 @@ test.describe('the console', () => {
     await page.getByRole('button', { name: 'Run', exact: true }).click()
     await expect(page.locator('.pg-console')).toBeVisible()
     await expect(page.locator('#log')).toContainText('hello from the cockpit')
+  })
+
+  test('is out of sight again after the next Run, until the app writes to it', async ({ page }) => {
+    await open_step(page, STEPS[0])
+    await page.locator('#code').fill('console.log("hello from the cockpit")')
+    await page.getByRole('button', { name: 'Run', exact: true }).click()
+    await expect(page.locator('.pg-console')).toBeVisible()
+    page.once('dialog', dialog => dialog.accept())
+    await page.getByRole('button', { name: 'Reset to this step' }).click()
+    await expect(page.locator('.pg-console')).toBeHidden()
+    await expect(page.locator('#log')).toBeEmpty()
   })
 })
 

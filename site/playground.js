@@ -3,12 +3,17 @@
 // The playground: an editor, and the app it holds running in a sandboxed
 // iframe. The iframe has no origin of its own to share, so it is sent
 // everything it needs by message: the code, Kwilos itself, and the files the
-// visitor added, which it serves to the app by name.
+// visitor added, which it serves to the app by name. With checks on, the app
+// imports Kwilos through a wrapper whose tick looks over each scene for
+// mistakes, see checks.js, and warns of them in the console.
 
 const MODULES = {
   'kwilos.js': 'kwilos/kwilos.min.mjs',
   'kwilos.js/aseprite': 'kwilos/aseprite.min.mjs',
 }
+// The checks, and the spec of each shape that the site build reads from Kwilos's types
+const CHECKS = { module: 'checks.js', spec: 'checks-spec.json' }
+const CHECKS_SETTING = 'kwilos.playground.checks'
 const MAX_LOG_LINES = 300
 
 const $ = (selector) => /** @type {any} */ (document.querySelector(selector))
@@ -25,6 +30,7 @@ const file_input = $('#file-input')
 const file_list = $('#file-list')
 const file_count = $('#file-count')
 const drop_zone = $('#files')
+const checks_box = $('#checks')
 
 const starter = code.defaultValue
 // Files that arrive with the page, as data-files lists, as addresses from the page
@@ -39,6 +45,7 @@ let has_run = false
 /** @type {Set<string>} */
 let missing = new Set()
 let module_texts = null
+let checks_texts = null
 
 // The runner is the document the app runs in. It is written as a function
 // so that it is checked as code, then sent to the iframe as text.
@@ -128,12 +135,14 @@ async function run({ reveal = true } = {}) {
   errors.hidden = true
   errors.replaceChildren()
   log.replaceChildren()
+  if (root.dataset.console === 'auto') console_section.hidden = true
   missing = new Set()
   has_run = true
 
   let modules
   try {
     modules = await load_modules()
+    if (checks_box.checked) modules = with_checks(modules, await load_checks())
   } catch (error) {
     show_error(error.message)
     return
@@ -162,6 +171,32 @@ async function load_modules() {
     return [specifier, (await response.text()).replace(/\n?\/\/# sourceMappingURL=.*$/m, '')]
   })))
   return module_texts
+}
+
+// Fetches the checks and the shape spec once
+async function load_checks() {
+  checks_texts ??= await Promise.all([CHECKS.module, CHECKS.spec].map(async (path) => {
+    const response = await fetch(new URL(path, import.meta.url))
+    if (!response.ok) throw new Error(`Could not load ${path}`)
+    return response.text()
+  }))
+  return checks_texts
+}
+
+// Returns the modules with kwilos.js replaced by a wrapper around it, whose
+// Kwilos.attach checks every scene the app's tick returns
+function with_checks(modules, [checks, spec]) {
+  const wrapper = `import { Kwilos as Unchecked } from "kwilos.js/unchecked"
+import { checked_tick } from "kwilos.js/checks"
+export * from "kwilos.js/unchecked"
+const spec = ${spec.trim()}
+export class Kwilos {
+  static attach(canvas, tick, config) {
+    return Unchecked.attach(canvas, checked_tick(tick, spec, (text) => console.warn("⚠ " + text)), config)
+  }
+}
+`
+  return { ...modules, 'kwilos.js': wrapper, 'kwilos.js/unchecked': modules['kwilos.js'], 'kwilos.js/checks': checks }
 }
 
 // What the app says arrives as messages from the iframe, and only from it
@@ -302,6 +337,10 @@ function render_files() {
 }
 
 $('#run').addEventListener('click', () => run())
+checks_box.addEventListener('change', () => {
+  try { localStorage.setItem(CHECKS_SETTING, checks_box.checked ? 'on' : 'off') } catch { }
+  if (has_run) run({ reveal: false })
+})
 $('#share').addEventListener('click', share)
 $('#reset').addEventListener('click', reset)
 file_input.addEventListener('change', () => {
@@ -336,6 +375,7 @@ code.addEventListener('keydown', (event) => {
 // it and press Run, as it is someone else's.
 // A tutorial page keeps the console out of sight until the app writes to it
 if (root.dataset.console === 'auto') console_section.hidden = true
+try { checks_box.checked = localStorage.getItem(CHECKS_SETTING) !== 'off' } catch { }
 await add_bundled()
 render_files()
 // The files start folded away on a narrow screen, where they would push the editor down;

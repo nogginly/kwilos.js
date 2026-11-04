@@ -13,6 +13,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Marked } from 'marked'
 import { changes, parse_step } from './tutorial.js'
+import { shape_spec } from './shape-spec.js'
 import hljs from 'highlight.js/lib/core'
 import javascript from 'highlight.js/lib/languages/javascript'
 import json from 'highlight.js/lib/languages/json'
@@ -100,6 +101,10 @@ const tutorial = await build_tutorial()
 await cp(join(SITE, 'style.css'), join(OUT, 'style.css'))
 await cp(join(SITE, 'site.js'), join(OUT, 'site.js'))
 await cp(join(SITE, 'playground.js'), join(OUT, 'playground.js'))
+// The playground's checks, with the properties of each shape, read from Kwilos's types
+await cp(join(SITE, 'checks.js'), join(OUT, 'checks.js'))
+const shape_sources = await Promise.all(['shapes.js', 'sprites.js'].map(name => readFile(join(ROOT, 'src', 'kwilos', name), 'utf8')))
+await writeFile(join(OUT, 'checks-spec.json'), JSON.stringify(shape_spec(shape_sources)) + '\n')
 // GitHub Pages would otherwise process the site with Jekyll
 await writeFile(join(OUT, '.nojekyll'), '')
 
