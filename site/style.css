@@ -495,6 +495,17 @@ input:focus-visible + .pg-hint {
   outline-offset: 2px;
 }
 
+.pg-line {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
 .pg-option {
   display: inline-flex;
   align-items: center;

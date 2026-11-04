@@ -1,6 +1,7 @@
 // The playground's checks: they look over each scene an app's tick returns
 // for mistakes that Kwilos would pass over in silence, such as a NaN position
 // or a misspelt property, and describe each one in words a beginner can act on.
+// A shape made with a mistake is noted with the line of the app that made it.
 
 /** @import { ShapeSpec } from './shape-spec.js' */
 
@@ -30,6 +31,7 @@ const MAX_PROBLEMS = 20
  * @property {string} key
  * @property {string} text
  * @property {string} [hint] What usually causes it, which is the same for every mistake of its kind
+ * @property {object} entity The shape with the mistake
  */
 
 /**
@@ -50,13 +52,15 @@ export function scene_problems(scene, spec) {
  * Returns a tick that calls `tick`, reports each new mistake in the scenes
  * it returns once, by calling `report`, with each hint only the first time
  * it applies, and throws an error that explains the likely cause when tick
- * returns nothing.
+ * returns nothing. A report has the line that made the shape, if `line_of`
+ * knows it.
  * @param {(env: any) => unknown} tick
  * @param {Record<string, ShapeSpec>} spec
- * @param {(text: string) => void} report
+ * @param {(text: string, line?: number) => void} report
+ * @param {(entity: object) => number | undefined} [line_of]
  * @returns {(env: any) => any}
  */
-export function checked_tick(tick, spec, report) {
+export function checked_tick(tick, spec, report, line_of = () => undefined) {
   const reported = new Set()
   const hinted = new Set()
   return (env) => {
@@ -64,17 +68,62 @@ export function checked_tick(tick, spec, report) {
     if (scene === undefined)
       throw new TypeError('tick returned nothing, so there is nothing to draw. Does it end with return and the scene, as in return [ship, rocks]?')
     if (reported.size < MAX_PROBLEMS) {
-      for (const { key, text, hint } of scene_problems(scene, spec)) {
+      for (const { key, text, hint, entity } of scene_problems(scene, spec)) {
         if (reported.has(key) || reported.size >= MAX_PROBLEMS) continue
         reported.add(key)
         let message = hint && !hinted.has(hint) ? `${text} ${hint}` : text
         if (hint) hinted.add(hint)
         if (reported.size === MAX_PROBLEMS) message += ' (No more problems will be reported until the next Run.)'
-        report(message)
+        report(message, line_of(entity))
       }
     }
     return scene
   }
+}
+
+/**
+ * Returns a shape factory that makes shapes as `factory` does, and, for a
+ * shape made with a mistake, keeps the line that `locate` finds in `lines`.
+ * `locate` is called from within the factory, so it can read the line of
+ * its caller from a stack trace.
+ * @template {(props: any) => object} F
+ * @param {F} factory
+ * @param {Record<string, ShapeSpec>} spec
+ * @param {WeakMap<object, number>} lines
+ * @param {() => number | undefined} locate
+ * @returns {F}
+ */
+export function checked_factory(factory, spec, lines, locate) {
+  return /** @type {F} */ ((props) => {
+    const entity = factory(props)
+    const shape = spec[entity.type]
+    if (shape) {
+      const problems = []
+      check_shape(entity, shape, problems)
+      const line = problems.length > 0 ? locate() : undefined
+      if (line !== undefined) lines.set(entity, line)
+    }
+    return entity
+  })
+}
+
+/**
+ * Returns the line of the first call in a stack trace that is in the
+ * script at `url`, as Chrome, Firefox and Safari write stack traces, or
+ * undefined if none is.
+ * @param {string | undefined} stack As in `new Error().stack`
+ * @param {string} url
+ * @returns {number | undefined}
+ */
+export function line_in(stack, url) {
+  if (!url) return undefined
+  for (const frame of String(stack ?? '').split('\n')) {
+    const at = frame.indexOf(url)
+    if (at < 0) continue
+    const found = frame.slice(at + url.length).match(/^:(\d+):\d+/)
+    if (found) return Number(found[1])
+  }
+  return undefined
 }
 
 // Steps: for each entry, skip what Kwilos skips, go into nested lists and
@@ -95,18 +144,18 @@ function check_shape(entity, { known, required, numbers }, problems) {
   const name = describe(entity)
   for (const property of required) {
     if (entity[property] === undefined)
-      problems.push({ key: `${entity.type}.${property}:missing`, text: `${name} has no ${property}, so Kwilos cannot draw it.` })
+      problems.push({ key: `${entity.type}.${property}:missing`, text: `${name} has no ${property}, so Kwilos cannot draw it.`, entity })
   }
   for (const property of numbers) {
     const value = entity[property]
     if (value === undefined || (typeof value === 'number' && Number.isFinite(value))) continue
-    problems.push({ key: `${entity.type}.${property}:number`, text: `${name} has ${property}: ${show(value)}.`, hint: number_hint(value) })
+    problems.push({ key: `${entity.type}.${property}:number`, text: `${name} has ${property}: ${show(value)}.`, hint: number_hint(value), entity })
   }
   for (const property of Object.keys(entity)) {
     if (known.includes(property)) continue
     const meant = ALIASES[property] && known.includes(ALIASES[property]) ? ALIASES[property] : closest(property, known)
     if (meant)
-      problems.push({ key: `${entity.type}.${property}:unknown`, text: `${name} has ${property}, which Kwilos ignores. Did you mean ${meant}?` })
+      problems.push({ key: `${entity.type}.${property}:unknown`, text: `${name} has ${property}, which Kwilos ignores. Did you mean ${meant}?`, entity })
   }
 }
 
