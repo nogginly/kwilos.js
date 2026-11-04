@@ -111,6 +111,21 @@ await Kwilos.attach("#canvas", () => { throw new Error("tick failed") })`)
     await expect(page.locator('#errors')).toContainText(/Unexpected token/)
   })
 
+  test('links an error to the line of the app it came from, and only the app', async ({ page }) => {
+    await write_and_run(page, `console.log("fine")
+
+null.x`)
+    await expect(page.locator('#errors')).toHaveText(/^line 3: /)
+    await page.locator('#errors').getByRole('button', { name: 'line 3' }).click()
+    expect(await page.locator('#code').evaluate(code => code.value.slice(code.selectionStart, code.selectionEnd))).toBe('null.x')
+
+    // A tick that returns nothing fails in Kwilos, after the app's line has run
+    await write_and_run(page, `import { Kwilos } from "kwilos.js"
+await Kwilos.attach("#canvas", () => {})`)
+    await expect(page.locator('#errors')).toContainText('tick returned nothing')
+    await expect(page.locator('#errors').getByRole('button')).toHaveCount(0)
+  })
+
   test('runs the app apart from the page: no reach to the page or its storage', async ({ page }) => {
     await write_and_run(page, `try { parent.document.title; console.log("reached the page") } catch { console.log("blocked from the page") }
 try { localStorage.length; console.log("has storage") } catch { console.log("blocked from storage") }`)
@@ -132,14 +147,42 @@ await Kwilos.attach("#canvas", (env) => [
 ])`)
     await expect.poll(() => pixel(page, 10, 10)).toEqual(RED)
     await expect(warnings(page)).toHaveCount(1)
-    await expect(warnings(page)).toHaveText(/^⚠ A rect has x: NaN\. NaN means "not a number"/)
+    await expect(warnings(page)).toHaveText(/^⚠ line 4: A rect has x: NaN\. NaN means "not a number"/)
     await expect(page.locator('#errors')).toBeHidden()
   })
 
   test('warn of a misspelt property, naming the one meant', async ({ page }) => {
     await write_and_run(page, `import { Kwilos, circle } from "kwilos.js"
 await Kwilos.attach("#canvas", () => [circle({ x: 50, y: 50, radius: 10, fill_colour: "red" })])`)
-    await expect(warnings(page)).toHaveText('⚠ A circle has fill_colour, which Kwilos ignores. Did you mean fill_color?')
+    await expect(warnings(page)).toHaveText('⚠ line 2: A circle has fill_colour, which Kwilos ignores. Did you mean fill_color?')
+  })
+
+  test('link to the line that made the shape, which selects it in the editor', async ({ page }) => {
+    await write_and_run(page, `import { Kwilos, circle } from "kwilos.js"
+
+function tick(env) {
+  const ship = env.state.ship ??= { x: 300 }
+  ship.x += 100 * env.td
+  return [
+    circle({ x: 50, y: 50, radius: 10, fill_color: "gold" }),
+    circle({ x: ship.x, y: 50, radius: 10, fill_color: "red" }),
+  ]
+}
+
+await Kwilos.attach("#canvas", tick)`)
+    const link = warnings(page).getByRole('button', { name: 'line 8' })
+    await link.click()
+    const selected = await page.locator('#code').evaluate(code => code.value.slice(code.selectionStart, code.selectionEnd))
+    expect(selected).toBe('    circle({ x: ship.x, y: 50, radius: 10, fill_color: "red" }),')
+    await expect(page.locator('#code')).toBeFocused()
+  })
+
+  test('warn without a line of a shape made right but changed later', async ({ page }) => {
+    await write_and_run(page, `import { Kwilos, circle } from "kwilos.js"
+const dot = circle({ x: 5, y: 5, radius: 3, fill_color: "red" })
+await Kwilos.attach("#canvas", () => { dot.x = NaN; return [dot] })`)
+    await expect(warnings(page)).toHaveText(/^⚠ A circle has x: NaN\./)
+    await expect(warnings(page).getByRole('button')).toHaveCount(0)
   })
 
   test('explain a tick that returns nothing as an error', async ({ page }) => {

@@ -6,7 +6,7 @@ Notable changes to Kwilos.js. The format follows [Keep a Changelog](https://keep
 
 ### Added
 
-- Checks in the web site's playground, and so in the tutorial: with "Check for mistakes" on, as it is at first, the console warns once of each mistake in the scenes an app draws that Kwilos passes over in silence, such as a position that is `NaN`, a shape missing a property it needs, or a misspelt property, and suggests the property meant. A `tick` that returns nothing gets an error that says so. The checks know each shape's properties from Kwilos's own types. The console is cleared, and on a tutorial page hidden again, with each Run.
+- Checks in the web site's playground, and so in the tutorial: with "Check for mistakes" on, as it is at first, the console warns once of each mistake in the scenes an app draws that Kwilos passes over in silence, such as a position that is `NaN`, a shape missing a property it needs, or a misspelt property, and suggests the property meant. A warning names the line of the app that made the shape, and an error the line of the app it came from; clicking the line selects it in the editor. A `tick` that returns nothing gets an error that says so. The checks know each shape's properties from Kwilos's own types. The console is cleared, and on a tutorial page hidden again, with each Run.
 
 ## [0.12.0] - 2026-11-04
 

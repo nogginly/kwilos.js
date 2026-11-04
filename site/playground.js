@@ -5,7 +5,11 @@
 // everything it needs by message: the code, Kwilos itself, and the files the
 // visitor added, which it serves to the app by name. With checks on, the app
 // imports Kwilos through a wrapper whose tick looks over each scene for
-// mistakes, see checks.js, and warns of them in the console.
+// mistakes, see checks.js, and warns of them in the console, with the line
+// of the app that made the shape. The app runs from a URL of its own, so the
+// lines in stack traces that are the app's can be told apart.
+
+import { line_in } from './checks.js'
 
 const MODULES = {
   'kwilos.js': 'kwilos/kwilos.min.mjs',
@@ -64,12 +68,16 @@ function runner_main() {
       original(...args)
     }
   }
+  // The app's URL, once it has one; an error's line is given only if it is the app's
+  let app_url = ''
+  const app_line = (error, event) =>
+    event?.filename === app_url && event.lineno ? event.lineno : line_in(error?.stack, app_url)
   addEventListener('error', (event) => {
     const text = event.error?.message ?? event.message ?? 'Error'
-    post({ type: 'error', text: event.lineno ? `${text} (line ${event.lineno})` : text })
+    post({ type: 'error', text, line: app_line(event.error, event) })
   })
   addEventListener('unhandledrejection', (event) =>
-    post({ type: 'error', text: event.reason?.message ?? String(event.reason) }))
+    post({ type: 'error', text: event.reason?.message ?? String(event.reason), line: app_line(event.reason) }))
 
   addEventListener('message', ({ data, source }) => {
     if (source !== parent || data?.type !== 'run') return
@@ -110,9 +118,17 @@ function runner_main() {
     map.textContent = JSON.stringify({ imports })
     document.head.append(map)
 
+    // What the checks need from the runner: the line of the app that is
+    // calling, and a way to warn with it
+    app_url = URL.createObjectURL(new Blob([data.code], { type: 'text/javascript' }))
+    globalThis[Symbol.for('kwilos.playground')] = {
+      caller_line: () => line_in(new Error().stack, app_url),
+      warn: (text, line) => post({ type: 'log', level: 'warn', text, line, check: true }),
+    }
+
     const app = document.createElement('script')
     app.type = 'module'
-    app.textContent = data.code
+    app.src = app_url
     document.body.append(app)
   })
 }
@@ -124,7 +140,7 @@ const RUNNER = `<!doctype html>
   canvas { display: block; max-width: 100%; height: auto; margin: 0 auto; }
 </style></head>
 <body><canvas id="canvas" width="600" height="360"></canvas>
-<script>(${runner_main.toString()})()</script>
+<script>${line_in.toString()};(${runner_main.toString()})()</script>
 </body></html>`
 
 // Runs the code in a new iframe, replacing the last one, which stops its app.
@@ -184,15 +200,21 @@ async function load_checks() {
 }
 
 // Returns the modules with kwilos.js replaced by a wrapper around it, whose
-// Kwilos.attach checks every scene the app's tick returns
+// Kwilos.attach checks every scene the app's tick returns, and whose shape
+// factories note the line of the app that made a shape with a mistake
 function with_checks(modules, [checks, spec]) {
-  const wrapper = `import { Kwilos as Unchecked } from "kwilos.js/unchecked"
-import { checked_tick } from "kwilos.js/checks"
+  const factories = Object.keys(JSON.parse(spec))
+  const wrapper = `import * as unchecked from "kwilos.js/unchecked"
+import { checked_tick, checked_factory } from "kwilos.js/checks"
 export * from "kwilos.js/unchecked"
 const spec = ${spec.trim()}
+const playground = globalThis[Symbol.for("kwilos.playground")]
+const lines = new WeakMap()
+const made = (factory) => checked_factory(factory, spec, lines, playground.caller_line)
+${factories.map(name => `export const ${name} = made(unchecked.${name})`).join('\n')}
 export class Kwilos {
   static attach(canvas, tick, config) {
-    return Unchecked.attach(canvas, checked_tick(tick, spec, (text) => console.warn("⚠ " + text)), config)
+    return unchecked.Kwilos.attach(canvas, checked_tick(tick, spec, playground.warn, (shape) => lines.get(shape)), config)
   }
 }
 `
@@ -202,29 +224,53 @@ export class Kwilos {
 // What the app says arrives as messages from the iframe, and only from it
 addEventListener('message', ({ data, source }) => {
   if (!frame || source !== frame.contentWindow) return
-  if (data?.type === 'log') add_log(data.level, data.text)
-  else if (data?.type === 'error') show_error(data.text)
+  if (data?.type === 'log') add_log(data.level, data.check ? `⚠ ` : '', data.text, data.line)
+  else if (data?.type === 'error') show_error(data.text, data.line)
   else if (data?.type === 'missing') {
     missing.add(data.name)
     show_error(`The app asked for “${data.name}”, which has not been added. Add it under Files, then press Run.`)
   }
 })
 
-function show_error(text) {
+function show_error(text, at) {
   const line = document.createElement('div')
-  line.textContent = text
+  line.append(...line_link(at), text)
   errors.append(line)
   errors.hidden = false
 }
 
-function add_log(level, text) {
+function add_log(level, mark, text, at) {
   console_section.hidden = false
   const line = document.createElement('div')
   line.className = `pg-log-${level}`
-  line.textContent = text
+  line.append(mark, ...line_link(at), text)
   log.append(line)
   while (log.children.length > MAX_LOG_LINES) log.firstChild.remove()
   log.scrollTop = log.scrollHeight
+}
+
+// Returns a button that shows a line of the code, and a colon to follow it,
+// or nothing for no line
+function line_link(at) {
+  if (!Number.isInteger(at) || at < 1) return []
+  const button = document.createElement('button')
+  button.type = 'button'
+  button.className = 'pg-line'
+  button.textContent = `line ${at}`
+  button.addEventListener('click', () => show_line(at))
+  return [button, ': ']
+}
+
+// Selects a line of the code in the editor, scrolled to a third of the way down
+function show_line(at) {
+  const lines = code.value.split('\n')
+  const n = Math.min(at, lines.length)
+  const start = lines.slice(0, n - 1).reduce((sum, line) => sum + line.length + 1, 0)
+  code.focus({ preventScroll: true })
+  code.setSelectionRange(start, start + lines[n - 1].length)
+  const height = parseFloat(getComputedStyle(code).lineHeight) || 20
+  code.scrollTop = Math.max(0, (n - 1) * height - code.clientHeight / 3)
+  code.scrollIntoView({ block: 'nearest' })
 }
 
 let say_timer
