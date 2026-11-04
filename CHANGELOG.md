@@ -4,6 +4,8 @@ Notable changes to Kwilos.js. The format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-04
+
 ### Added
 
 - `env.dt`, the seconds since the previous frame, at most 0.1: move things by a speed times `dt` and they keep that speed at any refresh rate.
