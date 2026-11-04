@@ -119,6 +119,68 @@ try { localStorage.length; console.log("has storage") } catch { console.log("blo
   })
 })
 
+test.describe('checks', () => {
+  const warnings = (page) => page.locator('#log .pg-log-warn')
+  const checks = (page) => page.getByRole('checkbox', { name: 'Check for mistakes' })
+
+  test('are on at first, and warn once of a NaN number, while the app runs on', async ({ page }) => {
+    await expect(checks(page)).toBeChecked()
+    await write_and_run(page, `import { Kwilos, rect } from "kwilos.js"
+await Kwilos.attach("#canvas", (env) => [
+  rect({ x: 0, y: 0, w: 600, h: 360, fill_color: "red" }),
+  rect({ x: env.td * 100, y: 0, w: 10, h: 10, fill_color: "blue" }),
+])`)
+    await expect.poll(() => pixel(page, 10, 10)).toEqual(RED)
+    await expect(warnings(page)).toHaveCount(1)
+    await expect(warnings(page)).toHaveText(/^⚠ A rect has x: NaN\. NaN means "not a number"/)
+    await expect(page.locator('#errors')).toBeHidden()
+  })
+
+  test('warn of a misspelt property, naming the one meant', async ({ page }) => {
+    await write_and_run(page, `import { Kwilos, circle } from "kwilos.js"
+await Kwilos.attach("#canvas", () => [circle({ x: 50, y: 50, radius: 10, fill_colour: "red" })])`)
+    await expect(warnings(page)).toHaveText('⚠ A circle has fill_colour, which Kwilos ignores. Did you mean fill_color?')
+  })
+
+  test('explain a tick that returns nothing as an error', async ({ page }) => {
+    await write_and_run(page, `import { Kwilos, circle } from "kwilos.js"
+await Kwilos.attach("#canvas", () => { circle({ x: 50, y: 50, radius: 10 }) })`)
+    await expect(page.locator('#errors')).toContainText('tick returned nothing')
+  })
+
+  test('leave the console empty for an app with no mistakes, and the exports of kwilos.js as they are', async ({ page }) => {
+    await write_and_run(page, `import * as kwilos from "kwilos.js"
+console.log(Object.keys(kwilos).sort().join(" "))
+await kwilos.Kwilos.attach("#canvas", () => [kwilos.circle({ x: 50, y: 50, radius: 10, fill_color: "red", speed: 3 })])`)
+    await expect(page.locator('#log')).toHaveText('Kwilos animation animation_status circle container contains image label rect sound sprite tile track')
+    await expect(warnings(page)).toHaveCount(0)
+  })
+
+  test('can be turned off, which runs the app again without them, and stay off on the next visit', async ({ page }) => {
+    await write_and_run(page, `import { Kwilos, circle } from "kwilos.js"
+await Kwilos.attach("#canvas", () => [circle({ x: NaN, y: 50, radius: 10, fill_color: "red" })])`)
+    await expect(warnings(page)).toHaveCount(1)
+    await checks(page).uncheck()
+    await expect(warnings(page)).toHaveCount(0)
+    await expect(page.locator('#stage iframe')).toHaveCount(1)
+    await page.reload()
+    await expect(checks(page)).not.toBeChecked()
+    await checks(page).check()
+    await page.reload()
+    await expect(checks(page)).toBeChecked()
+  })
+
+  test('start again with each Run, which clears the console', async ({ page }) => {
+    await write_and_run(page, `import { Kwilos, circle } from "kwilos.js"
+console.log("first")
+await Kwilos.attach("#canvas", () => [circle({ x: NaN, y: 50, radius: 10, fill_color: "red" })])`)
+    await expect(warnings(page)).toHaveCount(1)
+    await run(page)
+    await expect(warnings(page)).toHaveCount(1)
+    await expect(page.locator('#log > *')).toHaveCount(2)
+  })
+})
+
 test.describe('files', () => {
   const STRIPES_IMAGE = (path) => `import { Kwilos, image } from "kwilos.js"
 await Kwilos.attach("#canvas", () => [image({ path: "${path}", x: 0, y: 0, w: 40, h: 20 })],
